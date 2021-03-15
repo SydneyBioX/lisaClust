@@ -1,7 +1,7 @@
 lisaClust
 ======================================================
 
-.
+Clustering of Local Indicators of Spatial Association
 
 Overview
 --------
