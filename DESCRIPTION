@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 0.0.1
+Version: 0.99.0
 Authors@R: c(
     person("Ellis", "Patrick", email = "ellis.patrick@sydney.edu.au",
     role = c("aut", "cre")),
@@ -9,8 +9,9 @@ Authors@R: c(
     role = c("aut")))
 Description: lisaClust provides a series of functions to identify and visualise 
     regions of tissue where spatial associations between cell-types is similar.
-    This package is applicable to multiplexed imaging data that has been 
-    segmented at a single-cell resolution.
+    This package can be used to provide a high-level summary of cell-type 
+    colocalization in multiplexed imaging data that has been segmented at a 
+    single-cell resolution.
 License: GPL (>=2)
 biocViews: 
     SingleCell, CellBasedAssays
