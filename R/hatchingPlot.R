@@ -472,7 +472,7 @@ GeomHatching <-
                 makeWindow(coords, window, window.length)
             
             pp <-
-                spatstat::ppp(coords$x,
+                spatstat.geom::ppp(coords$x,
                               coords$y,
                               window = ow,
                               marks = coords$region)
@@ -585,10 +585,10 @@ plotRegions <-
 ######## Map predicted regions to a regular grid
 #' @importFrom class knn
 #' @importFrom grid linesGrob gpar gList
-#' @importFrom spatstat as.mask
+#' @importFrom spatstat.geom as.mask
 regionGrid <- function(pp, nbp = 250) {
     ow <- pp$window
-    m <- as.mask(ow, dimyx = c(nbp, nbp))$m
+    m <- spatstat.geom::as.mask(ow, dimyx = c(nbp, nbp))$m
     x <-
         seq(
             from = ow$xrange[1],
@@ -618,7 +618,7 @@ regionGrid <- function(pp, nbp = 250) {
 
 
 ######## Convert grid of regions into a polygon mask for a particular region.
-#' @importFrom spatstat owin as.polygonal
+#' @importFrom spatstat.geom owin as.polygonal
 regionPoly <- function(grid, region) {
     rx <- range(grid$x)
     ry <- range(grid$y)
@@ -630,17 +630,16 @@ regionPoly <- function(grid, region) {
             byrow = TRUE
         )
     mat[is.na(mat)] <- FALSE
-    ow <- owin(xrange = rx,
+    ow <- spatstat.geom::owin(xrange = rx,
                yrange = ry,
                mask = mat)
-    return(as.polygonal(ow))
+    return(spatstat.geom::as.polygonal(ow))
 }
 
 
 ######## Create line grobs of the hatching
 #' @importFrom purrr map map_dfr
 #' @importFrom grid linesGrob
-
 hatchingLines <-
     function(rPoly,
              allHatch,
