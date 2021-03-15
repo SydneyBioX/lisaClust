@@ -86,7 +86,7 @@ ggplot(cells, aes(x,y, colour = cellType)) + geom_point() + facet_wrap(~imageID)
 
 ## Create SegmentedCellExperiment object
 
-First we store our datas into a `SegmentedCells` object. 
+First we store our data in a `SegmentedCells` object. 
 
 ```{r}
 
@@ -99,10 +99,9 @@ cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
 ## Generate LISA curves
 
 We can then calculate local indicators of spatial association (LISA) functions 
-using the `lisa` function. In our implementation, our LISA curves are a 
-localised summary of an L-function from a Poisson point process model. By 
-default, `lisa` will calculate curves for 20 'sensible' radii for each 
-cell-type. 
+using the `lisa` function. Here the LISA curves are a 
+localised summary of an L-function from a Poisson point process model. The radii 
+that will be calculated over can be set with `Rs`.
 
 ```{r}
 
@@ -198,10 +197,7 @@ cellType(cellExp) <- paste('cluster', kM$cluster, sep = '')
 ## Generate LISA curves
 
 As before, we can calculate local indicators of spatial association (LISA) 
-functions using the `lisa` function. In our implementation, our LISA curves are 
-a localised summary of an L-function from a Poisson point process model. By 
-default, `lisa` will calculate curves for 20 'sensible' radii for each 
-cell-type. 
+functions using the `lisa` function. 
 
 ```{r}
 
@@ -212,9 +208,9 @@ lisaCurves <- lisa(cellExp, Rs = c(10,20,50))
 ## Perform some clustering
 
 The LISA curves can then be used to cluster the cells. Here we use k-means 
-clustering to cluster the cells into two microenvironments, other clustering 
-methods like SOM could be used. We can store these cell clusters or cell 
-"regions" in our `SegmentedCells` object using the `region() <-` function.
+clustering to cluster the cells into two microenvironments. 
+We can store these cell clusters or cell "regions" in our `SegmentedCells` 
+object using the `region() <-` function.
 
 ```{r}
 
@@ -229,7 +225,7 @@ region(cellExp) <- paste('region',kM$cluster,sep = '_')
 
 Finally, we can use `hatchingPlot` to construct a `ggplot` object where the 
 regions are marked by different hatching patterns. This allows us to visualize 
-the two regions and eight cell-types simultaneously.
+the two regions and ten cell-types simultaneously.
 
 ```{r}
 hatchingPlot(cellExp)
