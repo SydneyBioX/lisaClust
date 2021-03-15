@@ -1,0 +1,25 @@
+Package: lisaClust
+Type: Package
+Title: lisaClust: Clustering of Local Indicators of Spatial Association
+Version: 0.0.1
+Authors@R: c(
+    person("Ellis", "Patrick", email = "ellis.patrick@sydney.edu.au",
+    role = c("aut", "cre")),
+    person("Nicolas", "Canete", email = "nicolas.canete@sydney.edu.au",
+    role = c("aut")))
+Description: lisaClust provides a series of functions to identify and visualise 
+    regions of tissue where spatial associations between cell-types is similar.
+    This package is applicable to multiplexed imaging data that has been 
+    segmented at a single-cell resolution.
+License: GPL (>=2)
+biocViews: 
+    SingleCell, CellBasedAssays
+Encoding: UTF-8
+Depends: R (>= 4.0.0)
+VignetteBuilder: knitr
+BugReports: https://github.com/ellispatrick/lisaClust/issues
+Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat, 
+        BiocGenerics, S4Vectors, methods, spicyR,
+        purrr, stats, data.table, dplyr, tidyr
+Suggests: BiocStyle, knitr, rmarkdown
+RoxygenNote: 7.1.1
