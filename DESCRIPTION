@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 0.99.3
+Version: 0.99.4
 Authors@R: c(
     person("Ellis", "Patrick", email = "ellis.patrick@sydney.edu.au",
     role = c("aut", "cre")),
@@ -16,7 +16,7 @@ License: GPL (>=2)
 biocViews: 
     SingleCell, CellBasedAssays
 Encoding: UTF-8
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1)
 VignetteBuilder: knitr
 BugReports: https://github.com/ellispatrick/lisaClust/issues
 Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat.core,
