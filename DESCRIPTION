@@ -16,7 +16,7 @@ License: GPL (>=2)
 biocViews: 
     SingleCell, CellBasedAssays
 Encoding: UTF-8
-Depends: R (>= 3.6)
+Depends: R (>= 4.1)
 VignetteBuilder: knitr
 BugReports: https://github.com/ellispatrick/lisaClust/issues
 Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat.core,
