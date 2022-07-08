@@ -41,14 +41,10 @@ imageID <- rep(c('s1', 's2'),c(800,800))
 cells <- data.frame(x, y, cellType, imageID)
 
 ## Store data in SegmentedCells object
-cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
+cellExp <- SegmentedCells(cells)
 
-## Generate LISA
-lisaCurves <- lisa(cellExp)
-
-## Cluster regions
-kM <- kmeans(lisaCurves,2)
-region(cellExp) <- paste('region',kM$cluster,sep = '_')
+## Generate regions
+cellExp <- lisaClust(cellExp, k = 2)
 
 # Plot the regions with hatchingPlot()
 hatchingPlot(cellExp) +

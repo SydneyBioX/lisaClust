@@ -5,6 +5,7 @@
 #'
 #' @param data A SegmentedCells object that has region information.
 #' @param imageID A vector of imageIDs to be plotted.
+#' @param regionName Name of the region to plot.
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param line.spacing A integer indicating the spacing between hatching lines.
 #' @param hatching.colour Colour for the hatching.
@@ -29,12 +30,8 @@
 #' ## Store data in SegmentedCells object
 #' cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
 #' 
-#' ## Generate LISA
-#' lisaCurves <- lisa(cellExp)
-#' 
-#' ## Cluster regions
-#' kM <- kmeans(lisaCurves,2)
-#' region(cellExp) <- paste('region',kM$cluster,sep = '_')
+#' ## Generate regions
+#' cellExp <- lisaClust(cellExp, k = 2)
 #' 
 #' ## Plot regions
 #' hatchingPlot(cellExp)
@@ -47,16 +44,19 @@
 hatchingPlot <-
     function(data,
              imageID = NULL,
+             regionName = "region",
              window = "concave",
              line.spacing = 21,
              hatching.colour = 1,
-             nbp = 250,
-             window.length = NULL) {
-        if (!is(data, "SegmentedCells") | is.null(data$region))
-            stop("Please provide a SegmentedCells object with region information please.")
+             nbp = 50,
+             window.length = NULL
+             ) {
+        # if (!is(data, "SegmentedCells") | is.null(data$region))
+        #     stop("Please provide a SegmentedCells object with region information please.")
         
         if (is.null(imageID)) {
-            df <- region(data[1,], annot = TRUE)
+            df <- as.data.frame(cellSummary(data[1,]))
+            df["region"] <- df[regionName]
             p <-
                 ggplot(df, aes(
                     x = .data$x,
@@ -78,7 +78,8 @@ hatchingPlot <-
         if (!is.null(imageID)) {
             if (any(!imageID %in% rownames(data)))
                 stop("Some of the imageIDs are not in your SegmentedCells object")
-            df <- region(data, imageID = imageID, annot = TRUE)
+            df <-as.data.frame( cellSummary(data, imageID = imageID))
+            df["region"] <- df[regionName]
             p <-
                 ggplot(df, aes(
                     x = .data$x,
@@ -156,7 +157,7 @@ hatchingPlot <-
 #' library(ggplot2)
 #' 
 #' # Extract the region information along with x-y coordinates
-#' df <- region(cellExp, annot = TRUE)
+#' df <- as.data.frame(cellSummary(cellExp))
 #' 
 #' # Plot the regions with geom_hatching()
 #' p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) +
@@ -180,8 +181,8 @@ geom_hatching <-
              inherit.aes = TRUE,
              line.spacing = 21,
              hatching.colour = 1,
-             window = "square",
-             window.length = 0,
+             window = "concave",
+             window.length = NULL,
              nbp = 250,
              line.width = 1,
              ...) {
@@ -230,14 +231,10 @@ geom_hatching <-
 #' cells <- data.frame(x, y, cellType, imageID)
 #' 
 #' ## Store data in SegmentedCells object
-#' cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
+#' cellExp <- SegmentedCells(cells)
 #' 
-#' ## Generate LISA
-#' lisaCurves <- lisa(cellExp)
-#' 
-#' ## Cluster regions
-#' kM <- kmeans(lisaCurves,2)
-#' region(cellExp) <- paste('region',kM$cluster,sep = '_')
+#' ## Generate regions
+#' cellExp <- lisaClust(cellExp, k = 2)
 #' 
 #' # Plot the regions with hatchingPlot()
 #' hatchingPlot(cellExp) +

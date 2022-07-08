@@ -1,7 +1,7 @@
 #' Generate local indicators of spatial association
 #'
 #' @param cells A SegmentedCells or data frame that contains at least the 
-#' variables x and y, giving the  coordinates of each cell, and cellType.
+#' variables x and y, giving the  coordinates of each cell, imageID and cellType.
 #' @param Rs A vector of the radii that the measures of association should be calculated.
 #' @param BPPARAM A BiocParallelParam object.
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
@@ -14,6 +14,9 @@
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param fast A logical describing whether to use a fast approximation of the 
 #' inhomogeneous local L-curves.
+#' @param spatialCoords The columns which contain the x and y spatial coordinates.
+#' @param cellType The column which contains the cell types.
+#' @param imageID The column which contains image identifiers.
 #'
 #' @return A matrix of LISA curves
 #'
@@ -34,7 +37,7 @@
 #'
 #' # Cluster the LISA curves
 #' kM <- kmeans(lisaCurves,2)
-#' region(cellExp) <- paste('region',kM$cluster,sep = '_')
+#' cellAnnotation(cellExp, "region") <- paste('region',kM$cluster,sep = '_')
 #'
 #' @export
 #' @rdname lisa
@@ -54,48 +57,13 @@ lisa <-
            sigma = NULL,
            lisaFunc = "K",
            minLambda = 0.05,
-           fast = TRUE) {
-    if (is.data.frame(cells)) {
-      if (is.null(cells$cellID)) {
-        message("Creating cellID as it doesn't exist")
-        cells$cellID <-
-          paste("cell", seq_len(nrow(cells)), sep = "_")
-      }
-      
-      if (is.null(cells$cellType)) {
-        stop("I need celltype")
-      }
-      
-      if (is.null(cells$x) | is.null(cells$y)) {
-        stop("I need x and y coordinates")
-      }
-      
-      if (is.null(cells$imageCellID)) {
-        cells$imageCellID <- paste("cell", seq_len(nrow(cells)), sep = "_")
-      }
-      if (length(unique(cells$imageCellID)) != nrow(cells))
-        stop("The number of rows in cells does not equal the number of uniqueCellIDs")
-      
-      if (is.null(cells$imageID)) {
-        message(
-          "There is no imageID. I'll assume this is only one image and create an arbitrary imageID"
-        )
-        cells$imageID <- "image1"
-      }
-      
-      cellSummary <-
-        split(S4Vectors::DataFrame(cells[, c("imageID",
-                                             "imageCellID",
-                                             "cellID",
-                                             "x",
-                                             "y",
-                                             "cellType")]), cells$imageID)
-    }
-    
-    if (is(cells, "SegmentedCells")) {
-      cellSummary <- spicyR::cellSummary(cells, bind = FALSE)
-    }
-    
+           fast = TRUE,
+           spatialCoords = c("x","y"),
+           cellType = "cellType",
+           imageID = "imageID") {
+  
+    cellSummary <- prepCellSummary(cells, spatialCoords, cellType, imageID)
+        
     if (is.null(Rs)) {
       # loc = do.call('rbind', cellSummary)
       # range <- max(loc$x) - min(loc$x)
@@ -147,8 +115,7 @@ lisa <-
     
     curvelist <- lapply(curveList, as.data.frame)
     curves <- as.matrix(dplyr::bind_rows(curvelist))
-    rownames(curves) <- as.character(spicyR::cellSummary(cells)$cellID)
-    curves <- curves[as.character(spicyR::cellSummary(cells)$cellID), ]
+    rownames(curves) <- as.character(unlist(lapply(cellSummary, function(x)x$cellID)))
     
     return(curves)
   }
@@ -499,4 +466,73 @@ getL <-
     r
     
   }
+
+
+#' @importFrom spicyR cellSummary
+#' @importFrom SummarizedExperiment colData
+#' @import SpatialExperiment SingleCellExperiment
+prepCellSummary <- function(cells, spatialCoords, cellType, imageID){
+  if (is.data.frame(cells)) {
+    # if (is.null(cells$cellID)) {
+    #   message("Creating cellID as it doesn't exist")
+    #   cells$cellID <-
+    #     paste("cell", seq_len(nrow(cells)), sep = "_")
+    # }
+    
+    # if (is.null(cells$cellType)) {
+    #   stop("I need celltype")
+    # }
+    # 
+    # if (is.null(cells$x) | is.null(cells$y)) {
+    #   stop("I need x and y coordinates")
+    # }
+    # 
+    # if (is.null(cells$imageCellID)) {
+    #   cells$imageCellID <- paste("cell", seq_len(nrow(cells)), sep = "_")
+    # }
+    # if (length(unique(cells$imageCellID)) != nrow(cells))
+    #   stop("The number of rows in cells does not equal the number of uniqueCellIDs")
+    # 
+    # if (is.null(cells$imageID)) {
+    #   message(
+    #     "There is no imageID. I'll assume this is only one image and create an arbitrary imageID"
+    #   )
+    #   cells$imageID <- "image1"
+    # }
+    # 
+    cells <- SegmentedCells(cells, 
+                            spatialCoords = spatialCoords,
+                            cellTypeString = cellType,
+                            imageIDString = imageID)
+    
+    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)
+  }
+  
+  if (is(cells, "SingleCellExperiment")) {
+    cells <- colData(cells)
+    cells <- SegmentedCells(cells, 
+                            spatialCoords = spatialCoords,
+                            cellTypeString = cellType,
+                            imageIDString = imageID)
+    
+    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)   
+  }
+  
+  if (is(cells, "SpatialExperiment")) {
+    cells <- cbind(colData(cells), spatialCoords(cells))
+    cells <- SegmentedCells(cells, 
+                            spatialCoords = spatialCoords,
+                            cellTypeString = cellType,
+                            imageIDString = imageID)
+    
+    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)   
+  }
+  
+  if (is(cells, "SegmentedCells")) {
+    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)
+  }
+  
+  cellSummary
+}
+
 

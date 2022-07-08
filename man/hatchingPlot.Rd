@@ -8,10 +8,11 @@
 hatchingPlot(
   data,
   imageID = NULL,
+  regionName = "region",
   window = "concave",
   line.spacing = 21,
   hatching.colour = 1,
-  nbp = 250,
+  nbp = 50,
   window.length = NULL
 )
 
@@ -25,8 +26,8 @@ geom_hatching(
   inherit.aes = TRUE,
   line.spacing = 21,
   hatching.colour = 1,
-  window = "square",
-  window.length = 0,
+  window = "concave",
+  window.length = NULL,
   nbp = 250,
   line.width = 1,
   ...
@@ -43,6 +44,8 @@ data. All objects will be fortified to produce a data frame. See fortify() for
  layer data. A function can be created from a formula (e.g. ~ head(.x, 10)).}
 
 \item{imageID}{A vector of imageIDs to be plotted.}
+
+\item{regionName}{Name of the region to plot.}
 
 \item{window}{Should the window around the regions be 'square', 'convex' or 'concave'.}
 
@@ -109,12 +112,8 @@ cells <- data.frame(x, y, cellType, imageID)
 ## Store data in SegmentedCells object
 cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
 
-## Generate LISA
-lisaCurves <- lisa(cellExp)
-
-## Cluster regions
-kM <- kmeans(lisaCurves,2)
-region(cellExp) <- paste('region',kM$cluster,sep = '_')
+## Generate regions
+cellExp <- lisaClust(cellExp, k = 2)
 
 ## Plot regions
 hatchingPlot(cellExp)
@@ -124,7 +123,7 @@ hatchingPlot(cellExp)
 library(ggplot2)
 
 # Extract the region information along with x-y coordinates
-df <- region(cellExp, annot = TRUE)
+df <- as.data.frame(cellSummary(cellExp))
 
 # Plot the regions with geom_hatching()
 p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) +

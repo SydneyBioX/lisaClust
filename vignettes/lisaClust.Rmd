@@ -32,16 +32,16 @@ library(BiocStyle)
 ```{r, eval = FALSE}
 if (!require("BiocManager"))
     install.packages("BiocManager")
-BiocManager::install("spicyR")
+BiocManager::install("lisaClust")
 ```
 
 
 ```{r message=FALSE, warning=FALSE}
 # load required packages
-library(spicyR)
 library(lisaClust)
+library(spicyR)
 library(ggplot2)
-
+library(SingleCellExperiment)
 ```
  
  
@@ -94,32 +94,13 @@ cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
 
 
 ```
+## Running lisaCLust
 
-
-## Generate LISA curves
-
-We can then calculate local indicators of spatial association (LISA) functions 
-using the `lisa` function. Here the LISA curves are a 
-localised summary of an L-function from a Poisson point process model. The radii 
-that will be calculated over can be set with `Rs`.
+We can then use a convience function `lisaClust` to simultaneously calculate local indicators of spatial association (LISA) functions 
+using the `lisa` function and perform k-means clustering. 
 
 ```{r}
-
-lisaCurves <- lisa(cellExp, Rs = c(20, 50, 100))
-
-```
-
-## Perform some clustering
-
-The LISA curves can then be used to cluster the cells. Here we use k-means 
-clustering, other clustering methods like SOM could be used. We can store these 
-cell clusters or cell "regions" in our `SegmentedCells` object using the 
-`region() <-` function.
-
-```{r}
-
-kM <- kmeans(lisaCurves,2)
-region(cellExp) <- paste('region',kM$cluster,sep = '_')
+cellExp <- lisaClust(cellExp, k = 2)
 ```
 
 
@@ -134,6 +115,37 @@ regions and cell-types on the same visualization.
 hatchingPlot(cellExp, imageID = c('s1','s2'))
 ```
 
+## Using other clustering methods.
+
+While the `lisaClust` function is convenient, we have not implemented an exhaustive
+suite of clustering methods as it is very easy to do this yourself. There are 
+just two simple steps.
+
+### Generate LISA curves
+
+We can calculate local indicators of spatial association (LISA) functions 
+using the `lisa` function. Here the LISA curves are a 
+localised summary of an L-function from a Poisson point process model. The radii 
+that will be calculated over can be set with `Rs`.
+
+```{r}
+
+lisaCurves <- lisa(cellExp, Rs = c(20, 50, 100))
+
+```
+
+### Perform some clustering
+
+The LISA curves can then be used to cluster the cells. Here we use k-means 
+clustering, other clustering methods like SOM could be used. We can store these 
+cell clusters or cell "regions" in our `SegmentedCells` object using the 
+`cellAnnotation() <-` function.
+
+```{r}
+
+kM <- kmeans(lisaCurves,2)
+cellAnnotation(cellExp, "region") <- paste('region',kM$cluster,sep = '_')
+```
 
 
 
@@ -144,7 +156,7 @@ We could also create this plot using `geom_hatching` and `scale_region_manual`.
 
 ```{r}
 
-df <- region(cellExp, annot = TRUE)
+df <- as.data.frame(cellSummary(cellExp))
 
 p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) + 
   geom_point() + 
@@ -154,13 +166,73 @@ p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) +
                 nbp = 50, 
                 line.width = 2, 
                 hatching.colour = "gray20",
-                window.length = 0.1) +
+                window.length = NULL) +
   theme_minimal() + 
   scale_region_manual(values = 6:7, labels = c('ab','cd'))
 
 p
 
 ```
+## Faster ploting
+
+The `hatchingPlot` can be quite slow for large images and high `nbp` or `linewidth`.
+It is often useful to simply plot the regions without the cell type information.
+
+```{r}
+
+df <- as.data.frame(cellSummary(cellExp))
+df <- df[df$imageID == "s1", ]
+
+p <- ggplot(df,aes(x = x,y = y, colour  = region)) + 
+  geom_point() +
+  theme_classic()
+p
+
+```
+
+## Using a SingleCellExperiment
+
+The `lisaClust` function also works with a `SingleCellExperiment`. First lets
+create a `SingleCellExperiment` object. 
+
+
+
+```{r}
+
+sce <- SingleCellExperiment(colData = cells)
+
+```
+
+
+`lisaClust` just needs columns in `colData` corresponding to the x and y coordinates of the 
+cells, a column annotating the cell types of the cells and a column indicating 
+which image each cell came from.
+
+```{r}
+sce <- lisaClust(sce, 
+                 k = 2, 
+                 spatialCoords = c("x", "y"), 
+                 cellType = "cellType",
+                 imageID = "imageID")
+
+```
+We can then plot the regions using the following.
+
+```{r}
+
+df <- as.data.frame(colData(sce))
+
+df <- df[df$imageID == "s1", ]
+
+p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) + 
+  geom_point() +
+  geom_hatching() 
+p
+
+```
+
+
+
 
 
 # Damond et al. islet data.
@@ -196,27 +268,21 @@ cellType(cellExp) <- paste('cluster', kM$cluster, sep = '')
 
 ## Generate LISA curves
 
-As before, we can calculate local indicators of spatial association (LISA) 
-functions using the `lisa` function. 
+As before, we can calculate perform k-means clustering on the local indicators 
+of spatial association (LISA) functions using the `lisaClust` function. 
 
 ```{r}
 
-lisaCurves <- lisa(cellExp, Rs = c(10,20,50))
+cellExp <- lisaClust(cellExp, k = 2, Rs = c(10,20,50))
 
 ```
 
-## Perform some clustering
-
-The LISA curves can then be used to cluster the cells. Here we use k-means 
-clustering to cluster the cells into two microenvironments. 
-We can store these cell clusters or cell "regions" in our `SegmentedCells` 
-object using the `region() <-` function.
+These regions are stored in cellExp and can be extracted.
 
 ```{r}
 
-kM <- kmeans(lisaCurves,2)
-region(cellExp) <- paste('region',kM$cluster,sep = '_')
-
+cellAnnotation(cellExp, "region") |>
+  head()
 ```
 
 
@@ -230,7 +296,6 @@ the two regions and ten cell-types simultaneously.
 ```{r}
 hatchingPlot(cellExp)
 ```
-
 
 
 # sessionInfo()
