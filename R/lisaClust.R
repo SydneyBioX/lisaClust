@@ -1,6 +1,6 @@
 #' Use k-means clustering to cluster local indicators of spatial association. For other clustering use lisa.
 #'
-#' @param cells A SegmentedCells or data frame that contains at least the 
+#' @param cells A SegmentedCells, SingleCellExperiment, SpatialExperiment or data frame that contains at least the 
 #' variables x and y, giving the  coordinates of each cell, imageID and cellType.
 #' @param k The number of regions to cluster.
 #' @param Rs A vector of the radii that the measures of association should be calculated.
@@ -125,6 +125,31 @@ lisaClust <-
         regions <- paste('region',kM$cluster,sep = '_')
         cellAnnotation(cells, regionName) <- regions
         }
+        
+        
+        if(is(cells, "data.frame")){
+            cd <- cells
+            cd <- cd[,c(cellType, imageID, spatialCoords)]
+            colnames(cd) <- c("cellType", "imageID", "x", "y")
+            cd$cellID <- as.character(seq_len(nrow(cd)))
+            cd$imageCellID <- as.character(seq_len(nrow(cd)))
+            cd <- spicyR::SegmentedCells(cd)
+            lisaCurves <- lisa(cd,
+                               Rs = Rs,
+                               BPPARAM = BPPARAM,
+                               window = window,
+                               window.length = window.length,
+                               whichParallel = whichParallel,
+                               sigma = sigma,
+                               lisaFunc = lisaFunc,
+                               minLambda = minLambda,
+                               fast = fast)
+            
+            kM <- kmeans(lisaCurves,k)
+            regions <- paste('region',kM$cluster,sep = '_')
+            cells[regionName] <- regions
+        }
+        
         
      cells   
     

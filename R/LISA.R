@@ -1,6 +1,6 @@
 #' Generate local indicators of spatial association
 #'
-#' @param cells A SegmentedCells or data frame that contains at least the 
+#' @param cells A SegmentedCells, SingleCellExperiment, SpatialExperiment or data frame that contains at least the 
 #' variables x and y, giving the  coordinates of each cell, imageID and cellType.
 #' @param Rs A vector of the radii that the measures of association should be calculated.
 #' @param BPPARAM A BiocParallelParam object.
