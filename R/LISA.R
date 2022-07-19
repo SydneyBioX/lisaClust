@@ -117,6 +117,7 @@ lisa <-
     curves <- as.matrix(dplyr::bind_rows(curvelist))
     rownames(curves) <- as.character(unlist(lapply(cellSummary, function(x)x$cellID)))
     
+    curves[is.na(curves)] <- 0                                               
     return(curves)
   }
 
