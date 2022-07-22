@@ -21,7 +21,7 @@ lisa(
 )
 }
 \arguments{
-\item{cells}{A SegmentedCells or data frame that contains at least the 
+\item{cells}{A SegmentedCells, SingleCellExperiment, SpatialExperiment or data frame that contains at least the 
 variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
 \item{Rs}{A vector of the radii that the measures of association should be calculated.}

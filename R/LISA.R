@@ -537,3 +537,78 @@ prepCellSummary <- function(cells, spatialCoords, cellType, imageID){
 }
 
 
+
+
+#' Plot heatmap of cell type enrichment for lisaClust regions
+#'
+#' @param cells SegmentedCells, SingleCellExperiment, SpatialExperiment or data.frame
+#' @param type Make a "bubble" or "heatmap" plot.
+#' @param region The column storing the regions
+#' @param cellType The column storing the cell types
+#' @param limit limits to the lower and upper relative frequencies
+#' @param ... Any arguments to be passed to the pheatmap package
+#'
+#' @return A bubble plot or heatmap
+#'
+#'
+#' @examples
+#' set.seed(51773)
+#'x <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
+#'             runif(200)+3,runif(200)+2,runif(200)+1,runif(200)),4)*100
+#'y <- round(c(runif(200),runif(200)+1,runif(200)+2,runif(200)+3,
+#'             runif(200),runif(200)+1,runif(200)+2,runif(200)+3),4)*100
+#'cellType <- factor(paste('c',rep(rep(c(1:2),rep(200,2)),4),sep = ''))
+#'imageID <- rep(c('s1', 's2'),c(800,800))
+#'
+#'cells <- data.frame(x, y, cellType, imageID)
+#'
+#'cellExp <- spicyR::SegmentedCells(cells, cellTypeString = 'cellType')
+#'
+#'cellExp <- lisaClust(cellExp, k = 2)
+#'
+#'regionMap(cellExp)
+#'
+#' @export
+#' @importFrom SummarizedExperiment colData
+#' @importFrom pheatmap pheatmap
+#' @importFrom ggplot2 ggplot aes geom_point scale_colour_gradient2 theme_minimal labs
+#' @importFrom dplyr mutate
+#' @import SpatialExperiment SingleCellExperiment
+regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "region", limit = c(0.33,3), ...) {
+  
+  if (is.data.frame(cells)) {
+    df <- cells[,c(cellType, region)]
+  }
+  
+  if (is(cells, "SingleCellExperiment")|is(cells, "SpatialExperiment")) {
+    df <- as.data.frame(SummarizedExperiment::colData(cells))[,c(cellType, region)]
+  }
+  
+  if (is(cells, "SegmentedCells")) {
+    cellSummary <- cellSummary(cells, bind = TRUE)
+    df <- as.data.frame(cellSummary[,c(cellType, region)])
+  }
+  
+  tab <- table(df[,cellType], df[,region])
+  tab <- tab/rowSums(tab)%*%t(colSums(tab))*sum(tab)
+  
+  ph <- pheatmap::pheatmap(pmax(pmin(tab,limit[2]),limit[1]), cluster_cols = FALSE, silent = TRUE, ...)
+  
+  if(type == "bubble"){
+  
+  p1 <- tab |>
+    as.data.frame() |>
+    dplyr::mutate(cellType = factor(Var1, levels = levels(Var1)[ph$tree_row$order]), region = Var2, Freq2 = pmax(pmin(Freq,limit[2]),limit[1])) |>
+    ggplot2::ggplot(ggplot2::aes(x = region, y = cellType, colour = Freq2, size = Freq2)) + 
+    ggplot2::geom_point() + 
+    ggplot2::scale_colour_gradient2(low ="#4575B4", mid = "grey90", high = "#D73027", midpoint = 1, guide = "legend") + 
+    ggplot2::theme_minimal() + 
+    ggplot2::labs(x = "Region", y = "Cell-type", colour = "Relative\nFrequency", size = "Relative\nFrequency") 
+  
+  return(p1)
+  }
+  
+  pheatmap::pheatmap(pmax(pmin(tab,limit[2]),limit[1]), cluster_cols = FALSE, ...)
+  
+}
+

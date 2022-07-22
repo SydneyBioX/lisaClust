@@ -23,7 +23,7 @@ lisaClust(
 )
 }
 \arguments{
-\item{cells}{A SegmentedCells or data frame that contains at least the 
+\item{cells}{A SegmentedCells, SingleCellExperiment, SpatialExperiment or data frame that contains at least the 
 variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
 \item{k}{The number of regions to cluster.}

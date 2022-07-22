@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.5.4
+Version: 1.5.5
 Authors@R: c(
     person("Ellis", "Patrick", email = "ellis.patrick@sydney.edu.au",
     role = c("aut", "cre")),
@@ -22,6 +22,6 @@ BugReports: https://github.com/ellispatrick/lisaClust/issues
 Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat.core,
         spatstat.geom, BiocGenerics, S4Vectors, methods, spicyR,
         purrr, stats, data.table, dplyr, tidyr, SingleCellExperiment, SpatialExperiment,
-        SummarizedExperiment
+        SummarizedExperiment, pheatmap
 Suggests: BiocStyle, knitr, rmarkdown
 RoxygenNote: 7.2.0

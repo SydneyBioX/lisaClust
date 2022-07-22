@@ -286,6 +286,16 @@ cellAnnotation(cellExp, "region") |>
 ```
 
 
+## Examine cell type enrichment
+
+We should check to see which cell types appear more frequently in each region than
+expected by chance. 
+
+```{r}
+regionMap(cellExp, type = "bubble")
+```
+
+
 
 ## Plot identified regions
 
