@@ -112,7 +112,7 @@ regions and cell-types on the same visualization.
 
 
 ```{r}
-hatchingPlot(cellExp, imageID = c('s1','s2'))
+hatchingPlot(cellExp, useImages = c('s1','s2'))
 ```
 
 ## Using other clustering methods.
@@ -190,7 +190,7 @@ p
 
 ```
 
-## Using a SingleCellExperiment
+# Using a SingleCellExperiment
 
 The `lisaClust` function also works with a `SingleCellExperiment`. First lets
 create a `SingleCellExperiment` object. 
@@ -199,7 +199,7 @@ create a `SingleCellExperiment` object.
 
 ```{r}
 
-sce <- SingleCellExperiment(colData = cells)
+sce <- SingleCellExperiment(colData = cellSummary(cellExp))
 
 ```
 
@@ -220,14 +220,7 @@ We can then plot the regions using the following.
 
 ```{r}
 
-df <- as.data.frame(colData(sce))
-
-df <- df[df$imageID == "s1", ]
-
-p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) + 
-  geom_point() +
-  geom_hatching() 
-p
+hatchingPlot(sce)
 
 ```
 

@@ -3,9 +3,12 @@
 #' The hatchingPlot() function is used to create hatching patterns for representating 
 #' spatial regions and cell-types.
 #'
-#' @param data A SegmentedCells object that has region information.
-#' @param imageID A vector of imageIDs to be plotted.
-#' @param regionName Name of the region to plot.
+#' @param data A SegmentedCells object, data.frame or SingleCellExperiment.
+#' @param useImages A vector of images to plot.
+#' @param region The region column to plot.
+#' @param imageID The imageIDs column if using data.frame or SingleCellExperiment.
+#' @param cellType The cellType column if using data.frame or SingleCellExperiment.
+#' @param spatialCoords The spatial coordinates columns if using data.frame or SingleCellExperiment.
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param line.spacing A integer indicating the spacing between hatching lines.
 #' @param hatching.colour Colour for the hatching.
@@ -43,8 +46,11 @@
 #' @importFrom spicyR cellType
 hatchingPlot <-
     function(data,
-             imageID = NULL,
-             regionName = "region",
+             useImages = NULL,
+             region = "region",
+             imageID = "imageID",
+             cellType = "cellType",
+             spatialCoords = c("x", "y"),
              window = "concave",
              line.spacing = 21,
              hatching.colour = 1,
@@ -54,50 +60,37 @@ hatchingPlot <-
         # if (!is(data, "SegmentedCells") | is.null(data$region))
         #     stop("Please provide a SegmentedCells object with region information please.")
         
-        if (is.null(imageID)) {
-            df <- as.data.frame(cellSummary(data[1,]))
-            df["region"] <- df[regionName]
-            p <-
-                ggplot(df, aes(
-                    x = .data$x,
-                    y = .data$y,
-                    colour = cellType
-                )) + geom_point() + geom_hatching(
-                    aes(region = region),
-                    show.legend = TRUE,
-                    window = window,
-                    line.spacing = line.spacing,
-                    hatching.colour = hatching.colour,
-                    nbp = nbp,
-                    window.length = window.length
-                )
-            q <- p + theme_minimal() + scale_region() + labs(x = "x", y = "y")
-            return(q)
-        }
+        df <- prepCellSummary(data, 
+                              spatialCoords = spatialCoords, 
+                              cellType = cellType, 
+                              imageID = imageID, 
+                              region = region, 
+                              bind = TRUE)
         
-        if (!is.null(imageID)) {
-            if (any(!imageID %in% rownames(data)))
-                stop("Some of the imageIDs are not in your SegmentedCells object")
-            df <-as.data.frame( cellSummary(data, imageID = imageID))
-            df["region"] <- df[regionName]
-            p <-
-                ggplot(df, aes(
-                    x = .data$x,
-                    y = .data$y,
-                    colour = cellType
-                )) + geom_point() + facet_wrap( ~ imageID) +
-                geom_hatching(
-                    aes(region = region),
-                    show.legend = TRUE,
-                    window = window,
-                    line.spacing = line.spacing,
-                    hatching.colour = hatching.colour,
-                    nbp = nbp,
-                    window.length = window.length
-                )
-            q <- p + theme_minimal() + scale_region() + labs(x = "x", y = "y")
-            q
-        }
+        if (is.null(useImages)) useImages = df$imageID[1]
+        
+        if (any(!useImages %in% df$imageID))
+                stop("Some of the useImages are not in your SegmentedCells object")
+        
+        df <- df[df$imageID %in% useImages, ]
+        p <-
+            ggplot(df, aes(
+                x = .data$x,
+                y = .data$y,
+                colour = cellType
+            )) + geom_point() + facet_wrap( ~ imageID) +
+            geom_hatching(
+                aes(region = region),
+                show.legend = TRUE,
+                window = window,
+                line.spacing = line.spacing,
+                hatching.colour = hatching.colour,
+                nbp = nbp,
+                window.length = window.length
+            )
+        q <- p + theme_minimal() + scale_region() + labs(x = "x", y = "y")
+        q
+
     }
 
 

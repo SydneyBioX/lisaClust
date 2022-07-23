@@ -471,67 +471,44 @@ getL <-
 
 #' @importFrom spicyR cellSummary
 #' @importFrom SummarizedExperiment colData
+#' @importFrom spicyR as.data.frame
 #' @import SpatialExperiment SingleCellExperiment
-prepCellSummary <- function(cells, spatialCoords, cellType, imageID){
+prepCellSummary <- function(cells, spatialCoords, cellType, imageID, region = NULL, bind = FALSE){
   if (is.data.frame(cells)) {
-    # if (is.null(cells$cellID)) {
-    #   message("Creating cellID as it doesn't exist")
-    #   cells$cellID <-
-    #     paste("cell", seq_len(nrow(cells)), sep = "_")
-    # }
-    
-    # if (is.null(cells$cellType)) {
-    #   stop("I need celltype")
-    # }
-    # 
-    # if (is.null(cells$x) | is.null(cells$y)) {
-    #   stop("I need x and y coordinates")
-    # }
-    # 
-    # if (is.null(cells$imageCellID)) {
-    #   cells$imageCellID <- paste("cell", seq_len(nrow(cells)), sep = "_")
-    # }
-    # if (length(unique(cells$imageCellID)) != nrow(cells))
-    #   stop("The number of rows in cells does not equal the number of uniqueCellIDs")
-    # 
-    # if (is.null(cells$imageID)) {
-    #   message(
-    #     "There is no imageID. I'll assume this is only one image and create an arbitrary imageID"
-    #   )
-    #   cells$imageID <- "image1"
-    # }
-    # 
-    cells <- SegmentedCells(cells, 
+    data <- SegmentedCells(cells, 
                             spatialCoords = spatialCoords,
                             cellTypeString = cellType,
                             imageIDString = imageID)
-    
-    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)
+    if(!is.null(region)) cellAnnotation(data, "region") <- cells[,region]
+    cellSummary <- spicyR::cellSummary(data, bind = bind)
   }
   
   if (is(cells, "SingleCellExperiment")) {
     cells <- colData(cells)
-    cells <- SegmentedCells(cells, 
+    data <- SegmentedCells(cells, 
                             spatialCoords = spatialCoords,
                             cellTypeString = cellType,
                             imageIDString = imageID)
-    
-    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)   
+    if(!is.null(region)) cellAnnotation(data, "region") <- cells[,region]
+    cellSummary <- spicyR::cellSummary(data, bind = bind)   
   }
   
   if (is(cells, "SpatialExperiment")) {
     cells <- cbind(colData(cells), spatialCoords(cells))
-    cells <- SegmentedCells(cells, 
+    data <- SegmentedCells(cells, 
                             spatialCoords = spatialCoords,
                             cellTypeString = cellType,
                             imageIDString = imageID)
-    
-    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)   
+    if(!is.null(region)) cellAnnotation(data, "region") <- cells[,region]
+    cellSummary <- spicyR::cellSummary(data, bind = bind)   
   }
   
   if (is(cells, "SegmentedCells")) {
-    cellSummary <- spicyR::cellSummary(cells, bind = FALSE)
+    if(!is.null(region)) cellAnnotation(cells, "region") <- cellAnnotation(cells, region)
+    cellSummary <- spicyR::cellSummary(cells, bind = bind)
   }
+  
+  if(bind) return(as.data.frame(cellSummary))
   
   cellSummary
 }
