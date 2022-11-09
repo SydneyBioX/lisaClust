@@ -1,6 +1,8 @@
 lisaClust
 ======================================================
 
+<img src="https://raw.githubusercontent.com/ellispatrick/lisaClust/master/inst/lisaClust_sticker_ai_upscaled.png" align="right" width="200" />
+
 Clustering of Local Indicators of Spatial Association
 
 Overview
