@@ -1,5 +1,5 @@
 ---
-title: "Clustering of Local Indicators of Spatial Assocation (LISA) curves"
+title: "Introduction to Clustering of Local Indicators of Spatial Assocation (LISA) curves"
 date: "`r BiocStyle::doc_date()`"
 author:
 - name: Nicolas Canete
