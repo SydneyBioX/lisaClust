@@ -19,7 +19,7 @@ Encoding: UTF-8
 Depends: R (>= 4.0)
 VignetteBuilder: knitr
 BugReports: https://github.com/ellispatrick/lisaClust/issues
-Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat.core,
+Imports: ggplot2, class, concaveman, grid, BiocParallel, spatstat.explore,
         spatstat.geom, BiocGenerics, S4Vectors, methods, spicyR,
         purrr, stats, data.table, dplyr, tidyr, SingleCellExperiment, SpatialExperiment,
         SummarizedExperiment, pheatmap
