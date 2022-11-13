@@ -206,7 +206,7 @@ borderEdge <- function(X, maxD){
 
 
 #' @importFrom spatstat.geom ppp
-#' @importFrom spatstat.core localLcross localLcross.inhom density.ppp
+#' @importFrom spatstat.explore localLcross localLcross.inhom density.ppp
 #' @importFrom BiocParallel bplapply
 generateCurves <-
   function(data,
@@ -226,7 +226,7 @@ generateCurves <-
       )
     
     if (!is.null(sigma)) {
-      d <- spatstat.core::density.ppp(p1, sigma = sigma)
+      d <- spatstat.explore::density.ppp(p1, sigma = sigma)
       d <- d / mean(d)
     }
     
@@ -245,7 +245,7 @@ generateCurves <-
               dTo <-
                 d * (sum(p1$marks == j) - 1) / spatstat.geom::area(ow)
               localL <-
-                spatstat.core::localLcross.inhom(
+                spatstat.explore::localLcross.inhom(
                   p1,
                   from = i,
                   to = j,
@@ -255,7 +255,7 @@ generateCurves <-
                 )
             } else{
               localL <-
-                spatstat.core::localLcross(
+                spatstat.explore::localLcross(
                   p1,
                   from = i,
                   to = j,
@@ -330,7 +330,7 @@ weightCounts <- function(dt, X, maxD, lam) {
 }
 
 #' @importFrom spatstat.geom ppp closepairs marks area
-#' @importFrom spatstat.core density.ppp
+#' @importFrom spatstat.explore density.ppp
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr left_join
 inhomLocalK <-
@@ -359,7 +359,7 @@ inhomLocalK <-
     maxR <- min(ow$xrange[2]- ow$xrange[1], ow$yrange[2]- ow$yrange[1])/2.01
     Rs <- unique(pmin(c(0, sort(Rs)),maxR))
     
-    den <- spatstat.core::density.ppp(X, sigma = sigma)
+    den <- spatstat.explore::density.ppp(X, sigma = sigma)
     den <- den / mean(den)
     den$v <- pmax(den$v, minLambda)
 
