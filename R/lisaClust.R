@@ -106,6 +106,7 @@ lisaClust <-
                                fast = fast)
             
             kM <- kmeans(lisaCurves,k)
+            regions <- paste("region", kM$cluster, sep = "_")
             SummarizedExperiment::colData(cells)[regionName] <- regions
         }
         
