@@ -64,7 +64,7 @@ lisaClust <-
         
         
         
-        if(is(cells, "SingleCellExperiment")){
+        if(class(cells) == "SingleCellExperiment"){
             cd <- as.data.frame(SingleCellExperiment::colData(cells))
             cd <- cd[,c(cellType, imageID, spatialCoords)]
             colnames(cd) <- c("cellType", "imageID", "x", "y")
@@ -87,7 +87,7 @@ lisaClust <-
             SummarizedExperiment::colData(cells)[regionName] <- regions
         }
         
-        if(is(cells, "SpatialExperiment")){
+        if(class(cells) == "SpatialExperiment"){
             cd <- cbind(as.data.frame(SingleCellExperiment::colData(cells)),as.data.frame(SpatialExperiment::spatialCoords(cells)))
             cd <- cd[,c(cellType, imageID, spatialCoords)]
             colnames(cd) <- c("cellType", "imageID", "x", "y")
