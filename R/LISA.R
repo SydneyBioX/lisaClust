@@ -392,7 +392,7 @@ inhomLocalK <-
     edge <- as.data.frame(edge)
     colnames(edge) <- Rs[-1]
     edge$i <- data$cellID
-    edge <- tidyr::pivot_longer(edge,-i,"d")
+    edge <- tidyr::pivot_longer(edge,-i, names_to = "d")
     
     p <- dplyr::left_join(as.data.frame(p), edge, c("i", "d"))
     p$d <- factor(p$d, levels = Rs[-1])
