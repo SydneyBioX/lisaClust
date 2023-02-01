@@ -7,8 +7,11 @@
 \usage{
 hatchingPlot(
   data,
-  imageID = NULL,
-  regionName = "region",
+  useImages = NULL,
+  region = "region",
+  imageID = "imageID",
+  cellType = "cellType",
+  spatialCoords = c("x", "y"),
   window = "concave",
   line.spacing = 21,
   hatching.colour = 1,
@@ -43,9 +46,15 @@ data. All objects will be fortified to produce a data frame. See fortify() for
  the plot data. The return value must be a data.frame, and will be used as the 
  layer data. A function can be created from a formula (e.g. ~ head(.x, 10)).}
 
-\item{imageID}{A vector of imageIDs to be plotted.}
+\item{useImages}{A vector of images to plot.}
 
-\item{regionName}{Name of the region to plot.}
+\item{region}{The region column to plot.}
+
+\item{imageID}{The imageIDs column if using data.frame or SingleCellExperiment.}
+
+\item{cellType}{The cellType column if using data.frame or SingleCellExperiment.}
+
+\item{spatialCoords}{The spatial coordinates columns if using data.frame or SingleCellExperiment.}
 
 \item{window}{Should the window around the regions be 'square', 'convex' or 'concave'.}
 
