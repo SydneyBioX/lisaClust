@@ -2,6 +2,7 @@
 
 export(geom_hatching)
 export(hatchingPlot)
+export(inhomLocalK)
 export(lisa)
 export(lisaClust)
 export(regionMap)

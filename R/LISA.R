@@ -58,7 +58,7 @@ lisa <-
            lisaFunc = "K",
            minLambda = 0.05,
            fast = TRUE,
-           spatialCoords = c("x","y"),
+           spatialCoords = c("x", "y"),
            cellType = "cellType",
            imageID = "imageID") {
   
@@ -329,18 +329,54 @@ weightCounts <- function(dt, X, maxD, lam) {
   mat
 }
 
+#' Calculate the inhomogenous local K function.
+#'
+#' @param data The data.
+#' @param Rs
+#'   A vector of the radii that the measures of association should be
+#'   calculated.
+#' @param sigma
+#'   A numeric variable used for scaling when filting inhomogeneous L-curves.
+#' @param window
+#'   Should the window around the regions be 'square', 'convex' or 'concave'.
+#' @param window.length
+#'   A tuning parameter for controlling the level of concavity.
+#' @param minLambda
+#'   Minimum value for density for scaling when fitting inhomogeneous L-curves.
+#' @param lisaFunc Either "K" or "L" curve.
+#' 
+#' @return A matrix of LISA curves
+#'
+#' @examples
+#' library(spicyR)
+#' # Read in data as a SegmentedCells objects
+#' isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
+#' cells <- read.table(isletFile, header = TRUE)
+#' cells$x <- cells$AreaShape_Center_X
+#' cells$y <- cells$AreaShape_Center_Y
+#' cells$cellType <- as.factor(sample(
+#'     c("big", "medium", "small"),
+#'     length(cells$AreaShape_Center_Y),
+#'     replace = TRUE
+#' ))
+#' cells$cellID <- as.factor(cells$ObjectNumber)
+#'
+#' inhom <- inhomLocalK(cells[1:100,])
+#'
+#' @export
+#' @rdname inhomLocalK
 #' @importFrom spatstat.geom ppp closepairs marks area
 #' @importFrom spatstat.explore density.ppp
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr left_join
 inhomLocalK <-
-  function (data,
-            Rs = c(20, 50, 100, 200),
-            sigma = 10000,
-            window = "convex",
-            window.length = NULL,
-            minLambda = 0.05,
-            lisaFunc = "K") {
+  function(data,
+           Rs = c(20, 50, 100, 200),
+           sigma = 10000,
+           window = "convex",
+           window.length = NULL,
+           minLambda = 0.05,
+           lisaFunc = "K") {
 
     ow <- makeWindow(data, window, window.length)
     X <-
@@ -350,15 +386,15 @@ inhomLocalK <-
         window = ow,
         marks = data$cellType
       )
-    
+
     if (is.null(Rs))
-      Rs = c(20, 50, 100, 200)
+      Rs <- c(20, 50, 100, 200)
     if (is.null(sigma))
-      sigma = 100000
-    
+      sigma <- 100000
+
     maxR <- min(ow$xrange[2]- ow$xrange[1], ow$yrange[2]- ow$yrange[1])/2.01
     Rs <- unique(pmin(c(0, sort(Rs)),maxR))
-    
+
     den <- spatstat.explore::density.ppp(X, sigma = sigma)
     den <- den / mean(den)
     den$v <- pmax(den$v, minLambda)
@@ -367,37 +403,36 @@ inhomLocalK <-
     n <- X$n
     p$j <- data$cellID[p$j]
     p$i <- data$cellID[p$i]
-    
+
     cT <- data$cellType
     names(cT) <- data$cellID
-    
+
     p$d <- cut(p$d, Rs, labels = Rs[-1], include.lowest = TRUE)
-    
+
     # inhom density
     np <- spatstat.geom::nearest.valid.pixel(X$x, X$y, den)
     w <- den$v[cbind(np$row, np$col)]
     names(w) <- data$cellID
-    p$wt <- 1/w[p$j]*mean(w)
+    p$wt <- 1 / w[p$j] * mean(w)
     rm(np)
-    
-    lam <- table(data$cellType)/spatstat.geom::area(X)
-    
- 
+
+    lam <- table(data$cellType) / spatstat.geom::area(X)
+
+
 
     p$cellTypeJ <- cT[p$j]
     p$cellTypeI <- cT[p$i]
     p$i <- factor(p$i, levels = data$cellID)
-    
-    edge <- sapply(Rs[-1],function(x)borderEdge(X,x))
+    edge <- sapply(Rs[-1], function(x) borderEdge( X, x))
     edge <- as.data.frame(edge)
     colnames(edge) <- Rs[-1]
     edge$i <- data$cellID
-    edge <- tidyr::pivot_longer(edge,-i, names_to = "d")
-    
+    edge <- tidyr::pivot_longer(edge, -i, names_to = "d")
+
     p <- dplyr::left_join(as.data.frame(p), edge, c("i", "d"))
     p$d <- factor(p$d, levels = Rs[-1])
-  
-    
+
+
 
     p <- as.data.frame(p)
 
@@ -471,7 +506,6 @@ getL <-
 
 #' @importFrom spicyR cellSummary
 #' @importFrom SummarizedExperiment colData
-#' @importFrom spicyR as.data.frame
 #' @import SpatialExperiment SingleCellExperiment
 prepCellSummary <- function(cells, spatialCoords, cellType, imageID, region = NULL, bind = FALSE){
   if (is.data.frame(cells)) {
