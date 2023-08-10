@@ -55,3 +55,6 @@ all feedback related to the package.
 * **Nicolas Canete**
 * **Ellis Patrick**  - [@TheEllisPatrick](https://twitter.com/TheEllisPatrick)
 
+## Citation
+
+Patrick, E, Canete, NP, Iyengar, SS, Harman, AN, Sutherland, GT, Yang, P. Spatial analysis for highly multiplexed imaging data to identify tissue microenvironments. *Cytometry*. 2023. <https://doi.org/10.1002/cyto.a.24729>
