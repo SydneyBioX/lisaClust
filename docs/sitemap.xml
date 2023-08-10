@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/404.html</loc>
   </url>
   <url>
-    <loc>/articles/IntroductiontolisaClust.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/articles/index.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/articles/lisaClust.html</loc>
   </url>
   <url>
-    <loc>/articles/lisaClust.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/authors.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/index.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/hatchingPlot.html</loc>
   </url>
   <url>
-    <loc>/reference/hatchingPlot.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/inhomLocalK.html</loc>
   </url>
   <url>
-    <loc>/reference/lisa.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/lisa.html</loc>
   </url>
   <url>
-    <loc>/reference/lisaClust.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/lisaClust.html</loc>
   </url>
   <url>
-    <loc>/reference/regionMap.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/regionMap.html</loc>
   </url>
   <url>
-    <loc>/reference/scale_region.html</loc>
+    <loc>https://github.com/ellispatrick/lisaClust/reference/scale_region.html</loc>
   </url>
 </urlset>
