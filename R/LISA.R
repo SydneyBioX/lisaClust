@@ -367,6 +367,7 @@ weightCounts <- function(dt, X, maxD, lam) {
 #' @rdname inhomLocalK
 #' @importFrom spatstat.geom ppp closepairs marks area
 #' @importFrom spatstat.explore density.ppp
+#' @importFrom spatstat.random expand.owin
 #' @importFrom tidyr pivot_longer
 #' @importFrom dplyr left_join
 inhomLocalK <-
@@ -379,6 +380,7 @@ inhomLocalK <-
            lisaFunc = "K") {
 
     ow <- makeWindow(data, window, window.length)
+    ow <- spatstat.random::expand.owin(ow, distance = 0.01)
     X <-
       spatstat.geom::ppp(
         x = data$x,
