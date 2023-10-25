@@ -14,10 +14,13 @@ author:
 package: "`r BiocStyle::pkg_ver('spicyR')`"
 vignette: >
   %\VignetteIndexEntry{"Inroduction to lisaClust"}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 output: 
   BiocStyle::html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -35,7 +38,6 @@ if (!require("BiocManager"))
 BiocManager::install("lisaClust")
 ```
 
-
 ```{r message=FALSE, warning=FALSE}
 # load required packages
 library(lisaClust)
@@ -43,30 +45,28 @@ library(spicyR)
 library(ggplot2)
 library(SingleCellExperiment)
 ```
- 
- 
 
 # Overview
- Clustering local indicators of spatial association (LISA) functions is a 
- methodology for identifying consistent spatial organisation of multiple 
- cell-types in an unsupervised way. This can be used to enable the 
- characterization of interactions between multiple cell-types simultaneously and 
- can complement traditional pairwise analysis. In our implementation our LISA 
- curves are a localised summary of an L-function from a Poisson point process 
- model.  Our framework `lisaClust` can be used to provide a high-level summary 
- of cell-type colocalization in high-parameter spatial cytometry data, 
- facilitating the identification of distinct tissue compartments or 
- identification of complex cellular microenvironments.
 
-
+Clustering local indicators of spatial association (LISA) functions is a
+methodology for identifying consistent spatial organisation of multiple
+cell-types in an unsupervised way. This can be used to enable the
+characterization of interactions between multiple cell-types
+simultaneously and can complement traditional pairwise analysis. In our
+implementation our LISA curves are a localised summary of an L-function
+from a Poisson point process model. Our framework `lisaClust` can be
+used to provide a high-level summary of cell-type colocalization in
+high-parameter spatial cytometry data, facilitating the identification
+of distinct tissue compartments or identification of complex cellular
+microenvironments.
 
 # Quick start
 
 ## Generate toy data
 
-TO illustrate our `lisaClust` framework, here we consider a very simple toy 
-example where two cell-types are completely separated spatially. We simulate 
-data for two different images.
+TO illustrate our `lisaClust` framework, here we consider a very simple
+toy example where two cell-types are completely separated spatially. We
+simulate data for two different images.
 
 ```{r eval=T}
 set.seed(51773)
@@ -79,42 +79,55 @@ imageID <- rep(c('s1', 's2'),c(800,800))
 
 cells <- data.frame(x, y, cellType, imageID)
 
-ggplot(cells, aes(x,y, colour = cellType)) + geom_point() + facet_wrap(~imageID)
+ggplot(cells, aes(x,y, colour = cellType)) + geom_point() + facet_wrap(~imageID) + theme_minimal()
 
 
 ```
 
-## Create SegmentedCellExperiment object
+## Create Single Cell Experiment object
 
-First we store our data in a `SegmentedCells` object. 
+First we store our data in a `SingleCellExperiment` object.
 
 ```{r}
 
-cellExp <- SegmentedCells(cells, cellTypeString = 'cellType')
-
-
+SCE <- SingleCellExperiment(colData = cells)
+SCE
 ```
+
 ## Running lisaCLust
 
-We can then use a convience function `lisaClust` to simultaneously calculate local indicators of spatial association (LISA) functions 
-using the `lisa` function and perform k-means clustering. 
+We can then use the convenience function `lisaClust` to simultaneously
+calculate local indicators of spatial association (LISA) functions using
+the `lisa` function and perform k-means clustering. The number of
+clusters can be specified with the `k =` parameter. In the example
+below, we've chosen `k = 2`, resulting in a total of 2 clusters.
+
+These clusters are stored in `colData` of the `SingleCellExperiment`
+object, as a new column with the column name `regions`.
 
 ```{r}
-cellExp <- lisaClust(cellExp, k = 2)
+SCE <- lisaClust(SCE, k = 2)
+colData(SCE) |> head()
 ```
-
 
 ## Plot identified regions
 
-The `hatchingPlot` function can be used to construct a `ggplot` object where the 
-regions are marked by different hatching patterns. This allows us to plot both 
-regions and cell-types on the same visualization.
+`lisaClust` also provides the convenient `hatchingPlot` function to
+visualise the different regions that have been demarcated by the
+clustering. `hatchingPlot` outputs a `ggplot` object where the regions
+are marked by different hatching patterns. In a real biological dataset,
+this allows us to plot both regions and cell-types on the same
+visualization.
 
+In the example below, we can visualise our stimulated data where our 2
+cell types have been separated neatly into 2 distinct regions based on
+which cell type each region is dominated by. `region_2` is dominated by
+the red cell type `c1`, and `region_1` is dominated by the blue cell
+type `c2`.
 
 ```{r}
-hatchingPlot(cellExp, useImages = c('s1','s2'))
+hatchingPlot(SCE, useImages = c('s1','s2'))
 ```
-
 ## Using other clustering methods.
 
 While the `lisaClust` function is convenient, we have not implemented an exhaustive
@@ -129,177 +142,121 @@ localised summary of an L-function from a Poisson point process model. The radii
 that will be calculated over can be set with `Rs`.
 
 ```{r}
-
-lisaCurves <- lisa(cellExp, Rs = c(20, 50, 100))
-
+lisaCurves <- lisa(SCE, Rs = c(20, 50, 100))
 ```
 
 ### Perform some clustering
 
 The LISA curves can then be used to cluster the cells. Here we use k-means 
 clustering, other clustering methods like SOM could be used. We can store these 
-cell clusters or cell "regions" in our `SegmentedCells` object using the 
+cell clusters or cell "regions" in our `SingleCellExperiment` object using the 
 `cellAnnotation() <-` function.
 
 ```{r}
-
+# Custom clustering algorithm
 kM <- kmeans(lisaCurves,2)
-cellAnnotation(cellExp, "region") <- paste('region',kM$cluster,sep = '_')
+
+# Storing clusters into colData
+colData(SCE)$custom_region <- paste('region',kM$cluster,sep = '_')
+colData(SCE) |> head()
 ```
-
-
-
-## Alternative hatching plot
-
-We could also create this plot using `geom_hatching` and `scale_region_manual`.
-
-
-```{r}
-
-df <- as.data.frame(cellSummary(cellExp))
-
-p <- ggplot(df,aes(x = x,y = y, colour = cellType, region = region)) + 
-  geom_point() + 
-  facet_wrap(~imageID) +
-  geom_hatching(window = "concave", 
-                line.spacing = 11, 
-                nbp = 50, 
-                line.width = 2, 
-                hatching.colour = "gray20",
-                window.length = NULL) +
-  theme_minimal() + 
-  scale_region_manual(values = 6:7, labels = c('ab','cd'))
-
-p
-
-```
-## Faster ploting
-
-The `hatchingPlot` can be quite slow for large images and high `nbp` or `linewidth`.
-It is often useful to simply plot the regions without the cell type information.
-
-```{r}
-
-df <- as.data.frame(cellSummary(cellExp))
-df <- df[df$imageID == "s1", ]
-
-p <- ggplot(df,aes(x = x,y = y, colour  = region)) + 
-  geom_point() +
-  theme_classic()
-p
-
-```
-
-# Using a SingleCellExperiment
-
-The `lisaClust` function also works with a `SingleCellExperiment`. First lets
-create a `SingleCellExperiment` object. 
-
-
-
-```{r}
-
-sce <- SingleCellExperiment(colData = cellSummary(cellExp))
-
-```
-
-
-`lisaClust` just needs columns in `colData` corresponding to the x and y coordinates of the 
-cells, a column annotating the cell types of the cells and a column indicating 
-which image each cell came from.
-
-```{r}
-sce <- lisaClust(sce, 
-                 k = 2, 
-                 spatialCoords = c("x", "y"), 
-                 cellType = "cellType",
-                 imageID = "imageID")
-
-```
-We can then plot the regions using the following.
-
-```{r}
-
-hatchingPlot(sce)
-
-```
-
 
 
 
 
 # Damond et al. islet data.
 
-Here we apply our `lisaClust` framework to three images of pancreatic islets 
-from *A Map of Human Type 1 Diabetes Progression by Imaging Mass Cytometry* by 
-Damond et al. (2019).
+Next, we apply our `lisaClust` framework to three images of pancreatic
+islets from *A Map of Human Type 1 Diabetes Progression by Imaging Mass
+Cytometry* by Damond et al. (2019).
 
 ## Read in data
 
-We will start by reading in the data and storing it as a `SegmentedCells` 
-object. Here the data is in a format consistent with that outputted by 
-CellProfiler.
+We will start by reading in the data and storing it as a
+`SingleCellExperiment` object. Here the data is in a format consistent with
+that outputted by CellProfiler.
+
 ```{r}
 isletFile <- system.file("extdata","isletCells.txt.gz", package = "spicyR")
 cells <- read.table(isletFile, header = TRUE)
-cellExp <- SegmentedCells(cells, cellProfiler = TRUE)
+damonSCE <- SingleCellExperiment(assay = list(intensities = t(cells[,grepl(names(cells), pattern = "Intensity_")])),
+                                 colData = cells[,!grepl(names(cells), pattern = "Intensity_")]
+                                 )
 
 ```
 
-
 ## Cluster cell-types
 
-This data does not include annotation of the cell-types of each cell. Here we 
-extract the marker intensities from the `SegmentedCells` object using 
-`cellMarks`. We then perform k-means clustering with eight clusters and store 
-these cell-type clusters in our `SegmentedCells` object using `cellType() <-`.
+This data does not include annotation of the cell-types of each cell.
+Here we extract the marker intensities from the `SingleCellExperiment` object
+using `assay()`. We then perform k-means clustering with 10
+clusters and store these cell-type clusters in our `SingleCellExperiment`
+object using `colData() <-`.
+
 ```{r}
-markers <- cellMarks(cellExp)
+markers <- t(assay(damonSCE, "intensities"))
 kM <- kmeans(markers,10)
-cellType(cellExp) <- paste('cluster', kM$cluster, sep = '')
+colData(damonSCE)$cluster <- paste('cluster', kM$cluster, sep = '')
+colData(damonSCE)[, c("ImageNumber", "cluster")] |> head()
 ```
 
 ## Generate LISA curves
 
-As before, we can calculate perform k-means clustering on the local indicators 
-of spatial association (LISA) functions using the `lisaClust` function. 
+As before, we can perform k-means clustering on the local
+indicators of spatial association (LISA) functions using the `lisaClust`
+function, remembering to specify the `imageID`, `cellType`, and `spatialCoords` 
+columns in `colData`.
 
 ```{r}
 
-cellExp <- lisaClust(cellExp, k = 2, Rs = c(10,20,50))
+damonSCE <- lisaClust(damonSCE, 
+                      k = 2, 
+                      Rs = c(10,20,50), 
+                      imageID = "ImageNumber", 
+                      cellType = "cluster",
+                      spatialCoords = c("Location_Center_X", "Location_Center_Y"))
 
 ```
 
-These regions are stored in cellExp and can be extracted.
+These regions are stored in `colData` and can be extracted.
 
 ```{r}
-
-cellAnnotation(cellExp, "region") |>
-  head()
+colData(damonSCE)[, c("ImageNumber", "region")] |>
+  head(20)
 ```
-
 
 ## Examine cell type enrichment
 
-We should check to see which cell types appear more frequently in each region than
-expected by chance. 
+`lisaClust` also provides a convenient function, `regionMap`, for examining which 
+cell types are located in which regions. In this example, we use this to check
+which cell types appear more frequently in each region than expected by chance.
+
+Here, we clearly see that clusters 2, 5, 1, and 8 are highly concentrated in 
+region 1, whilst all other clusters are thinly spread out across region 2.
+
+We can further segregate these cells by increasing the number of clusters, ie.
+increasing the parameter `k = ` in the `lisaClust()` function, but for the purposes
+of demonstration, let's take a look at the `hatchingPlot` of these regions.
 
 ```{r}
-regionMap(cellExp, type = "bubble")
+regionMap(damonSCE, 
+          imageID = "ImageNumber", 
+          cellType = "cluster",
+          spatialCoords = c("Location_Center_X", "Location_Center_Y"),
+          type = "bubble")
 ```
-
-
 
 ## Plot identified regions
 
-Finally, we can use `hatchingPlot` to construct a `ggplot` object where the 
-regions are marked by different hatching patterns. This allows us to visualize 
-the two regions and ten cell-types simultaneously.
+Finally, we can use `hatchingPlot` to construct a `ggplot` object where
+the regions are marked by different hatching patterns. This allows us to
+visualize the two regions and ten cell-types simultaneously.
 
 ```{r}
-hatchingPlot(cellExp)
+hatchingPlot(damonSCE, 
+             cellType = "cluster",
+             spatialCoords = c("Location_Center_X", "Location_Center_Y"))
 ```
-
 
 # sessionInfo()
 
