@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,6 @@
 <span>  sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lisaFunc <span class="op">=</span> <span class="st">"K"</span>,</span>
 <span>  minLambda <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  fast <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  spatialCoords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span>,</span>
 <span>  cellType <span class="op">=</span> <span class="st">"cellType"</span>,</span>
 <span>  imageID <span class="op">=</span> <span class="st">"imageID"</span></span>
@@ -97,11 +96,6 @@ the cellType.</p></dd>
 
 <dt id="arg-minlambda">minLambda<a class="anchor" aria-label="anchor" href="#arg-minlambda"></a></dt>
 <dd><p>Minimum value for density for scaling when fitting inhomogeneous L-curves.</p></dd>
-
-
-<dt id="arg-fast">fast<a class="anchor" aria-label="anchor" href="#arg-fast"></a></dt>
-<dd><p>A logical describing whether to use a fast approximation of the
-inhomogeneous local L-curves.</p></dd>
 
 
 <dt id="arg-spatialcoords">spatialCoords<a class="anchor" aria-label="anchor" href="#arg-spatialcoords"></a></dt>
@@ -161,8 +155,8 @@ inhomogeneous local L-curves.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     as.data.frame, basename, cbind, colnames, dirname, do.call,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     duplicated, eval, evalq, get, grep, grepl, intersect, is.unsorted,</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>     lapply, mapply, match, mget, order, paste, pmax, pmax.int, pmin,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     pmin.int, rank, rbind, rownames, sapply, setdiff, table, tapply,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     union, unique, unsplit, which.max, which.min</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     pmin.int, rank, rbind, rownames, sapply, saveRDS, setdiff, table,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     tapply, union, unique, unsplit, which.max, which.min</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: S4Vectors</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: ‘S4Vectors’</span>
