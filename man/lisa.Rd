@@ -6,7 +6,7 @@
 \usage{
 lisa(
   cells,
-  Rs = NULL,
+  r = NULL,
   imageID = "imageID",
   cellType = "cellType",
   spatialCoords = c("x", "y"),
@@ -17,14 +17,15 @@ lisa(
   sigma = NULL,
   lisaFunc = "K",
   minLambda = 0.05,
-  BPPARAM = BiocParallel::SerialParam()
+  BPPARAM = BiocParallel::SerialParam(),
+  Rs = r
 )
 }
 \arguments{
 \item{cells}{A SingleCellExperiment, SpatialExperiment or data frame that contains at least the
 variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
-\item{Rs}{A vector of the radii that the measures of association should be calculated.}
+\item{r}{A vector of the radii that the measures of association should be calculated.}
 
 \item{imageID}{The column which contains image identifiers.}
 
@@ -50,6 +51,8 @@ the cellType.}
 \item{minLambda}{Minimum value for density for scaling when fitting inhomogeneous L-curves.}
 
 \item{BPPARAM}{\{DEPRECATED\} A BiocParallel MulticoreParam or SerialParam object.}
+
+\item{Rs}{\{DEPRECATED\} A vector of the radii that the measures of association should be calculated.}
 }
 \value{
 A matrix of LISA curves

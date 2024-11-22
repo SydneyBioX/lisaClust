@@ -7,7 +7,7 @@
 lisaClust(
   cells,
   k = 2,
-  Rs = NULL,
+  r = NULL,
   imageID = "imageID",
   cellType = "cellType",
   spatialCoords = c("x", "y"),
@@ -19,7 +19,8 @@ lisaClust(
   sigma = NULL,
   lisaFunc = "K",
   minLambda = 0.05,
-  BPPARAM = BiocParallel::SerialParam()
+  BPPARAM = BiocParallel::SerialParam(),
+  Rs = r
 )
 }
 \arguments{
@@ -28,7 +29,7 @@ variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 
 \item{k}{The number of regions to cluster.}
 
-\item{Rs}{A vector of the radii that the measures of association should be calculated.}
+\item{r}{A vector of the radii that the measures of association should be calculated.}
 
 \item{imageID}{The column which contains image identifiers.}
 
@@ -56,6 +57,8 @@ the cellType.}
 \item{minLambda}{Minimum value for density for scaling when fitting inhomogeneous L-curves.}
 
 \item{BPPARAM}{\{DEPRECATED\} A BiocParalell MulticoreParam or SerialParam object.}
+
+\item{Rs}{A vector of the radii that the measures of association should be calculated.}
 }
 \value{
 A matrix of LISA curves

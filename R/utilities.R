@@ -17,6 +17,7 @@ argumentChecks = function(function_name, user_vals) {
   }
 
   handle_deprecated("BPPARAM", "cores", user_vals)
+  handle_deprecated("Rs", "r", user_vals)
   
   # enforce mutually exclusive arguments
   check_exclusive = function(arg_set, user_vals) {
@@ -27,6 +28,7 @@ argumentChecks = function(function_name, user_vals) {
   }
   
   check_exclusive(c("cores", "BPPARAM"), user_vals)
+  check_exclusive(c("Rs", "r"), user_vals)
   
   # validity checks for cores/BPPARAM
   if ("BPPARAM" %in% names(user_vals)) {

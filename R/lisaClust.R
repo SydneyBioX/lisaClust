@@ -3,7 +3,7 @@
 #' @param cells A SingleCellExperiment, SpatialExperiment or data frame that contains at least the
 #' variables x and y, giving the  coordinates of each cell, imageID and cellType.
 #' @param k The number of regions to cluster.
-#' @param Rs A vector of the radii that the measures of association should be calculated.
+#' @param r A vector of the radii that the measures of association should be calculated.
 #' @param imageID The column which contains image identifiers.
 #' @param cellType The column which contains the cell types.
 #' @param spatialCoords The columns which contain the x and y spatial coordinates.
@@ -19,6 +19,7 @@
 #' @param lisaFunc Either "K" or "L" curve.
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param BPPARAM \{DEPRECATED\} A BiocParalell MulticoreParam or SerialParam object.
+#' @param Rs A vector of the radii that the measures of association should be calculated.
 #'
 #' @return A matrix of LISA curves
 #'
@@ -56,7 +57,7 @@
 lisaClust <-
   function(cells,
            k = 2,
-           Rs = NULL,
+           r = NULL,
            imageID = "imageID",
            cellType = "cellType",
            spatialCoords = c("x", "y"),
@@ -68,12 +69,13 @@ lisaClust <-
            sigma = NULL,
            lisaFunc = "K",
            minLambda = 0.05,
-           BPPARAM = BiocParallel::SerialParam()) {
+           BPPARAM = BiocParallel::SerialParam(),
+           Rs = r) {
     
     user_args = as.list(match.call())[-1]
     
     user_vals = lapply(names(user_args), function(arg) {
-      if (arg %in% c("BPPARAM", "cores")) {
+      if (arg %in% c("BPPARAM", "cores", "Rs")) {
         eval(user_args[[arg]])
       } 
     })
@@ -103,7 +105,7 @@ lisaClust <-
       )
       
       lisaCurves <- lisa(cd,
-                         Rs = Rs,
+                         r = r,
                          cores = cores,
                          window = window,
                          window.length = window.length,
@@ -124,7 +126,7 @@ lisaClust <-
       cd$imageCellID <- as.character(seq_len(nrow(cd)))
       
       lisaCurves <- lisa(cd,
-                         Rs = Rs,
+                         r = r,
                          cores = cores,
                          window = window,
                          window.length = window.length,

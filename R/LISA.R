@@ -2,7 +2,7 @@
 #'
 #' @param cells A SingleCellExperiment, SpatialExperiment or data frame that contains at least the
 #' variables x and y, giving the  coordinates of each cell, imageID and cellType.
-#' @param Rs A vector of the radii that the measures of association should be calculated.
+#' @param r A vector of the radii that the measures of association should be calculated.
 #' @param imageID The column which contains image identifiers.
 #' @param cellType The column which contains the cell types.
 #' @param spatialCoords The columns which contain the x and y spatial coordinates.
@@ -17,7 +17,8 @@
 #' @param lisaFunc Either "K" or "L" curve.
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param BPPARAM \{DEPRECATED\} A BiocParallel MulticoreParam or SerialParam object. 
-#'
+#' @param Rs \{DEPRECATED\} A vector of the radii that the measures of association should be calculated.
+#' 
 #' @return A matrix of LISA curves
 #'
 #' @examples
@@ -54,7 +55,7 @@
 #' @importFrom BiocGenerics do.call rbind
 #' @importFrom dplyr bind_rows
 lisa <- function(cells,
-                 Rs = NULL,
+                 r = NULL,
                  imageID = "imageID",
                  cellType = "cellType",
                  spatialCoords = c("x", "y"),
@@ -65,13 +66,14 @@ lisa <- function(cells,
                  sigma = NULL,
                  lisaFunc = "K",
                  minLambda = 0.05,
-                 BPPARAM = BiocParallel::SerialParam()) {
+                 BPPARAM = BiocParallel::SerialParam(),
+                 Rs = r) {
   
   user_args = as.list(match.call())[-1]
   
   tryCatch({
     user_vals = lapply(names(user_args), function(arg) {
-      if (arg %in% c("BPPARAM", "cores")) {
+      if (arg %in% c("BPPARAM", "cores", "Rs")) {
         eval(user_args[[arg]])
       } 
     })
