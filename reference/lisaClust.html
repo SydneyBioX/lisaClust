@@ -42,7 +42,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lisaClust</span><span class="op">(</span></span>
 <span>  <span class="va">cells</span>,</span>
 <span>  k <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  Rs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  r <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  imageID <span class="op">=</span> <span class="st">"imageID"</span>,</span>
 <span>  cellType <span class="op">=</span> <span class="st">"cellType"</span>,</span>
 <span>  spatialCoords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span>,</span>
@@ -54,7 +54,8 @@
 <span>  sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lisaFunc <span class="op">=</span> <span class="st">"K"</span>,</span>
 <span>  minLambda <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  BPPARAM <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  Rs <span class="op">=</span> <span class="va">r</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -71,7 +72,7 @@ variables x and y, giving the  coordinates of each cell, imageID and cellType.</
 <dd><p>The number of regions to cluster.</p></dd>
 
 
-<dt id="arg-rs">Rs<a class="anchor" aria-label="anchor" href="#arg-rs"></a></dt>
+<dt id="arg-r">r<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
 <dd><p>A vector of the radii that the measures of association should be calculated.</p></dd>
 
 
@@ -124,6 +125,10 @@ the cellType.</p></dd>
 
 <dt id="arg-bpparam">BPPARAM<a class="anchor" aria-label="anchor" href="#arg-bpparam"></a></dt>
 <dd><p>{DEPRECATED} A BiocParalell MulticoreParam or SerialParam object.</p></dd>
+
+
+<dt id="arg-rs">Rs<a class="anchor" aria-label="anchor" href="#arg-rs"></a></dt>
+<dd><p>A vector of the radii that the measures of association should be calculated.</p></dd>
 
 </dl></div>
     <div class="section level2">
