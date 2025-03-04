@@ -131,7 +131,7 @@ lisa <- function(cells,
   }
   
   
-  message("Generating local L-curves.")
+  message("Generating local indicators of spatial association.")
   
   curveList <-
     BiocParallel::bplapply(
