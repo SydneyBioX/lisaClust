@@ -19,7 +19,7 @@ lisaClust(
   sigma = NULL,
   lisaFunc = "K",
   minLambda = 0.05,
-  BPPARAM = BiocParallel::SerialParam(),
+  BPPARAM = NULL,
   Rs = r
 )
 }

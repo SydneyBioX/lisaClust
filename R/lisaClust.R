@@ -69,7 +69,7 @@ lisaClust <-
            sigma = NULL,
            lisaFunc = "K",
            minLambda = 0.05,
-           BPPARAM = BiocParallel::SerialParam(),
+           BPPARAM = NULL,
            Rs = r) {
     
     user_args = as.list(match.call())[-1]
@@ -82,6 +82,8 @@ lisaClust <-
     
     names(user_vals) = names(user_args)
     argumentChecks("lisaClust", user_vals)
+    
+    
   
     if (is(cells, "SummarizedExperiment")) {
       cols = colnames(colData(cells))

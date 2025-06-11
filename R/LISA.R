@@ -66,7 +66,7 @@ lisa <- function(cells,
                  sigma = NULL,
                  lisaFunc = "K",
                  minLambda = 0.05,
-                 BPPARAM = BiocParallel::SerialParam(),
+                 BPPARAM = NULL,
                  Rs = r) {
   
   user_args = as.list(match.call())[-1]
@@ -113,6 +113,7 @@ lisa <- function(cells,
     )
   }
   
+  
   cellSummary <- spicyR:::getCellSummary(cells, bind = FALSE)
   
   if (is.null(Rs)) {
@@ -120,7 +121,7 @@ lisa <- function(cells,
   }
   
   if (is(cores, "numeric")) {
-    cores = BiocParallel::MulticoreParam(workers = cores)
+    BPPARAM = BiocParallel::MulticoreParam(workers = cores)
   } 
   
   if (whichParallel == "imageID") {
@@ -143,7 +144,7 @@ lisa <- function(cells,
       window.length = window.length,
       minLambda = minLambda,
       lisaFunc = lisaFunc,
-      BPPARAM = cores
+      BPPARAM = BPPARAM
     )
   
   curvelist <- lapply(curveList, as.data.frame)
