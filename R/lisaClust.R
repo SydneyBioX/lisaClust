@@ -102,6 +102,9 @@ lisaClust <-
     }
     
     if (methods::is(cells, "SummarizedExperiment")) {
+      
+      colData(cells) <- colData(cells)[, c(cellType, imageID, spatialCoords), drop = FALSE]
+      
       cd <- spicyR:::.format_data(
         cells, imageID, cellType, spatialCoords, FALSE
       )
