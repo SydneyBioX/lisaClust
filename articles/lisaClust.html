@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Introduction to Clustering of Local Indicators of Spatial Assocation (LISA) curves • lisaClust</title>
+<title>Introduction to lisaClust • lisaClust</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to Clustering of Local Indicators of Spatial Assocation (LISA) curves">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to lisaClust">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.15.6</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,438 +50,553 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Introduction to Clustering of Local Indicators of Spatial Assocation (LISA) curves</h1>
-                        <h4 data-toc-skip class="author">Nicolas
+      <h1>Introduction to lisaClust</h1>
+                        <h4 data-toc-skip class="author">Ellis
+Patrick</h4>
+            <address class="author_afil">
+      School of Mathematics and Statistics, and Westmead Institute for
+Medical Research, University of Sydney,
+Australia<br><h4 data-toc-skip class="author">Nicolas
 Canete</h4>
             <address class="author_afil">
       Westmead Institute for Medical Research, University of Sydney,
-Australia<br><a class="author_email" href="mailto:#"></a><a href="mailto:nicolas.canete@sydney.edu.au" class="email">nicolas.canete@sydney.edu.au</a>
-      </address>
-                              <h4 data-toc-skip class="author">Ellis
-Patrick</h4>
+Australia<br><h4 data-toc-skip class="author">Alex
+Run Qin</h4>
             <address class="author_afil">
-      Westmead Institute for Medical Research, University of Sydney,
-AustraliaSchool of Mathematics and Statistics, University of Sydney,
-Australia<br><a class="author_email" href="mailto:#"></a><a href="mailto:ellis.patrick@sydney.edu.au" class="email">ellis.patrick@sydney.edu.au</a>
-      </address>
-                              <h4 data-toc-skip class="author">Alex Run
-Qin</h4>
-            <address class="author_afil">
-      Westmead Institute for Medical Research, University of Sydney,
-AustraliaSchool of Mathematics and Statistics, University of Sydney,
-Australia<br><a class="author_email" href="mailto:#"></a><a href="mailto:alex.qin@sydney.edu.au" class="email">alex.qin@sydney.edu.au</a>
-      </address>
-                  
-            <h4 data-toc-skip class="date">12 June 2025</h4>
+      School of Mathematics and Statistics, University of Sydney,
+Australia<br><h4 data-toc-skip class="date">9 October 2026</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ellispatrick/lisaClust/blob/devel/vignettes/lisaClust.Rmd"><code>vignettes/lisaClust.Rmd</code></a></small>
       <div class="d-none name"><code>lisaClust.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
         <div class="abstract">
       <p class="abstract">Abstract</p>
-      <p>Identify and visualise regions of cell type colocalization in
-      multiplexed imaging data that has been segmented at a single-cell
-      resolution.</p>
+      <p>Which parts of a tumour are tumour cells, which are immune
+      infiltrate and which are stroma? Which local neighbourhoods of
+      cells are more common in one group of patients than another?
+      lisaClust describes, for every cell, which cell types surround it,
+      and groups cells with similar surroundings into regions. With a
+      few regions these are tissue domains; with many they are cellular
+      niches. This vignette finds domains in triple-negative breast
+      cancers and niches in colorectal cancers, and compares them
+      between groups of patients.</p>
     </div>
     
+<style type="text/css">
+.callout { border-left: 4px solid; border-radius: 4px; padding: 0.6em 1em; margin: 1em 0; }
+.callout > p:last-child { margin-bottom: 0; }
+.callout-note { border-color: #1f6fb4; background: #eef4fb; }
+.callout-tip { border-color: #2e7d32; background: #eef7ee; }
+.callout-important { border-color: #b3261e; background: #fbeeee; }
+</style>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>For each cell, lisaClust <span class="citation">(Patrick et al.
+2023)</span> counts the cells of every type within a few radii of it and
+compares each count with what would be expected if that type were spread
+evenly over the image. These local indicators of spatial association
+(LISA) describe the cell’s surroundings: a tumour cell deep in a tumour
+nest has many tumour neighbours and few immune neighbours, while a
+tumour cell at the invasive margin has both. Clustering the cells by
+their LISA groups cells with similar surroundings, whatever their own
+type, into <strong>regions</strong>.</p>
+<p>The number of regions sets the scale of the question. With a few
+regions, they are broad tissue <strong>domains</strong>, such as tumour,
+stroma and immune infiltrate. With 20 or more, they are cellular
+<strong>niches</strong>: recurring local combinations of cell types,
+such as T cells mixed with macrophages at a tumour border.</p>
+<p>lisaClust needs only the type and position of every cell, so it
+applies to any technology that gives segmented, typed cells: spatial
+proteomics such as imaging mass cytometry, MIBI and CODEX, and spatial
+transcriptomics such as Xenium, CosMx, MERSCOPE or high-definition
+spatial transcriptomics <span class="citation">(Patrick et al.
+2023)</span>. It is not designed for spot-based data such as Visium,
+where a spot holds several cells. It works alongside other SydneyBioX
+packages: <em>spicyR</em> tests whether pairs of cell types co-localise
+differently between groups of patients, and <em>Statial</em> tests
+co-localisation within tissue compartments.</p>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"BiocManager"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
 <span><span class="fu">BiocManager</span><span class="fu">::</span><span class="fu"><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"lisaClust"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load required packages</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ellispatrick.github.io/lisaClust/" class="external-link">lisaClust</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ellispatrick.github.io/spicyR/" class="external-link">spicyR</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ellispatrick.github.io/lisaClust/" class="external-link">lisaClust</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/drighelli/SpatialExperiment" class="external-link">SpatialExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SydneyBioX/SpatialDatasets" class="external-link">SpatialDatasets</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SydneyBioX/SpatialDatasets" class="external-link">SpatialDatasets</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<p>Clustering local indicators of spatial association (LISA) functions
-is a methodology for identifying consistent spatial organisation of
-multiple cell-types in an unsupervised way. This can be used to enable
-the characterization of interactions between multiple cell-types
-simultaneously and can complement traditional pairwise analysis. In our
-implementation our LISA curves are a localised summary of an L-function
-from a Poisson point process model. Our framework <code>lisaClust</code>
-can be used to provide a high-level summary of cell-type colocalization
-in high-parameter spatial cytometry data, facilitating the
-identification of distinct tissue compartments or identification of
-complex cellular microenvironments.</p>
-</div>
-<div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+<h2 id="tissue-domains-in-triple-negative-breast-cancer">Tissue domains in triple-negative breast cancer<a class="anchor" aria-label="anchor" href="#tissue-domains-in-triple-negative-breast-cancer"></a>
 </h2>
 <div class="section level3">
-<h3 id="generate-toy-data">Generate toy data<a class="anchor" aria-label="anchor" href="#generate-toy-data"></a>
+<h3 id="the-data">The data<a class="anchor" aria-label="anchor" href="#the-data"></a>
 </h3>
-<p>To illustrate our <code>lisaClust</code> framework, we consider a
-very simple toy example where two cell-types are completely separated
-spatially. We simulate data for two different images.</p>
+<p><span class="citation">Keren et al. (2018)</span> imaged tumours from
+40 patients with triple-negative breast cancer by MIBI-TOF, one image
+per patient, and classified each tumour by how its immune and tumour
+cells are arranged: <em>compartmentalised</em>, where immune cells and
+tumour cells occupy separate areas; <em>mixed</em>, where they are
+interspersed; and <em>cold</em>, with few immune cells. The data are a
+<code>SpatialExperiment</code> in the SpatialDatasets package, with the
+coordinates in pixels.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">51773</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">3</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">3</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span>
-<span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">3</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span><span class="op">)</span> <span class="op">+</span> <span class="fl">3</span></span>
-<span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span>
-<span><span class="va">cellType</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="fl">4</span><span class="op">)</span>, sep <span class="op">=</span> <span class="st">""</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">imageID</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"s1"</span>, <span class="st">"s2"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">800</span>, <span class="fl">800</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">cellType</span>, <span class="va">imageID</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">cells</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, colour <span class="op">=</span> <span class="va">cellType</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">imageID</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lisaClust_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<code class="sourceCode R"><span><span class="va">kerenSPE</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpatialDatasets/man/SpatialDatasets.html" class="external-link">spe_Keren_2018</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">patients</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">colData</span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"imageID"</span>, <span class="st">"tumour_type"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">patients</span><span class="op">$</span><span class="va">tumour_type</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;              cold compartmentalised             mixed </span></span>
+<span><span class="co">#&gt;                 6                15                19</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Keratin_Tumour    Macrophages     CD8_T_cell     CD4_T_cell         B_cell </span></span>
+<span><span class="co">#&gt;          99487          20616          15698          12438           9115 </span></span>
+<span><span class="co">#&gt;    Mesenchymal   Other_Immune     DC_or_Mono       dn_T_CD3         Tumour </span></span>
+<span><span class="co">#&gt;           8170           6891           5049           3848           3167 </span></span>
+<span><span class="co">#&gt;    Mono_or_Neu    Neutrophils    Endothelial   Unidentified          Tregs </span></span>
+<span><span class="co">#&gt;           3110           3018           2086           1725           1341 </span></span>
+<span><span class="co">#&gt;             DC             NK </span></span>
+<span><span class="co">#&gt;           1245            674</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="create-single-cell-experiment-object">Create Single Cell Experiment object<a class="anchor" aria-label="anchor" href="#create-single-cell-experiment-object"></a>
+<h3 id="finding-domains">Finding domains<a class="anchor" aria-label="anchor" href="#finding-domains"></a>
 </h3>
-<p>First we store our data in a <code>SingleCellExperiment</code>
-object.</p>
+<p><code><a href="../reference/lisaClust.html">lisaClust()</a></code> computes the LISA of every cell and clusters
+them with k-means into <code>k</code> regions, stored in a new
+<code>colData</code> column (<code>region</code> by default). It looks
+for columns called <code>imageID</code> and <code>cellType</code>, and
+takes the coordinates of a <code>SpatialExperiment</code> from
+<code><a href="https://rdrr.io/pkg/SpatialExperiment/man/SpatialExperiment-methods.html" class="external-link">spatialCoords()</a></code>. Here we ask for four domains, describing
+each cell’s surroundings within 20, 50 and 100 pixels.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">SCE</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a></span><span class="op">(</span>colData <span class="op">=</span> <span class="va">cells</span><span class="op">)</span></span>
-<span><span class="va">SCE</span></span>
-<span><span class="co">## class: SingleCellExperiment </span></span>
-<span><span class="co">## dim: 0 1600 </span></span>
-<span><span class="co">## metadata(0):</span></span>
-<span><span class="co">## assays(0):</span></span>
-<span><span class="co">## rownames: NULL</span></span>
-<span><span class="co">## rowData names(0):</span></span>
-<span><span class="co">## colnames: NULL</span></span>
-<span><span class="co">## colData names(4): x y cellType imageID</span></span>
-<span><span class="co">## reducedDimNames(0):</span></span>
-<span><span class="co">## mainExpName: NULL</span></span>
-<span><span class="co">## altExpNames(0):</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">51773</span><span class="op">)</span></span>
+<span><span class="va">kerenSPE</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisaClust.html">lisaClust</a></span><span class="op">(</span><span class="va">kerenSPE</span>, k <span class="op">=</span> <span class="fl">4</span>, r <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">region</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; region_1 region_2 region_3 region_4 </span></span>
+<span><span class="co">#&gt;    67383   101637    21806     6852</span></span></code></pre></div>
+<p>k-means starts from random centres, so set a seed to make the regions
+reproducible.</p>
 </div>
 <div class="section level3">
-<h3 id="running-lisaclust">Running lisaCLust<a class="anchor" aria-label="anchor" href="#running-lisaclust"></a>
+<h3 id="what-is-in-each-domain">What is in each domain?<a class="anchor" aria-label="anchor" href="#what-is-in-each-domain"></a>
 </h3>
-<p>We can then use the convenience function <code>lisaClust</code> to
-simultaneously calculate local indicators of spatial association (LISA)
-functions and perform k-means clustering. The number of clusters can be
-specified with the <code>k =</code> parameter. In the example below,
-we’ve chosen <code>k = 2</code>, resulting in a total of 2 clusters. The
-cell type column can be specified using the <code>cellType =</code>
-argument. By default, <code>lisaClust</code> uses the column named
-<code>cellType</code>.</p>
-<p>The clusters identified by <code>lisaClust</code> are stored in
-<code>colData</code> of the <code>SingleCellExperiment</code> object as
-a new column called <code>regions</code>.</p>
+<p><code><a href="../reference/regionMap.html">regionMap()</a></code> shows how much more often each cell type is
+found in each region than if cell types were spread evenly over the
+regions: above one, the type is enriched in that region.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">SCE</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisaClust.html">lisaClust</a></span><span class="op">(</span><span class="va">SCE</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">SCE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## DataFrame with 6 rows and 5 columns</span></span>
-<span><span class="co">##           x         y cellType     imageID      region</span></span>
-<span><span class="co">##   &lt;numeric&gt; &lt;numeric&gt; &lt;factor&gt; &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">## 1     36.72     38.58       c1          s1    region_2</span></span>
-<span><span class="co">## 2     61.38     41.29       c1          s1    region_2</span></span>
-<span><span class="co">## 3     33.59     80.98       c1          s1    region_2</span></span>
-<span><span class="co">## 4     50.17     64.91       c1          s1    region_2</span></span>
-<span><span class="co">## 5     82.93     35.60       c1          s1    region_2</span></span>
-<span><span class="co">## 6     83.13      2.69       c1          s1    region_2</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="plot-identified-regions">Plot identified regions<a class="anchor" aria-label="anchor" href="#plot-identified-regions"></a>
-</h3>
-<p><code>lisaClust</code> also provides the convenient
-<code>hatchingPlot</code> function to visualise the different regions
-that have been demarcated by the clustering. <code>hatchingPlot</code>
-outputs a <code>ggplot</code> object where the regions are marked by
-different hatching patterns. In a real biological dataset, this allows
-us to plot both regions and cell-types on the same visualization.</p>
-<p>In the example below, we can visualise our stimulated data where our
-2 cell types have been separated neatly into 2 distinct regions based on
-which cell type each region is dominated by. <code>region_2</code> is
-dominated by the red cell type <code>c1</code>, and
-<code>region_1</code> is dominated by the blue cell type
-<code>c2</code>.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/regionMap.html">regionMap</a></span><span class="op">(</span><span class="va">kerenSPE</span>, type <span class="op">=</span> <span class="st">"bubble"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lisaClust_files/figure-html/keren-region-map-1.png" class="r-plt" alt="" style="display: block; margin: auto;"></p>
+<p>The regions are numbered arbitrarily, so we name each one by the cell
+type it is most enriched for, among tumour cells, CD8 T cells, B cells
+and mesenchymal cells.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/hatchingPlot.html">hatchingPlot</a></span><span class="op">(</span><span class="va">SCE</span>, useImages <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"s1"</span>, <span class="st">"s2"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lisaClust_files/figure-html/unnamed-chunk-7-1.png" width="700">
-## Using other clustering methods.</p>
-<p>While the <code>lisaClust</code> function is convenient, we have not
-implemented an exhaustive suite of clustering methods as it is very easy
-to do this yourself. There are just two simple steps.</p>
-<div class="section level4">
-<h4 id="generate-lisa-curves">Generate LISA curves<a class="anchor" aria-label="anchor" href="#generate-lisa-curves"></a>
-</h4>
-<p>We can calculate local indicators of spatial association (LISA)
-functions using the <code>lisa</code> function. Here the LISA curves are
-a localised summary of an L-function from a Poisson point process model.
-The radii that will be calculated over can be set with
-<code>Rs</code>.</p>
+<code class="sourceCode R"><span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">cellType</span>, <span class="va">kerenSPE</span><span class="op">$</span><span class="va">region</span><span class="op">)</span></span>
+<span><span class="va">enrichment</span> <span class="op">&lt;-</span> <span class="va">tab</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">tab</span><span class="op">)</span></span>
+<span><span class="va">markers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>tumour <span class="op">=</span> <span class="st">"Keratin_Tumour"</span>, `T cell` <span class="op">=</span> <span class="st">"CD8_T_cell"</span>, `B cell` <span class="op">=</span> <span class="st">"B_cell"</span>, stroma <span class="op">=</span> <span class="st">"Mesenchymal"</span><span class="op">)</span></span>
+<span><span class="va">domainOf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">markers</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">enrichment</span><span class="op">[</span><span class="va">markers</span>, <span class="op">]</span>, <span class="fl">2</span>, <span class="va">which.max</span><span class="op">)</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">enrichment</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">domainOf</span></span>
+<span><span class="co">#&gt; region_1 region_2 region_3 region_4 </span></span>
+<span><span class="co">#&gt; "stroma" "tumour" "T cell" "B cell"</span></span>
+<span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">domain</span> <span class="op">&lt;-</span> <span class="va">domainOf</span><span class="op">[</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">region</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">domain</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; B cell stroma T cell tumour </span></span>
+<span><span class="co">#&gt;    3.5   34.1   11.0   51.4</span></span></code></pre></div>
+<p>The cell types most enriched in each domain:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lisaCurves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisa.html">lisa</a></span><span class="op">(</span><span class="va">SCE</span>, Rs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lisaCurves</span><span class="op">)</span></span>
-<span><span class="co">##           20_c1     20_c2     50_c1     50_c2    100_c1     100_c2</span></span>
-<span><span class="co">## cell_1 5.556700 -2.764143 15.631209 -6.910357 11.733097  -9.198914</span></span>
-<span><span class="co">## cell_2 4.833149 -2.764143 13.940407 -6.910357  9.532662  -8.543440</span></span>
-<span><span class="co">## cell_3 5.918476 -2.764143  9.008588 -6.910357  9.157887  -7.813862</span></span>
-<span><span class="co">## cell_4 4.109597 -2.764143 11.907928 -6.910357  8.404425  -8.140036</span></span>
-<span><span class="co">## cell_5 3.024270 -2.764143 10.159278 -6.910357  9.006286  -8.283564</span></span>
-<span><span class="co">## cell_6 7.986742 -2.764143  8.675070 -6.910357 12.859615 -13.820714</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">domainOf</span><span class="op">)</span>, <span class="va">domainOf</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">enrichment</span><span class="op">[</span>, <span class="va">r</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">e</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                                                 B cell </span></span>
+<span><span class="co">#&gt;                     "B_cell, CD4_T_cell, DC, dn_T_CD3" </span></span>
+<span><span class="co">#&gt;                                                 stroma </span></span>
+<span><span class="co">#&gt; "Other_Immune, Unidentified, Endothelial, Mesenchymal" </span></span>
+<span><span class="co">#&gt;                                                 T cell </span></span>
+<span><span class="co">#&gt;               "CD4_T_cell, NK, DC_or_Mono, CD8_T_cell" </span></span>
+<span><span class="co">#&gt;                                                 tumour </span></span>
+<span><span class="co">#&gt;           "Keratin_Tumour, Tumour, Tregs, Neutrophils"</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="perform-some-clustering">Perform some clustering<a class="anchor" aria-label="anchor" href="#perform-some-clustering"></a>
-</h4>
-<p>The LISA curves can then be used to cluster the cells. Here we use
-k-means clustering. However, other clustering methods like SOM could
-also be used. We can store these cell clusters or cell “regions” in our
-<code>SingleCellExperiment</code> object.</p>
+<div class="section level3">
+<h3 id="domains-in-two-tumours">Domains in two tumours<a class="anchor" aria-label="anchor" href="#domains-in-two-tumours"></a>
+</h3>
+<p><code><a href="../reference/hatchingPlot.html">hatchingPlot()</a></code> draws the cells coloured by type, with
+each region outlined and filled with its own hatching, so types and
+regions can be seen together. Here are the compartmentalised tumour and
+the mixed tumour with the most cells in the T cell domain.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Custom clustering algorithm</span></span>
-<span><span class="va">kM</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="va">lisaCurves</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Storing clusters into colData</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">SCE</span><span class="op">)</span><span class="op">$</span><span class="va">custom_region</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"region"</span>, <span class="va">kM</span><span class="op">$</span><span class="va">cluster</span>, sep <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">SCE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## DataFrame with 6 rows and 6 columns</span></span>
-<span><span class="co">##           x         y cellType     imageID      region custom_region</span></span>
-<span><span class="co">##   &lt;numeric&gt; &lt;numeric&gt; &lt;factor&gt; &lt;character&gt; &lt;character&gt;   &lt;character&gt;</span></span>
-<span><span class="co">## 1     36.72     38.58       c1          s1    region_2      region_2</span></span>
-<span><span class="co">## 2     61.38     41.29       c1          s1    region_2      region_2</span></span>
-<span><span class="co">## 3     33.59     80.98       c1          s1    region_2      region_2</span></span>
-<span><span class="co">## 4     50.17     64.91       c1          s1    region_2      region_2</span></span>
-<span><span class="co">## 5     82.93     35.60       c1          s1    region_2      region_2</span></span>
-<span><span class="co">## 6     83.13      2.69       c1          s1    region_2      region_2</span></span></code></pre></div>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="keren-et-al--breast-cancer-data-">Keren et al. breast cancer data.<a class="anchor" aria-label="anchor" href="#keren-et-al--breast-cancer-data-"></a>
-</h2>
-<p>Next, we apply our <code>lisaClust</code> framework to two images of
-breast cancer obtained by <span class="citation">Keren et al.
-(2018)</span>.</p>
-<div class="section level3">
-<h3 id="read-in-data">Read in data<a class="anchor" aria-label="anchor" href="#read-in-data"></a>
-</h3>
-<p>We will start by reading in the data from the
-<code>SpatialDatasets</code> package as a
-<code>SingleCellExperiment</code> object. Here the data is in a format
-consistent with that outputted by CellProfiler.</p>
+<code class="sourceCode R"><span><span class="va">domainShare</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">imageID</span>, <span class="va">kerenSPE</span><span class="op">$</span><span class="va">domain</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">type</span> <span class="op">&lt;-</span> <span class="va">patients</span><span class="op">$</span><span class="va">tumour_type</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span>, <span class="va">patients</span><span class="op">$</span><span class="va">imageID</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">examples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"compartmentalised"</span>, <span class="st">"mixed"</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">im</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span><span class="op">[</span><span class="va">type</span> <span class="op">==</span> <span class="va">t</span><span class="op">]</span></span>
+<span>  <span class="va">im</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.max</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">[</span><span class="va">im</span>, <span class="st">"T cell"</span><span class="op">]</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">examples</span></span>
+<span><span class="co">#&gt; compartmentalised             mixed </span></span>
+<span><span class="co">#&gt;              "16"              "29"</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">kerenSPE</span> <span class="op">&lt;-</span> <span class="fu">SpatialDatasets</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/SpatialDatasets/man/SpatialDatasets.html" class="external-link">spe_Keren_2018</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/hatchingPlot.html">hatchingPlot</a></span><span class="op">(</span><span class="va">kerenSPE</span>, useImages <span class="op">=</span> <span class="va">examples</span>, region <span class="op">=</span> <span class="st">"domain"</span>, nbp <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lisaClust_files/figure-html/keren-hatching-1.png" class="r-plt" alt="" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="generate-lisa-curves-1">Generate LISA curves<a class="anchor" aria-label="anchor" href="#generate-lisa-curves-1"></a>
+<h3 id="do-the-domains-differ-between-kinds-of-tumour">Do the domains differ between kinds of tumour?<a class="anchor" aria-label="anchor" href="#do-the-domains-differ-between-kinds-of-tumour"></a>
 </h3>
-<p>This data includes annotation of the cell-types of each cell. Hence,
-we can move directly to performing k-means clustering on the local
-indicators of spatial association (LISA) functions using the
-<code>lisaClust</code> function, remembering to specify the
-<code>imageID</code>, <code>cellType</code>, and
-<code>spatialCoords</code> columns in <code>colData</code>. For the
-purpose of demonstration, we will be using only images 5 and 6 of the
-<code>kerenSPE</code> dataset.</p>
+<p>Each patient has one image, so the share of each domain in an image
+is a value per patient.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">kerenSPE</span> <span class="op">&lt;-</span> <span class="va">kerenSPE</span><span class="op">[</span>,<span class="va">kerenSPE</span><span class="op">$</span><span class="va">imageID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"5"</span>, <span class="st">"6"</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">kerenSPE</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisaClust.html">lisaClust</a></span><span class="op">(</span><span class="va">kerenSPE</span>,</span>
-<span>  k <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>These regions are stored in <code>colData</code> and can be
-extracted.</p>
+<code class="sourceCode R"><span><span class="va">shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>imageID <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                     domain <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                     share <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">domainShare</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">shares</span><span class="op">$</span><span class="va">tumour_type</span> <span class="op">&lt;-</span> <span class="va">patients</span><span class="op">$</span><span class="va">tumour_type</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">shares</span><span class="op">$</span><span class="va">imageID</span>, <span class="va">patients</span><span class="op">$</span><span class="va">imageID</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">shares</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">tumour_type</span>, <span class="va">share</span>, colour <span class="op">=</span> <span class="va">tumour_type</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>outlier.shape <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.15</span>, height <span class="op">=</span> <span class="fl">0</span>, size <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span> <span class="va">domain</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">v</span>, <span class="st">"%"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"share of the image's cells"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span>, axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lisaClust_files/figure-html/keren-domain-share-1.png" class="r-plt" alt="" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"imageID"</span>, <span class="st">"region"</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span></span>
-<span><span class="co">## DataFrame with 20 rows and 2 columns</span></span>
-<span><span class="co">##           imageID      region</span></span>
-<span><span class="co">##       &lt;character&gt; &lt;character&gt;</span></span>
-<span><span class="co">## 21154           5    region_4</span></span>
-<span><span class="co">## 21155           5    region_4</span></span>
-<span><span class="co">## 21156           5    region_4</span></span>
-<span><span class="co">## 21157           5    region_3</span></span>
-<span><span class="co">## 21158           5    region_3</span></span>
-<span><span class="co">## ...           ...         ...</span></span>
-<span><span class="co">## 21169           5    region_3</span></span>
-<span><span class="co">## 21170           5    region_3</span></span>
-<span><span class="co">## 21171           5    region_1</span></span>
-<span><span class="co">## 21172           5    region_3</span></span>
-<span><span class="co">## 21173           5    region_1</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">tcell</span> <span class="op">&lt;-</span> <span class="va">domainShare</span><span class="op">[</span>, <span class="st">"T cell"</span><span class="op">]</span></span>
+<span><span class="va">medians</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">tcell</span>, <span class="va">type</span>, <span class="va">median</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">medians</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;              cold compartmentalised             mixed </span></span>
+<span><span class="co">#&gt;               1.3              15.0               3.6</span></span>
+<span><span class="va">pT</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/wilcox.test.html" class="external-link">wilcox.test</a></span><span class="op">(</span><span class="va">tcell</span><span class="op">[</span><span class="va">type</span> <span class="op">==</span> <span class="st">"compartmentalised"</span><span class="op">]</span>, <span class="va">tcell</span><span class="op">[</span><span class="va">type</span> <span class="op">==</span> <span class="st">"mixed"</span><span class="op">]</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="va">pT</span></span>
+<span><span class="co">#&gt; [1] 9.138522e-05</span></span></code></pre></div>
+<p>The T cell domain makes up a median of 15% of the cells in a
+compartmentalised tumour and 3.6% in a mixed one (Wilcoxon p = 9.1e-05).
+In compartmentalised tumours the immune cells form their own areas,
+which become a domain; in mixed tumours they sit among the tumour cells
+and fall into the tumour domain.</p>
+<div class="callout callout-important">
+<p><span class="citation">Keren et al. (2018)</span> classified the
+tumours from how their immune and tumour cells are arranged, so this
+difference is a check that the domains capture that arrangement, not an
+independent finding.</p>
 </div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="cellular-niches-in-colorectal-cancer">Cellular niches in colorectal cancer<a class="anchor" aria-label="anchor" href="#cellular-niches-in-colorectal-cancer"></a>
+</h2>
 <div class="section level3">
-<h3 id="examine-cell-type-enrichment">Examine cell type enrichment<a class="anchor" aria-label="anchor" href="#examine-cell-type-enrichment"></a>
+<h3 id="the-data-1">The data<a class="anchor" aria-label="anchor" href="#the-data-1"></a>
 </h3>
-<p><code>lisaClust</code> also provides a convenient function,
-<code>regionMap</code>, for examining which cell types are located in
-which regions. In this example, we use this to check which cell types
-appear more frequently in each region than expected by chance.</p>
-<p>Here, we clearly see that healthy epithelial and mesenchymal tissue
-are highly concentrated in region 1, immune cells are concentrated in
-regions 2 and 4, whilst tumour cells are concentrated in region 3.</p>
-<p>We can further segregate these cells by increasing the number of
-clusters, i.e., increasing the parameter <code>k =</code> in the
-<code><a href="../reference/lisaClust.html">lisaClust()</a></code> function. For the purposes of demonstration,
-let’s take a look at the <code>hatchingPlot</code> of these regions.</p>
+<p><span class="citation"><span class="nocase">Schürch et al.</span>
+(2020)</span> imaged colorectal cancers from 35 patients by CODEX, four
+tissue microarray cores per patient. The patients had one of two
+patterns of immune response: a Crohn’s-like reaction (CLR, with lymphoid
+follicles; 17 patients) or diffuse inflammatory infiltration (DII; 18
+patients). We leave out the objects the authors labelled as debris
+(<code>dirt</code>).</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/regionMap.html">regionMap</a></span><span class="op">(</span><span class="va">kerenSPE</span>,</span>
-<span>  type <span class="op">=</span> <span class="st">"bubble"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="lisaClust_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<code class="sourceCode R"><span><span class="va">schurchSPE</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpatialDatasets/man/SpatialDatasets.html" class="external-link">spe_Schurch_2020</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">schurchSPE</span> <span class="op">&lt;-</span> <span class="va">schurchSPE</span><span class="op">[</span>, <span class="va">schurchSPE</span><span class="op">$</span><span class="va">cellType</span> <span class="op">!=</span> <span class="st">"dirt"</span><span class="op">]</span></span>
+<span><span class="va">schurchSPE</span><span class="op">$</span><span class="va">condition</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">schurchSPE</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="fl">1</span>, <span class="st">"CLR"</span>, <span class="st">"DII"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">colData</span><span class="op">(</span><span class="va">schurchSPE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"patients"</span>, <span class="st">"condition"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">$</span><span class="va">condition</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; CLR DII </span></span>
+<span><span class="co">#&gt;  17  18</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">schurchSPE</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 28</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="plot-identified-regions-1">Plot identified regions<a class="anchor" aria-label="anchor" href="#plot-identified-regions-1"></a>
+<h3 id="finding-niches">Finding niches<a class="anchor" aria-label="anchor" href="#finding-niches"></a>
 </h3>
-<p>Finally, we can use <code>hatchingPlot</code> to construct a
-<code>ggplot</code> object where the regions are marked by different
-hatching patterns. This allows us to visualize the 5 regions and 17
-cell-types simultaneously.</p>
+<p>With 20 regions, the regions are finer combinations of cell types. We
+store them in a column called <code>niche</code>.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/hatchingPlot.html">hatchingPlot</a></span><span class="op">(</span><span class="va">kerenSPE</span>, nbp <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lisaClust_files/figure-html/unnamed-chunk-14-1.png" width="864"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
-</h2>
-</div>
-<div class="section level2">
-<h2 id="sessioninfo">sessionInfo()<a class="anchor" aria-label="anchor" href="#sessioninfo"></a>
-</h2>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">51773</span><span class="op">)</span></span>
+<span><span class="va">schurchSPE</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisaClust.html">lisaClust</a></span><span class="op">(</span><span class="va">schurchSPE</span>, k <span class="op">=</span> <span class="fl">20</span>, r <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span>, regionName <span class="op">=</span> <span class="st">"niche"</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/regionMap.html">regionMap</a></span><span class="op">(</span><span class="va">schurchSPE</span>, region <span class="op">=</span> <span class="st">"niche"</span>, type <span class="op">=</span> <span class="st">"bubble"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">90</span>, vjust <span class="op">=</span> <span class="fl">0.5</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lisaClust_files/figure-html/schurch-region-map-1.png" class="r-plt" alt="" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="comparing-niches-between-groups-of-patients">Comparing niches between groups of patients<a class="anchor" aria-label="anchor" href="#comparing-niches-between-groups-of-patients"></a>
+</h3>
+<p>The question is whether a niche makes up more of the tissue in one
+group of patients than in the other. The four cores of a patient come
+from the same tumour, so they are not independent: we pool the cells of
+each patient’s cores, so that each patient contributes one share of each
+niche, and compare the two groups of patients. With 20 niches tested,
+the p-values are adjusted for multiple testing.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">colData</span><span class="op">(</span><span class="va">schurchSPE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">byPatient</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cd</span><span class="op">$</span><span class="va">patients</span>, <span class="va">cd</span><span class="op">$</span><span class="va">niche</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">groupOf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cd</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"patients"</span>, <span class="st">"condition"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">group</span> <span class="op">&lt;-</span> <span class="va">groupOf</span><span class="op">$</span><span class="va">condition</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">byPatient</span><span class="op">)</span>, <span class="va">groupOf</span><span class="op">$</span><span class="va">patients</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">nicheTest</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">share</span>, <span class="va">group</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">share</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/wilcox.test.html" class="external-link">wilcox.test</a></span><span class="op">(</span><span class="va">v</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="st">"CLR"</span><span class="op">]</span>, <span class="va">v</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="st">"DII"</span><span class="op">]</span>, exact <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>niche <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">share</span><span class="op">)</span>,</span>
+<span>             CLR <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">share</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="st">"CLR"</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span>, <span class="fl">2</span>, <span class="va">median</span><span class="op">)</span>,</span>
+<span>             DII <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">share</span><span class="op">[</span><span class="va">group</span> <span class="op">==</span> <span class="st">"DII"</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span>, <span class="fl">2</span>, <span class="va">median</span><span class="op">)</span>,</span>
+<span>             p_value <span class="op">=</span> <span class="va">p</span>, p_adj <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">p.adjust</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"BH"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">patientTests</span> <span class="op">&lt;-</span> <span class="fu">nicheTest</span><span class="op">(</span><span class="va">byPatient</span>, <span class="va">group</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co">#&gt;               niche        CLR         DII      p_value       p_adj</span></span>
+<span><span class="co">#&gt; region_13 region_13 0.04152047 0.008741548 0.0002652751 0.005305502</span></span>
+<span><span class="co">#&gt; region_11 region_11 0.01593220 0.044091471 0.0071473256 0.071473256</span></span>
+<span><span class="co">#&gt; region_5   region_5 0.02458821 0.042001232 0.0237693593 0.130436442</span></span>
+<span><span class="co">#&gt; region_10 region_10 0.01383192 0.018377385 0.0360988449 0.130436442</span></span>
+<span><span class="co">#&gt; region_15 region_15 0.01299103 0.008435928 0.0391172031 0.130436442</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">byCore</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cd</span><span class="op">$</span><span class="va">imageID</span>, <span class="va">cd</span><span class="op">$</span><span class="va">niche</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">coreGroup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cd</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"imageID"</span>, <span class="st">"condition"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">coreTests</span> <span class="op">&lt;-</span> <span class="fu">nicheTest</span><span class="op">(</span><span class="va">byCore</span>, <span class="va">coreGroup</span><span class="op">$</span><span class="va">condition</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">byCore</span><span class="op">)</span>, <span class="va">coreGroup</span><span class="op">$</span><span class="va">imageID</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>patients <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">$</span><span class="va">p_adj</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span>, cores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">coreTests</span><span class="op">$</span><span class="va">p_adj</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; patients    cores </span></span>
+<span><span class="co">#&gt;        1        4</span></span></code></pre></div>
+<p>With the 35 patients as the units, 1 niche differs between CLR and
+DII patients at a 5% false discovery rate (smallest adjusted p-value
+0.0053). Treating each of the 140 cores as an independent sample
+instead, 4 niches differ.</p>
+<div class="callout callout-important">
+<p>Cores or images from the same patient are alike, so treating them as
+independent overstates the evidence and turns up differences that the
+patients do not support. Compare niches with patients as the units, and
+adjust for the number of niches tested.</p>
+</div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">top</span> <span class="op">&lt;-</span> <span class="va">patientTests</span><span class="op">$</span><span class="va">niche</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">nicheTab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cd</span><span class="op">$</span><span class="va">cellType</span>, <span class="va">cd</span><span class="op">$</span><span class="va">niche</span><span class="op">)</span></span>
+<span><span class="va">nicheEnrichment</span> <span class="op">&lt;-</span> <span class="va">nicheTab</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">nicheEnrichment</span><span class="op">[</span>, <span class="va">top</span><span class="op">]</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                b_cells            cd4_t_cells      cd163_macrophages </span></span>
+<span><span class="co">#&gt;                   10.1                    2.8                    2.6 </span></span>
+<span><span class="co">#&gt;     cd4_t_cells_cd45ro cd68_macrophages_gzm_b </span></span>
+<span><span class="co">#&gt;                    1.5                    1.4</span></span></code></pre></div>
+<p>The niche with the smallest p-value, region_13, is most enriched for
+b_cells, cd4_t_cells, cd163_macrophages. It makes up a median of 4.2% of
+the cells in CLR patients and 0.9% in DII patients, as expected for the
+lymphoid follicles that define a Crohn’s-like reaction:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>share <span class="op">=</span> <span class="va">byPatient</span><span class="op">[</span>, <span class="va">top</span><span class="op">]</span>, group <span class="op">=</span> <span class="va">group</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">group</span>, <span class="va">share</span>, colour <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>outlier.shape <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html" class="external-link">geom_jitter</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.15</span>, height <span class="op">=</span> <span class="fl">0</span>, size <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">v</span>, <span class="st">"%"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"share of"</span>, <span class="va">top</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lisaClust_files/figure-html/schurch-top-niche-1.png" class="r-plt" alt="" style="display: block; margin: auto;"></p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="using-your-own-clustering">Using your own clustering<a class="anchor" aria-label="anchor" href="#using-your-own-clustering"></a>
+</h2>
+<p><code><a href="../reference/lisa.html">lisa()</a></code> returns the LISA themselves, one row per cell and
+one column per radius and cell type, so you can cluster them any way you
+like.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lisa.html">lisa</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">[</span>, <span class="va">kerenSPE</span><span class="op">$</span><span class="va">imageID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">examples</span><span class="op">]</span>, r <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">curves</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 13031    51</span></span>
+<span><span class="va">curves</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span>
+<span><span class="co">#&gt;        20_Keratin_Tumour 20_CD8_T_cell 20_dn_T_CD3 20_CD4_T_cell</span></span>
+<span><span class="co">#&gt; cell_1         1.6233015    -0.8831332  -0.2041394    -0.8778542</span></span>
+<span><span class="co">#&gt; cell_2        -0.7323238     4.0046288  -0.2041394    -0.8778542</span></span>
+<span><span class="co">#&gt; cell_3        -0.7323238     3.9443524  -0.2041394    -0.8778542</span></span>
+<span></span>
+<span><span class="co"># for example, k-means with several random starts</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">51773</span><span class="op">)</span></span>
+<span><span class="va">km</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="va">curves</span>, centers <span class="op">=</span> <span class="fl">4</span>, nstart <span class="op">=</span> <span class="fl">10</span>, iter.max <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">km</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;    1    2    3    4 </span></span>
+<span><span class="co">#&gt; 5555 1380 5934  162</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="choosing-the-settings">Choosing the settings<a class="anchor" aria-label="anchor" href="#choosing-the-settings"></a>
+</h2>
+<div class="callout callout-tip">
+<p><strong>The number of regions.</strong> A few regions describe the
+large compartments of a tissue; many regions separate finer
+neighbourhoods but split rarer combinations across several regions and
+make each one harder to interpret. Look at <code><a href="../reference/regionMap.html">regionMap()</a></code> for
+a few values of <code>k</code> and choose the coarsest one that
+separates the structures you care about; generic rules for the number of
+clusters, such as the elbow or silhouette, can merge tissue structures
+that are known to be distinct <span class="citation">(Patrick et al.
+2023)</span>.</p>
+</div>
+<div class="callout callout-tip">
+<p><strong>The radii.</strong> Choose them from the scales of
+interaction you expect, in the units of the coordinates: a radius of two
+or three cell diameters describes the cell’s immediate neighbours, and
+larger radii describe its wider surroundings. Several radii
+(<code>r</code>) are used together; run time grows with the number and
+size of the radii, so a few well-chosen ones are better than many.</p>
+</div>
+<div class="callout callout-note">
+<p><strong>Uneven cell density.</strong> By default the expected count
+assumes cells are spread evenly over the image. With <code>sigma</code>,
+each neighbour is weighted by the inverse of the local density of all
+cells, estimated with a Gaussian kernel of bandwidth <code>sigma</code>,
+so that a dense area does not by itself look enriched for every cell
+type.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="how-it-works">How it works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
+</h2>
+<p>For cell <em>i</em>, cell type <em>j</em> and radius <em>r</em>, let
+<em>n<sub>ij</sub>(r)</em> be the number of cells of type <em>j</em>
+within <em>r</em> of cell <em>i</em>. If the cells of type <em>j</em>
+were spread evenly over the image window <em>W</em>, with density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>j</mi></msub><mo>=</mo><msub><mi>N</mi><mi>j</mi></msub><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>W</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\lambda_j = N_j / |W|</annotation></semantics></math>,
+the expected count would be</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>λ</mi><mi>j</mi></msub><mspace width="0.167em"></mspace><mi>π</mi><msup><mi>r</mi><mn>2</mn></msup><msub><mi>e</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">E_{ij}(r) = \lambda_j \, \pi r^2 e_i(r),</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>e</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">e_i(r)</annotation></semantics></math>
+is the share of the disc of radius <em>r</em> around cell <em>i</em>
+that lies inside the window, which corrects for cells near the edge. The
+LISA is the standardised difference</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><msub><mi>n</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">\frac{n_{ij}(r) - E_{ij}(r)}{\sqrt{E_{ij}(r)}},</annotation></semantics></math></p>
+<p>a local version of Ripley’s K function for the pair
+(<code>lisaFunc = "L"</code> gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><msub><mi>n</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt><mo>−</mo><msqrt><mrow><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{n_{ij}(r)} - \sqrt{E_{ij}(r)}</annotation></semantics></math>
+instead). The window is the convex hull of the image’s cells by default
+(<code>window</code>). The neighbour search and the edge correction run
+in C++, so the LISA of hundreds of thousands of cells take seconds.</p>
+</div>
+<div class="section level2">
+<h2 id="reporting-results">Reporting results<a class="anchor" aria-label="anchor" href="#reporting-results"></a>
+</h2>
+<p>A methods sentence might read: “We used lisaClust (version 1.21.1) to
+compute, for each cell, local indicators of spatial association with
+every cell type at radii of 20, 50 and 100 pixels, and clustered the
+cells into 20 niches by k-means. The share of each niche in each patient
+was compared between groups with a Wilcoxon test, with patients as the
+units, and p-values were adjusted across niches by the
+Benjamini–Hochberg method.” Show <code><a href="../reference/regionMap.html">regionMap()</a></code> and a
+<code><a href="../reference/hatchingPlot.html">hatchingPlot()</a></code> of example images with the results.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"lisaClust"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; To cite package 'lisaClust' in publications use:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Patrick E, Canete NP, Iyengar SS, Harman AN, Sutherland GT, Yang P</span></span>
+<span><span class="co">#&gt;   (2023). "Spatial analysis for highly multiplexed imaging data to</span></span>
+<span><span class="co">#&gt;   identify tissue microenvironments." _Cytometry Part A_, *103*,</span></span>
+<span><span class="co">#&gt;   593-599. doi:10.1002/cyto.a.24729</span></span>
+<span><span class="co">#&gt;   &lt;https://doi.org/10.1002/cyto.a.24729&gt;.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; A BibTeX entry for LaTeX users is</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   @Article{,</span></span>
+<span><span class="co">#&gt;     title = {Spatial analysis for highly multiplexed imaging data to identify tissue microenvironments},</span></span>
+<span><span class="co">#&gt;     author = {Ellis Patrick and Nicolas P. Canete and Sourish S. Iyengar and Andrew N. Harman and Greg T. Sutherland and Pengyi Yang},</span></span>
+<span><span class="co">#&gt;     journal = {Cytometry Part A},</span></span>
+<span><span class="co">#&gt;     volume = {103},</span></span>
+<span><span class="co">#&gt;     pages = {593--599},</span></span>
+<span><span class="co">#&gt;     year = {2023},</span></span>
+<span><span class="co">#&gt;     doi = {10.1002/cyto.a.24729},</span></span>
+<span><span class="co">#&gt;   }</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
+</h2>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">## R version 4.5.0 (2025-04-11)</span></span>
-<span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Matrix products: default</span></span>
-<span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
-<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## locale:</span></span>
-<span><span class="co">##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
-<span><span class="co">##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
-<span><span class="co">##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
-<span><span class="co">## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## time zone: UTC</span></span>
-<span><span class="co">## tzcode source: system (glibc)</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## attached base packages:</span></span>
-<span><span class="co">## [1] stats4    stats     graphics  grDevices utils     datasets  methods  </span></span>
-<span><span class="co">## [8] base     </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] SpatialDatasets_1.6.3       SpatialExperiment_1.18.1   </span></span>
-<span><span class="co">##  [3] ExperimentHub_2.16.0        AnnotationHub_3.16.0       </span></span>
-<span><span class="co">##  [5] BiocFileCache_2.16.0        dbplyr_2.5.0               </span></span>
-<span><span class="co">##  [7] SingleCellExperiment_1.30.1 SummarizedExperiment_1.38.1</span></span>
-<span><span class="co">##  [9] Biobase_2.68.0              GenomicRanges_1.60.0       </span></span>
-<span><span class="co">## [11] GenomeInfoDb_1.44.0         IRanges_2.42.0             </span></span>
-<span><span class="co">## [13] S4Vectors_0.46.0            BiocGenerics_0.54.0        </span></span>
-<span><span class="co">## [15] generics_0.1.4              MatrixGenerics_1.20.0      </span></span>
-<span><span class="co">## [17] matrixStats_1.5.0           ggplot2_3.5.2              </span></span>
-<span><span class="co">## [19] spicyR_1.20.1               lisaClust_1.15.6           </span></span>
-<span><span class="co">## [21] BiocStyle_2.36.0           </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] fs_1.6.6                    spatstat.sparse_3.1-0      </span></span>
-<span><span class="co">##   [3] bitops_1.0-9                EBImage_4.50.0             </span></span>
-<span><span class="co">##   [5] httr_1.4.7                  RColorBrewer_1.1-3         </span></span>
-<span><span class="co">##   [7] numDeriv_2016.8-1.1         tools_4.5.0                </span></span>
-<span><span class="co">##   [9] doRNG_1.8.6.2               backports_1.5.0            </span></span>
-<span><span class="co">##  [11] R6_2.6.1                    HDF5Array_1.36.0           </span></span>
-<span><span class="co">##  [13] mgcv_1.9-1                  rhdf5filters_1.20.0        </span></span>
-<span><span class="co">##  [15] withr_3.0.2                 sp_2.2-0                   </span></span>
-<span><span class="co">##  [17] gridExtra_2.3               coxme_2.2-22               </span></span>
-<span><span class="co">##  [19] ClassifyR_3.12.2            cli_3.6.5                  </span></span>
-<span><span class="co">##  [21] textshaping_1.0.1           spatstat.explore_3.4-3     </span></span>
-<span><span class="co">##  [23] labeling_0.4.3              sass_0.4.10                </span></span>
-<span><span class="co">##  [25] nnls_1.6                    spatstat.data_3.1-6        </span></span>
-<span><span class="co">##  [27] pkgdown_2.1.3               systemfonts_1.2.3          </span></span>
-<span><span class="co">##  [29] ggupset_0.4.1               svglite_2.2.1              </span></span>
-<span><span class="co">##  [31] RSQLite_2.4.1               simpleSeg_1.10.0           </span></span>
-<span><span class="co">##  [33] spatstat.random_3.4-1       car_3.1-3                  </span></span>
-<span><span class="co">##  [35] dplyr_1.1.4                 scam_1.2-19                </span></span>
-<span><span class="co">##  [37] Matrix_1.7-3                ggbeeswarm_0.7.2           </span></span>
-<span><span class="co">##  [39] abind_1.4-8                 terra_1.8-54               </span></span>
-<span><span class="co">##  [41] lifecycle_1.0.4             yaml_2.3.10                </span></span>
-<span><span class="co">##  [43] carData_3.0-5               rhdf5_2.52.1               </span></span>
-<span><span class="co">##  [45] SparseArray_1.8.0           grid_4.5.0                 </span></span>
-<span><span class="co">##  [47] blob_1.2.4                  promises_1.3.3             </span></span>
-<span><span class="co">##  [49] crayon_1.5.3                bdsmatrix_1.3-7            </span></span>
-<span><span class="co">##  [51] shinydashboard_0.7.3        lattice_0.22-6             </span></span>
-<span><span class="co">##  [53] KEGGREST_1.48.0             magick_2.8.7               </span></span>
-<span><span class="co">##  [55] cytomapper_1.20.0           pillar_1.10.2              </span></span>
-<span><span class="co">##  [57] knitr_1.50                  dcanr_1.24.0               </span></span>
-<span><span class="co">##  [59] rjson_0.2.23                boot_1.3-31                </span></span>
-<span><span class="co">##  [61] codetools_0.2-20            glue_1.8.0                 </span></span>
-<span><span class="co">##  [63] V8_6.0.4                    spatstat.univar_3.1-3      </span></span>
-<span><span class="co">##  [65] data.table_1.17.4           MultiAssayExperiment_1.34.0</span></span>
-<span><span class="co">##  [67] vctrs_0.6.5                 png_0.1-8                  </span></span>
-<span><span class="co">##  [69] Rdpack_2.6.4                gtable_0.3.6               </span></span>
-<span><span class="co">##  [71] cachem_1.1.0                xfun_0.52                  </span></span>
-<span><span class="co">##  [73] rbibutils_2.3               S4Arrays_1.8.1             </span></span>
-<span><span class="co">##  [75] mime_0.13                   reformulas_0.4.1           </span></span>
-<span><span class="co">##  [77] survival_3.8-3              pheatmap_1.0.13            </span></span>
-<span><span class="co">##  [79] iterators_1.0.14            nlme_3.1-168               </span></span>
-<span><span class="co">##  [81] bit64_4.6.0-1               filelock_1.0.3             </span></span>
-<span><span class="co">##  [83] bslib_0.9.0                 svgPanZoom_0.3.4           </span></span>
-<span><span class="co">##  [85] vipor_0.4.7                 DBI_1.2.3                  </span></span>
-<span><span class="co">##  [87] raster_3.6-32               tidyselect_1.2.1           </span></span>
-<span><span class="co">##  [89] bit_4.6.0                   compiler_4.5.0             </span></span>
-<span><span class="co">##  [91] curl_6.3.0                  h5mread_1.0.1              </span></span>
-<span><span class="co">##  [93] desc_1.4.3                  DelayedArray_0.34.1        </span></span>
-<span><span class="co">##  [95] bookdown_0.43               scales_1.4.0               </span></span>
-<span><span class="co">##  [97] rappdirs_0.3.3              tiff_0.1-12                </span></span>
-<span><span class="co">##  [99] stringr_1.5.1               digest_0.6.37              </span></span>
-<span><span class="co">## [101] goftest_1.2-3               fftwtools_0.9-11           </span></span>
-<span><span class="co">## [103] spatstat.utils_3.1-4        minqa_1.2.8                </span></span>
-<span><span class="co">## [105] rmarkdown_2.29              XVector_0.48.0             </span></span>
-<span><span class="co">## [107] htmltools_0.5.8.1           pkgconfig_2.0.3            </span></span>
-<span><span class="co">## [109] jpeg_0.1-11                 lme4_1.1-37                </span></span>
-<span><span class="co">## [111] fastmap_1.2.0               rlang_1.1.6                </span></span>
-<span><span class="co">## [113] htmlwidgets_1.6.4           ggthemes_5.1.0             </span></span>
-<span><span class="co">## [115] UCSC.utils_1.4.0            shiny_1.10.0               </span></span>
-<span><span class="co">## [117] ggh4x_0.3.1                 farver_2.1.2               </span></span>
-<span><span class="co">## [119] jquerylib_0.1.4             jsonlite_2.0.0             </span></span>
-<span><span class="co">## [121] BiocParallel_1.42.1         RCurl_1.98-1.17            </span></span>
-<span><span class="co">## [123] magrittr_2.0.3              Formula_1.2-5              </span></span>
-<span><span class="co">## [125] GenomeInfoDbData_1.2.14     Rhdf5lib_1.30.0            </span></span>
-<span><span class="co">## [127] Rcpp_1.0.14                 viridis_0.6.5              </span></span>
-<span><span class="co">## [129] ggnewscale_0.5.1            stringi_1.8.7              </span></span>
-<span><span class="co">## [131] MASS_7.3-65                 plyr_1.8.9                 </span></span>
-<span><span class="co">## [133] parallel_4.5.0              deldir_2.0-4               </span></span>
-<span><span class="co">## [135] Biostrings_2.76.0           splines_4.5.0              </span></span>
-<span><span class="co">## [137] tensor_1.5                  locfit_1.5-9.12            </span></span>
-<span><span class="co">## [139] igraph_2.1.4                ggpubr_0.6.0               </span></span>
-<span><span class="co">## [141] spatstat.geom_3.4-1         ggsignif_0.6.4             </span></span>
-<span><span class="co">## [143] rngtools_1.5.2              reshape2_1.4.4             </span></span>
-<span><span class="co">## [145] BiocVersion_3.21.1          evaluate_1.0.3             </span></span>
-<span><span class="co">## [147] BiocManager_1.30.26         nloptr_2.2.1               </span></span>
-<span><span class="co">## [149] foreach_1.5.2               tweenr_2.0.3               </span></span>
-<span><span class="co">## [151] httpuv_1.6.16               tidyr_1.3.1                </span></span>
-<span><span class="co">## [153] purrr_1.0.4                 polyclip_1.10-7            </span></span>
-<span><span class="co">## [155] BiocBaseUtils_1.10.0        ggforce_0.4.2              </span></span>
-<span><span class="co">## [157] broom_1.0.8                 xtable_1.8-4               </span></span>
-<span><span class="co">## [159] rstatix_0.7.2               later_1.4.2                </span></span>
-<span><span class="co">## [161] viridisLite_0.4.2           class_7.3-23               </span></span>
-<span><span class="co">## [163] ragg_1.4.0                  tibble_3.3.0               </span></span>
-<span><span class="co">## [165] lmerTest_3.1-3              memoise_2.0.1              </span></span>
-<span><span class="co">## [167] beeswarm_0.4.0              AnnotationDbi_1.70.0       </span></span>
-<span><span class="co">## [169] concaveman_1.1.0</span></span></code></pre></div>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.5 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats4    stats     graphics  grDevices utils     datasets  methods  </span></span>
+<span><span class="co">#&gt; [8] base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt;  [1] ggplot2_4.0.3               SpatialDatasets_1.10.0     </span></span>
+<span><span class="co">#&gt;  [3] ExperimentHub_3.2.2         AnnotationHub_4.2.2        </span></span>
+<span><span class="co">#&gt;  [5] BiocFileCache_3.2.0         dbplyr_2.6.0               </span></span>
+<span><span class="co">#&gt;  [7] SpatialExperiment_1.22.0    SingleCellExperiment_1.34.0</span></span>
+<span><span class="co">#&gt;  [9] SummarizedExperiment_1.42.0 Biobase_2.72.0             </span></span>
+<span><span class="co">#&gt; [11] GenomicRanges_1.64.0        Seqinfo_1.2.0              </span></span>
+<span><span class="co">#&gt; [13] IRanges_2.46.0              S4Vectors_0.50.3           </span></span>
+<span><span class="co">#&gt; [15] BiocGenerics_0.58.1         generics_0.1.4             </span></span>
+<span><span class="co">#&gt; [17] MatrixGenerics_1.24.0       matrixStats_1.5.0          </span></span>
+<span><span class="co">#&gt; [19] lisaClust_1.21.1            BiocStyle_2.40.0           </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] DBI_1.3.0              deldir_2.0-4           httr2_1.3.0           </span></span>
+<span><span class="co">#&gt;  [4] rlang_1.3.0            magrittr_2.0.5         otel_0.2.0            </span></span>
+<span><span class="co">#&gt;  [7] compiler_4.6.1         RSQLite_3.53.3         spatstat.geom_3.8-3   </span></span>
+<span><span class="co">#&gt; [10] png_0.1-9              systemfonts_1.3.2      vctrs_0.7.3           </span></span>
+<span><span class="co">#&gt; [13] pkgconfig_2.0.3        crayon_1.5.3           fastmap_1.2.0         </span></span>
+<span><span class="co">#&gt; [16] magick_2.9.1           XVector_0.52.0         labeling_0.4.3        </span></span>
+<span><span class="co">#&gt; [19] rmarkdown_2.32         ragg_1.5.2             purrr_1.2.2           </span></span>
+<span><span class="co">#&gt; [22] bit_4.6.0              xfun_0.61              cachem_1.1.0          </span></span>
+<span><span class="co">#&gt; [25] jsonlite_2.0.0         goftest_1.2-3          blob_1.3.0            </span></span>
+<span><span class="co">#&gt; [28] DelayedArray_0.38.2    spatstat.utils_3.2-5   BiocParallel_1.46.0   </span></span>
+<span><span class="co">#&gt; [31] parallel_4.6.1         R6_2.6.1               bslib_0.12.0          </span></span>
+<span><span class="co">#&gt; [34] RColorBrewer_1.1-3     spatstat.data_3.1-9    spatstat.univar_3.2-0 </span></span>
+<span><span class="co">#&gt; [37] jquerylib_0.1.4        Rcpp_1.1.2             bookdown_0.48         </span></span>
+<span><span class="co">#&gt; [40] knitr_1.52             tensor_1.5.1           Matrix_1.7-5          </span></span>
+<span><span class="co">#&gt; [43] tidyselect_1.2.1       abind_1.4-8            yaml_2.3.12           </span></span>
+<span><span class="co">#&gt; [46] codetools_0.2-20       spatstat.random_3.5-2  spatstat.explore_3.8-3</span></span>
+<span><span class="co">#&gt; [49] curl_8.0.0             lattice_0.22-9         tibble_3.3.1          </span></span>
+<span><span class="co">#&gt; [52] withr_3.0.3            KEGGREST_1.52.2        S7_0.2.2              </span></span>
+<span><span class="co">#&gt; [55] evaluate_1.0.5         desc_1.4.3             polyclip_1.10-7       </span></span>
+<span><span class="co">#&gt; [58] Biostrings_2.80.2      pillar_1.11.1          BiocManager_1.30.27   </span></span>
+<span><span class="co">#&gt; [61] filelock_1.0.3         BiocVersion_3.23.1     scales_1.4.0          </span></span>
+<span><span class="co">#&gt; [64] glue_1.8.1             pheatmap_1.0.13        tools_4.6.1           </span></span>
+<span><span class="co">#&gt; [67] fs_2.1.0               grid_4.6.1             AnnotationDbi_1.74.0  </span></span>
+<span><span class="co">#&gt; [70] nlme_3.1-169           cli_3.6.6              spatstat.sparse_3.2-0 </span></span>
+<span><span class="co">#&gt; [73] rappdirs_0.3.4         textshaping_1.0.5      S4Arrays_1.12.1       </span></span>
+<span><span class="co">#&gt; [76] dplyr_1.2.1            concaveman_1.2.0       V8_8.2.0              </span></span>
+<span><span class="co">#&gt; [79] gtable_0.3.6           sass_0.4.10            digest_0.6.39         </span></span>
+<span><span class="co">#&gt; [82] SparseArray_1.12.3     rjson_0.2.23           farver_2.1.2          </span></span>
+<span><span class="co">#&gt; [85] memoise_2.0.1          htmltools_0.5.9        pkgdown_2.2.1         </span></span>
+<span><span class="co">#&gt; [88] lifecycle_1.0.5        httr_1.4.9             bit64_4.8.6</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-keren2018" class="csl-entry">
-Keren, L, M Bosse, D Marquez, R Angoshtari, S Jain, S Varma, S Yang, et
-al. 2018. <span>“A Structured Tumor-Immune Microenvironment in Triple
-Negative Breast Cancer Revealed by Multiplexed Ion Beam Imaging.”</span>
-<em>Cell</em> 174 (6): 1373–1387.e19.
+Keren, L, M Bosse, D Marquez, et al. 2018. <span>“A Structured
+Tumor-Immune Microenvironment in Triple Negative Breast Cancer Revealed
+by Multiplexed Ion Beam Imaging.”</span> <em>Cell</em> 174 (6):
+1373–1387.e19.
+</div>
+<div id="ref-patrick2023" class="csl-entry">
+Patrick, Ellis, Nicolas P Canete, Sourish S Iyengar, Andrew N Harman,
+Greg T Sutherland, and Pengyi Yang. 2023. <span>“Spatial Analysis for
+Highly Multiplexed Imaging Data to Identify Tissue
+Microenvironments.”</span> <em>Cytometry Part A</em> 103: 593–99. <a href="https://doi.org/10.1002/cyto.a.24729" class="external-link">https://doi.org/10.1002/cyto.a.24729</a>.
+</div>
+<div id="ref-schurch2020" class="csl-entry">
+<span class="nocase">Schürch, Christian M et al.</span> 2020.
+<span>“Coordinated Cellular Neighborhoods Orchestrate Antitumoral
+Immunity at the Colorectal Cancer Invasive Front.”</span> <em>Cell</em>
+182 (5): 1341–59. <a href="https://doi.org/10.1016/j.cell.2020.07.005" class="external-link">https://doi.org/10.1016/j.cell.2020.07.005</a>.
 </div>
 </div>
 </div>
@@ -496,7 +611,7 @@ Negative Breast Cancer Revealed by Multiplexed Ion Beam Imaging.”</span>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
