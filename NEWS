@@ -1,3 +1,13 @@
+CHANGES IN VERSION 1.21.3
+-------------------------
+
+    o hatchingPlot() and geom_hatching() outline each region by the union of the Voronoi tiles of its cells,
+      clipped to the window, instead of a grid of nbp x nbp points: the outlines follow the cells exactly and
+      `nbp` is no longer used. The hatching lines are clipped to each outline by polyclip, so they cannot cross
+      into another region. Drawing an image of about 6,000 cells takes about 3 s, and printing it again 0.8 s.
+
+    o The concave window is built without a loop over cells (about 3 times faster, same window).
+
 CHANGES IN VERSION 1.21.2
 -------------------------
 

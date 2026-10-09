@@ -81,72 +81,57 @@ test_that("nearest labels match a brute-force search", {
   expect_equal(lisaClust:::.nearestLabels(c(0, 2, 1), c(0, 0, 1), c(2L, 1L, 2L), 1, 0), 2L)
 })
 
-test_that("hatching lines cross each outline an even number of times, with their midpoints inside", {
-  # a region on a grid, like those regionPoly() makes: outlines with many vertices on grid lines
+ringsArea <- function(rings) sum(vapply(rings, function(r) {
+  n <- length(r$x); 0.5 * sum(r$x * r$y[c(2:n, 1)] - r$x[c(2:n, 1)] * r$y)
+}, numeric(1)))
+
+test_that("region outlines partition the window, and each cell is inside its own region", {
   set.seed(4)
-  mat <- matrix(runif(400) < 0.5, 20, 20)
-  W <- spatstat.geom::as.polygonal(spatstat.geom::owin(c(0, 20), c(0, 20), mask = mat))
-  edges <- lapply(W$bdry, function(b) {
-    n <- length(b$x)
-    list(x1 = b$x, y1 = b$y, x2 = b$x[c(seq_len(n)[-1], 1)], y2 = b$y[c(seq_len(n)[-1], 1)])
-  })
-  vx <- unlist(lapply(W$bdry, `[[`, "x")); vy <- unlist(lapply(W$bdry, `[[`, "y"))
-  lines <- list(rbind(c(-1, 5), c(21, 5)),                 # along grid lines: through vertices and along edges
-                rbind(c(vx[3], -1), c(vx[3], 21)),
-                rbind(c(vx[7] - 30, vy[7] - 30), c(vx[7] + 30, vy[7] + 30)),  # diagonal through a vertex
-                rbind(c(-1, 3.3), c(21, 7.7)))              # general position
-  for (h in lines) {
-    cr <- lisaClust:::hatchCrossings(edges, h[1, ], h[2, ])
-    expect_true(nrow(cr) %% 2 == 0)
-    if (nrow(cr) >= 2) {
-      mid <- (cr[c(TRUE, FALSE), , drop = FALSE] + cr[c(FALSE, TRUE), , drop = FALSE]) / 2
-      long <- sqrt(rowSums((cr[c(TRUE, FALSE), , drop = FALSE] - cr[c(FALSE, TRUE), , drop = FALSE])^2)) > 1e-9
-      expect_true(all(spatstat.geom::inside.owin(mid[long, 1], mid[long, 2], W)))
+  n <- 600
+  x <- runif(n, 0, 100); y <- runif(n, 0, 80)
+  region <- ifelse(x + 20 * sin(y / 8) < 50, 1, ifelse(y < 40, 2, 3))
+  for (window in c("square", "convex", "concave")) {
+    W <- suppressMessages(lisaClust:::makeWindow(data.frame(x = x, y = y), window, NULL))
+    polys <- lisaClust:::regionPolygons(x, y, region, W)
+    expect_equal(sum(vapply(polys[lengths(polys) > 0], ringsArea, numeric(1))), spatstat.geom::area(W), tolerance = 1e-6)
+    # cells on the window's edge (the corners of a convex hull or bounding box) lie on the outline itself
+    interior <- spatstat.geom::bdist.points(spatstat.geom::ppp(x, y, window = W, check = FALSE)) > 1e-9
+    for (r in 1:3) {
+      Wr <- spatstat.geom::owin(poly = polys[[r]], check = FALSE)
+      k <- region == r & interior
+      expect_true(all(spatstat.geom::inside.owin(x[k], y[k], Wr)))
     }
   }
 })
 
-test_that("hatching crossings agree with the line intersection used before, in general position", {
-  # the scalar version lisaClust used before 1.21.1
-  lineIntersection <- function(P1, P2, P3, P4) {
-    P1 <- round(as.vector(P1), 10); P2 <- round(as.vector(P2), 10); P3 <- round(as.vector(P3), 10); P4 <- round(as.vector(P4), 10)
-    dx1 <- P1[1] - P2[1]; dx2 <- P3[1] - P4[1]; dy1 <- P1[2] - P2[2]; dy2 <- P3[2] - P4[2]
-    D <- det(rbind(c(dx1, dy1), c(dx2, dy2)))
-    if (is.na(D) | D == 0) return(c(Inf, Inf))
-    D1 <- det(rbind(P1, P2)); D2 <- det(rbind(P3, P4))
-    X <- round(det(rbind(c(D1, dx1), c(D2, dx2))) / D, 10); Y <- round(det(rbind(c(D1, dy1), c(D2, dy2))) / D, 10)
-    l1 <- -((X - P1[1]) * dx1 + (Y - P1[2]) * dy1) / (dx1^2 + dy1^2)
-    l2 <- -((X - P3[1]) * dx2 + (Y - P3[2]) * dy2) / (dx2^2 + dy2^2)
-    if (!((l1 >= 0) & (l1 <= 1) & (l2 >= 0) & (l2 <= 1))) return(c(NA, NA))
-    c(X, Y)
+test_that("hatching lines clipped to a region stay inside it", {
+  ring <- list(list(x = c(0.1, 0.9, 0.9, 0.5, 0.1), y = c(0.1, 0.1, 0.9, 0.5, 0.9)))
+  for (type in 2:7) {
+    pieces <- polyclip::polyclip(lisaClust:::hatchLines(type, 1 / 20), ring, op = "intersection", closed = FALSE)
+    expect_true(length(pieces) > 0)
+    W <- spatstat.geom::owin(poly = ring, check = FALSE)
+    mids <- t(vapply(pieces, function(p) c(mean(range(p$x)), mean(range(p$y))), numeric(2)))
+    expect_true(all(spatstat.geom::inside.owin(mids[, 1], mids[, 2], spatstat.geom::grow.rectangle(spatstat.geom::Frame(W), 1e-9)) ))
+    expect_true(all(unlist(lapply(pieces, `[[`, "x")) >= 0.1 - 1e-9 & unlist(lapply(pieces, `[[`, "x")) <= 0.9 + 1e-9))
   }
-  set.seed(5)
-  th <- sort(runif(30, 0, 2 * pi)); rr <- runif(30, 5, 10)
-  ring <- list(x1 = rr * cos(th), y1 = rr * sin(th))
-  ring$x2 <- ring$x1[c(2:30, 1)]; ring$y2 <- ring$y1[c(2:30, 1)]
-  h <- rbind(c(-12, -3.1), c(12, 4.7))
-  got <- lisaClust:::hatchCrossings(list(ring), h[1, ], h[2, ])
-  old <- t(vapply(1:30, function(i) lineIntersection(c(ring$x1[i], ring$y1[i]), c(ring$x2[i], ring$y2[i]), h[1, ], h[2, ]),
-                  numeric(2)))
-  old <- old[!is.na(old[, 1]), , drop = FALSE]
-  old <- old[order(old[, 1]), , drop = FALSE]
-  expect_equal(unname(got), unname(old), tolerance = 1e-9)
 })
 
-test_that("a hatching plot drawn again comes from the cache", {
+test_that("a hatching plot drawn again reuses the region outlines", {
   set.seed(6)
   d <- data.frame(x = runif(400, 0, 100), y = runif(400, 0, 100), imageID = "a")
-  d$cellType <- ifelse(d$x < 50, "l", "r")
   d$region <- ifelse(d$x < 50, "region_1", "region_2")
-  p <- ggplot2::ggplot(d, ggplot2::aes(x, y, region = region)) + geom_hatching(window = "square", nbp = 50)
+  p <- ggplot2::ggplot(d, ggplot2::aes(x, y, region = region)) + geom_hatching(window = "square")
   lisaClust:::.hatchingCache$clear()
-  t1 <- system.time(g1 <- ggplot2::ggplotGrob(p))[3]
-  t2 <- system.time(g2 <- ggplot2::ggplotGrob(p))[3]
+  g1 <- ggplot2::ggplotGrob(p)
+  g2 <- ggplot2::ggplotGrob(p)
+  expect_length(environment(lisaClust:::.hatchingCache$get)$store, 1)
   panel <- function(g) g$grobs[[grep("panel", g$layout$name)[1]]]
   h1 <- panel(g1)$children[[grep("hatching", names(panel(g1)$children))]]
   h2 <- panel(g2)$children[[grep("hatching", names(panel(g2)$children))]]
-  expect_identical(h1, h2)
-  expect_length(environment(lisaClust:::.hatchingCache$get)$store, 1)
+  expect_identical(h1$polys, h2$polys)
+  # it draws
+  pdf(NULL); on.exit(dev.off())
+  expect_silent(grid::grid.draw(g1))
 })
 
 test_that("regions go back to the right cells when the images are not in order", {

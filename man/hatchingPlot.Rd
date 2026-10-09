@@ -15,7 +15,7 @@ hatchingPlot(
   window = "concave",
   line.spacing = 21,
   hatching.colour = 1,
-  nbp = 50,
+  nbp = NULL,
   window.length = NULL
 )
 
@@ -31,7 +31,7 @@ geom_hatching(
   hatching.colour = 1,
   window = "concave",
   window.length = NULL,
-  nbp = 250,
+  nbp = NULL,
   line.width = 1,
   ...
 )
@@ -55,7 +55,7 @@ geom_hatching(
 
 \item{hatching.colour}{A colour for the hatching.}
 
-\item{nbp}{An integer tuning the granularity of the grid used when defining regions}
+\item{nbp}{Not used: regions are outlined by the Voronoi tiles of their cells.}
 
 \item{window.length}{A tuning parameter for controlling the level of concavity
 when estimating concave windows.}
@@ -107,6 +107,10 @@ The hatchingPlot() function is used to create hatching patterns for representati
 spatial regions and cell-types.
 
 The hatching geom is used to create hatching patterns for representation of spatial regions.
+}
+\details{
+Each region is outlined by the union of the Voronoi tiles of its cells, clipped to the window, and
+its hatching lines are clipped to that outline.
 }
 \examples{
 ## Generate toy data

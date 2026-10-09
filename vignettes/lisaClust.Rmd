@@ -152,7 +152,7 @@ examples
 ```
 
 ```{r keren-hatching, fig.width = 10, fig.height = 5.5}
-hatchingPlot(kerenSPE, useImages = examples, region = "domain", nbp = 200)
+hatchingPlot(kerenSPE, useImages = examples, region = "domain")
 ```
 
 ## Do the domains differ between kinds of tumour?

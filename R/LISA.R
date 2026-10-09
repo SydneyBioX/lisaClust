@@ -172,13 +172,11 @@ makeWindow <-
         window.length <- (max(data$x) - min(data$x)) / 20 * window.length
       }
       dist <- (max(data$x) - min(data$x)) / (length(data$x))
-      bigDat <-
-        do.call("rbind", lapply(as.list(as.data.frame(t(data[, c("x", "y")]))), function(x) {
-          cbind(
-            x[1] + c(0, 1, 0, -1, -1, 0, 1, -1, 1) * dist,
-            x[2] + c(0, 1, 1, 1, -1, -1, -1, 0, 0) * dist
-          )
-        }))
+      # each cell and its 8 neighbours at distance dist, cell by cell
+      bigDat <- cbind(
+        rep(data$x, each = 9) + rep(c(0, 1, 0, -1, -1, 0, 1, -1, 1) * dist, times = nrow(data)),
+        rep(data$y, each = 9) + rep(c(0, 1, 1, 1, -1, -1, -1, 0, 0) * dist, times = nrow(data))
+      )
       ch <-
         concaveman::concaveman(bigDat,
                                length_threshold = window.length,

@@ -12,9 +12,12 @@
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param line.spacing A integer indicating the spacing between hatching lines.
 #' @param hatching.colour Colour for the hatching.
-#' @param nbp An integer tuning the granularity of the grid used when defining regions.
+#' @param nbp Not used: regions are outlined by the Voronoi tiles of their cells.
 #' @param window.length A tuning parameter for controlling the level of concavity
 #' when estimating concave windows.
+#'
+#' @details Each region is outlined by the union of the Voronoi tiles of its cells, clipped to the window, and
+#' its hatching lines are clipped to that outline.
 #'
 #' @return A ggplot object
 #'
@@ -54,7 +57,7 @@ hatchingPlot <-
            window = "concave",
            line.spacing = 21,
            hatching.colour = 1,
-           nbp = 50,
+           nbp = NULL,
            window.length = NULL) {
     df <- .formatCells(cells, imageID, cellType, spatialCoords)
     if (!region %in% colnames(df)) stop(paste0("'", region, "' column not found in data"))
@@ -81,7 +84,6 @@ hatchingPlot <-
         window = window,
         line.spacing = line.spacing,
         hatching.colour = hatching.colour,
-        nbp = nbp,
         window.length = window.length
       )
     q <- p + theme_minimal() + scale_region() + labs(x = "x", y = "y")
@@ -130,7 +132,7 @@ hatchingPlot <-
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param window.length A tuning parameter for controlling the level of concavity
 #' when estimating concave windows.
-#' @param nbp An integer tuning the granularity of the grid used when defining regions
+#' @param nbp Not used: regions are outlined by the Voronoi tiles of their cells.
 #' @param line.width A numeric controlling the width of the hatching lines
 #' @param ... Other arguments passed on to layer(). These are often aesthetics,
 #' used to set an aesthetic to a fixed value, like colour = "red" or size = 3.
@@ -182,7 +184,7 @@ geom_hatching <-
            hatching.colour = 1,
            window = "concave",
            window.length = NULL,
-           nbp = 250,
+           nbp = NULL,
            line.width = 1,
            ...) {
     ggplot2::layer(
@@ -199,7 +201,6 @@ geom_hatching <-
         hatching.colour = hatching.colour,
         window = window,
         window.length = window.length,
-        nbp = nbp,
         line.width = line.width,
         ...
       )
@@ -479,7 +480,7 @@ GeomHatching <-
     ggplot2::GeomPoint,
     extra_params = c(
       "na.rm",
-      "line.spacing", "window", "nbp", "line.width", "hatching.colour"
+      "line.spacing", "window", "window.length", "line.width", "hatching.colour"
     ),
     draw_panel = function(data,
                           panel_params,
@@ -488,53 +489,33 @@ GeomHatching <-
                           line.spacing = 21,
                           window = "convex",
                           window.length = NULL,
-                          nbp = 250,
+                          nbp = NULL,
                           line.width = 1,
                           hatching.colour = 1) {
-      coords <- coord$transform(data, panel_params)
-      
-      # The hatching depends only on the cells' positions in the panel, their regions and the settings, so a
-      # plot that is printed again (for example when its window is resized) reuses it.
-      key <- rlang::hash(list(coords$x, coords$y, coords$region, line.spacing, window, window.length, nbp,
-                              line.width, hatching.colour))
-      cached <- .hatchingCache$get(key)
-      if (!is.null(cached)) return(cached)
-      
-      if (is.factor(coords$region)) {
-        coords$region <-
-          as.numeric(coords$region)
-      }
-      if (is.character(coords$region)) {
-        coords$region <-
-          as.numeric(as.factor(coords$region))
+      region <- data$region
+      if (is.factor(region)) region <- as.numeric(region)
+      if (is.character(region)) region <- as.numeric(as.factor(region))
+      if (max(region) > 7) {
+        warning("Can not plot more than 7 regions. Adding regions greater than 7 to region 1.")
+        region[region > 7] <- 1
       }
       
-      ow <-
-        makeWindow(coords, window, window.length)
+      # The region outlines depend only on the cells, their regions and the window, so a plot that is printed
+      # again (for example when its window is resized) reuses them.
+      key <- rlang::hash(list(data$x, data$y, region, window, window.length))
+      polys <- .hatchingCache$get(key)
+      if (is.null(polys)) {
+        polys <- regionPolygons(data$x, data$y, region, makeWindow(data, window, window.length))
+        .hatchingCache$set(key, polys)
+      }
       
-      pp <-
-        spatstat.geom::ppp(coords$x,
-                           coords$y,
-                           window = ow,
-                           marks = coords$region
-        )
-      
-      
-      pp$region <-
-        pp$marks
-      grob <-
-        plotRegions(pp,
-                    line.spacing,
-                    c(0, 1),
-                    c(0, 1),
-                    nbp = nbp,
-                    line.width = line.width,
-                    hatching.colour = hatching.colour
-        )
-      grob$name <-
-        "geom_hatching"
-      .hatchingCache$set(key, grob)
-      return(grob)
+      # outlines in the panel's coordinates
+      polys <- lapply(polys, function(rings) lapply(rings, function(r) {
+        xy <- coord$transform(data.frame(x = r$x, y = r$y), panel_params)
+        list(x = xy$x, y = xy$y)
+      }))
+      grid::gTree(polys = polys, spacing = 1 / line.spacing, col = hatching.colour, lwd = line.width,
+                  name = "geom_hatching", cl = "lisaHatching")
     },
     draw_key = draw_key_region,
     required_aes = c("x", "y", "region"),
@@ -556,387 +537,104 @@ GeomHatching <-
 
 ################################################################################
 ##
-## Create Hatchings
+## Region outlines and their hatching
 ##
 ################################################################################
 
 
-
-######## Plot the hatchings
-#' @importFrom purrr map
-#' @importFrom grid linesGrob gpar gList grobTree
-plotRegions <-
-  function(pp,
-           line.spacing = 21,
-           xrange = c(0, 1),
-           yrange = c(0, 1),
-           nbp = 250,
-           line.width = 1,
-           hatching.colour = 1) {
-    rx <- xrange
-    ry <- yrange
-    width <- (rx[2] - rx[1]) / line.spacing
-    
-    # Convert to 7 regions
-    if (max(pp$region) > 7) {
-      warning("Can not plot more than 7 regions. Adding regions greater than 7 to region 1.")
-      pp$region[pp$region > 7] <- 1
-    }
-    
-    # Convert ppp to grid
-    rG <- regionGrid(pp, nbp)
-    
-    # Convert grid to polygon
-    tree <- purrr::map(as.character(unique(pp$region)), ~ {
-      rPoly <- regionPoly(rG, .)
-      
-      bdrys <- purrr::map(rPoly$bdry, ~ {
-        df <- do.call("cbind", .)
-        df <- data.frame(rbind(df, df[1, ]))
-        g <-
-          linesGrob(
-            x = df$x / rx[2],
-            y = df$y / ry[2],
-            gp = gpar(col = hatching.colour, lwd = line.width)
-          )
-        return(g)
-      })
-      
-      hatchFun <-
-        switch(.,
-               `1` = hatchNull,
-               `2` = hatch45,
-               `3` = hatch315,
-               `4` = hatch90,
-               `5` = hatch180,
-               `6` = hatchX,
-               `7` = hatchPlus
-        )
-      return(c(
-        bdrys,
-        hatchFun(rPoly, width, rx, ry, line.width = line.width, hatching.colour = hatching.colour)
-      ))
-    })
-    
-    g <- do.call("gList", (do.call("c", tree)))
-    return(grobTree(g))
+# The outline of each region in data coordinates: the union of the Voronoi tiles of its cells, clipped to the
+# window. A list with one element per region code (1 to 7), each a list of rings list(x, y).
+#' @importFrom deldir deldir
+#' @importFrom polyclip polyclip
+regionPolygons <- function(x, y, region, window) {
+  win <- if (window$type == "rectangle") {
+    list(list(x = window$xrange[c(1, 2, 2, 1)], y = window$yrange[c(1, 1, 2, 2)]))
+  } else {
+    lapply(window$bdry, function(b) list(x = b$x, y = b$y))
   }
-
-
-
-
-
-
-######## Map predicted regions to a regular grid
-#' @importFrom grid linesGrob gpar gList
-#' @importFrom spatstat.geom as.mask
-regionGrid <- function(pp, nbp = 250) {
-  ow <- pp$window
-  m <- spatstat.geom::as.mask(ow, dimyx = c(nbp, nbp))$m
-  x <-
-    seq(
-      from = ow$xrange[1],
-      to = ow$xrange[2],
-      length.out = nrow(m)
-    )
-  y <-
-    seq(
-      from = ow$yrange[1],
-      to = ow$yrange[2],
-      length.out = ncol(m)
-    )
-  grid <- expand.grid(x = x, y = y)
-  grid <- data.frame(x = grid[, 1], y = grid[, 2])
-  inside <- t(m)[seq_len(length(m))]
-  # the region of the nearest cell to each grid point inside the window; cells at exactly the same
-  # distance vote, and a tied vote goes to the first region
-  cl <- factor(pp$region)
-  k <- rep(NA, length(m))
-  K <- .nearestLabels(pp$x, pp$y, as.integer(cl), grid$x[inside], grid$y[inside])
-  k[inside] <- levels(cl)[K]
-  data.frame(grid, regions = k)
-}
-
-
-######## Convert grid of regions into a polygon mask for a particular region.
-#' @importFrom spatstat.geom owin as.polygonal
-regionPoly <- function(grid, region) {
-  rx <- range(grid$x)
-  ry <- range(grid$y)
-  mat <-
-    matrix(
-      grid$regions == region,
-      nrow = length(unique(grid$x)),
-      ncol = length(unique(grid$y)),
-      byrow = TRUE
-    )
-  mat[is.na(mat)] <- FALSE
-  ow <- spatstat.geom::owin(
-    xrange = rx,
-    yrange = ry,
-    mask = mat
-  )
-  return(spatstat.geom::as.polygonal(ow))
-}
-
-
-######## Create line grobs of the hatching
-#' @importFrom purrr map map_dfr
-#' @importFrom grid linesGrob
-hatchingLines <-
-  function(rPoly,
-           allHatch,
-           ordColumn,
-           h90 = FALSE,
-           xr,
-           yr,
-           rx,
-           ry,
-           line.width = 1,
-           hatching.colour = 1) {
-    # The boundary edges of each ring of the region, closed back to the first vertex
-    edges <- lapply(rPoly$bdry, function(b) {
-      n <- length(b$x)
-      list(x1 = b$x, y1 = b$y, x2 = b$x[c(seq_len(n)[-1], 1)], y2 = b$y[c(seq_len(n)[-1], 1)])
-    })
-    purrr::map(seq_len(nrow(allHatch)), ~ {
-      if (h90) {
-        hatch <-
-          rbind(c(xr[1], allHatch[., "from"]), c(xr[2], allHatch[., "to"]))
-      } else {
-        hatch <-
-          rbind(c(allHatch[., "from"], yr[1]), c(allHatch[., "to"], yr[2]))
-      }
-      
-      
-      # Where the hatching line crosses the region's outline, in order along the line. Consecutive pairs of
-      # crossings bound the parts of the line inside the region (holes included, by the even-odd rule).
-      cross <- hatchCrossings(edges, hatch[1, ], hatch[2, ])
-      linesH <- NULL
-      
-      if (nrow(cross) >= 2) {
-        pair <- rep(seq_len(nrow(cross) / 2), each = 2)
-        linesH <- lapply(split(seq_len(nrow(cross)), pair), function(k) {
-          linesGrob(
-            x = cross[k, 1] / rx[2],
-            y = cross[k, 2] / ry[2],
-            gp = gpar(
-              col = hatching.colour,
-              lwd = line.width
-            )
-          )
-        })
-      }
-      return(linesH)
-    })
+  keep <- !duplicated(cbind(x, y))
+  x <- x[keep]; y <- y[keep]; region <- region[keep]
+  out <- vector("list", 7)
+  if (length(unique(region)) == 1 || length(x) < 3) {
+    out[[region[1]]] <- win
+    return(out)
   }
-
-
-######## No hatching
-
-hatchNull <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  NULL
-}
-
-######## / hatching
-
-
-hatch45 <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  xr <- range(rPoly$x)
-  yr <- range(rPoly$y)
-  from1 <- seq(
-    from = xr[1],
-    to = xr[2],
-    by = width
-  )
-  to1 <- seq(
-    from = xr[2],
-    to = xr[2] + xr[2] - xr[1],
-    by = width
-  )
-  from2 <- seq(
-    from = xr[1],
-    to = 2 * xr[1] - xr[2],
-    by = -width
-  )
-  to2 <- seq(
-    from = xr[2],
-    to = xr[1],
-    by = -width
-  )
-  allHatch <- data.frame(from = c(from1, from2), to = c(to1, to2))
-  
-  lines <-
-    hatchingLines(
-      rPoly,
-      allHatch,
-      ordColumn = 1,
-      h90 = FALSE,
-      xr,
-      yr,
-      rx,
-      ry,
-      line.width = line.width,
-      hatching.colour = hatching.colour
-    )
-  
-  return(do.call("c", lines))
-}
-
-######## \ hatching
-
-hatch315 <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  xr <- range(rPoly$x)
-  yr <- range(rPoly$y)
-  from1 <- seq(
-    from = xr[2],
-    to = xr[1],
-    by = -width
-  )
-  to1 <-
-    seq(
-      from = xr[1],
-      to = xr[1] + xr[1] - xr[2],
-      by = -width
-    )
-  from2 <- seq(
-    from = xr[2],
-    to = 2 * xr[2] - xr[1],
-    by = width
-  )
-  to2 <- seq(
-    from = xr[1],
-    to = xr[2],
-    by = width
-  )
-  allHatch <- data.frame(from = c(from1, from2), to = c(to1, to2))
-  
-  lines <-
-    hatchingLines(
-      rPoly,
-      allHatch,
-      ordColumn = 1,
-      h90 = FALSE,
-      xr,
-      yr,
-      rx,
-      ry,
-      line.width = line.width,
-      hatching.colour = hatching.colour
-    )
-  
-  return(do.call("c", lines))
-}
-
-######## | hatching
-
-hatch180 <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  xr <- range(rPoly$x)
-  yr <- range(rPoly$y)
-  from1 <- seq(
-    from = xr[1],
-    to = xr[2],
-    by = width
-  )
-  to1 <- seq(
-    from = xr[1],
-    to = xr[2],
-    by = width
-  )
-  allHatch <- data.frame(from = c(from1), to = c(to1))
-  
-  lines <-
-    hatchingLines(
-      rPoly,
-      allHatch,
-      ordColumn = 2,
-      h90 = FALSE,
-      xr,
-      yr,
-      rx,
-      ry,
-      line.width = line.width,
-      hatching.colour = hatching.colour
-    )
-  
-  return(do.call("c", lines))
+  bb <- c(range(x), range(y))
+  pad <- 0.05 * max(diff(bb[1:2]), diff(bb[3:4]))
+  rw <- c(bb[1] - pad, bb[2] + pad, bb[3] - pad, bb[4] + pad)
+  dd <- suppressWarnings(deldir::deldir(x, y, rw = rw, round = FALSE))
+  e <- dd$dirsgs
+  # A Voronoi tile is convex, so its corners in order of angle around its cell trace it: the ends of the edges
+  # it shares with its neighbours, and the corners of the frame closest to its cell.
+  gen <- c(e$ind1, e$ind1, e$ind2, e$ind2)
+  vx <- c(e$x1, e$x2, e$x1, e$x2)
+  vy <- c(e$y1, e$y2, e$y1, e$y2)
+  cx <- rw[c(1, 2, 2, 1)]
+  cy <- rw[c(3, 3, 4, 4)]
+  gen <- c(gen, .nearestLabels(x, y, seq_along(x), cx, cy))
+  vx <- c(vx, cx)
+  vy <- c(vy, cy)
+  d <- data.frame(gen = gen, vx = vx, vy = vy)
+  d <- d[!duplicated(data.frame(d$gen, round(d$vx, 9), round(d$vy, 9))), ]
+  d <- d[order(d$gen, atan2(d$vy - y[d$gen], d$vx - x[d$gen])), ]
+  tiles <- lapply(split(d, d$gen), function(t) list(x = t$vx, y = t$vy))
+  tileRegion <- region[as.integer(names(tiles))]
+  for (r in unique(tileRegion)) {
+    tl <- tiles[tileRegion == r]
+    u <- if (length(tl) == 1) tl else polyclip::polyclip(tl[1], tl[-1], op = "union", fillA = "nonzero", fillB = "nonzero")
+    out[[r]] <- polyclip::polyclip(u, win, op = "intersection")
+  }
+  out
 }
 
 
-######## - hatching
-
-hatch90 <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  xr <- range(rPoly$x)
-  yr <- range(rPoly$y)
-  from1 <- seq(
-    from = yr[1],
-    to = yr[2],
-    by = width
+# Line segments for hatching type `type` (2 to 7), as list(x0, y0, x1, y1) in units of the spacing, within one
+# tile; repeated every tile, they join into continuous lines.
+hatchSegments <- function(type) {
+  switch(as.character(type),
+    `2` = list(x0 = c(-1, 0, 1), y0 = c(0, 0, 0), x1 = c(0, 1, 2), y1 = c(1, 1, 1)),
+    `3` = list(x0 = c(-1, 0, 1), y0 = c(1, 1, 1), x1 = c(0, 1, 2), y1 = c(0, 0, 0)),
+    `4` = list(x0 = 0, y0 = 0.5, x1 = 1, y1 = 0.5),
+    `5` = list(x0 = 0.5, y0 = 0, x1 = 0.5, y1 = 1),
+    `6` = list(x0 = c(-1, 0, 1, -1, 0, 1), y0 = c(0, 0, 0, 1, 1, 1), x1 = c(0, 1, 2, 0, 1, 2), y1 = c(1, 1, 1, 0, 0, 0)),
+    `7` = list(x0 = c(0, 0.5), y0 = c(0.5, 0), x1 = c(1, 0.5), y1 = c(0.5, 1)),
+    NULL
   )
-  to1 <- seq(
-    from = yr[1],
-    to = yr[2],
-    by = width
-  )
-  allHatch <- data.frame(from = c(from1), to = c(to1))
-  
-  lines <-
-    hatchingLines(
-      rPoly,
-      allHatch,
-      ordColumn = 1,
-      h90 = TRUE,
-      xr,
-      yr,
-      rx,
-      ry,
-      line.width = line.width,
-      hatching.colour = hatching.colour
-    )
-  
-  return(do.call("c", lines))
 }
 
-######## x hatching
-
-hatchX <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  h45 <- hatch45(rPoly, width, rx, ry, line.width = line.width, hatching.colour = hatching.colour)
-  h315 <- hatch315(rPoly, width, rx, ry, line.width = line.width, hatching.colour = hatching.colour)
-  return(c(h45, h315))
-}
-
-######## + hatching
-
-hatchPlus <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1) {
-  h90 <- hatch90(rPoly, width, rx, ry, line.width = line.width, hatching.colour = hatching.colour)
-  h180 <- hatch180(rPoly, width, rx, ry, line.width = line.width, hatching.colour = hatching.colour)
-  return(c(h90, h180))
-}
-
-
-
-####### Crossings of a hatching line with a region's outline.
-
-# The points where the line from P3 to P4 crosses the edges of the rings in `edges` (lists of x1, y1, x2, y2),
-# ordered along the line, within the segment P3-P4. An edge is crossed when its two ends lie on opposite sides
-# of the line, counting a vertex on the line as being on the left (a half-open rule): a line through a vertex
-# then crosses the outline once, a line touching it at a vertex crosses it twice or not at all, and an edge
-# lying along the line is not crossed. Each closed ring therefore gives an even number of crossings.
-hatchCrossings <- function(edges, P3, P4) {
-  dx <- P4[1] - P3[1]
-  dy <- P4[2] - P3[2]
-  len2 <- dx^2 + dy^2
-  out <- lapply(edges, function(e) {
-    s1 <- dx * (e$y1 - P3[2]) - dy * (e$x1 - P3[1])
-    s2 <- dx * (e$y2 - P3[2]) - dy * (e$x2 - P3[1])
-    k <- (s1 >= 0) != (s2 >= 0)
-    f <- s1[k] / (s1[k] - s2[k])
-    x <- e$x1[k] + f * (e$x2[k] - e$x1[k])
-    y <- e$y1[k] + f * (e$y2[k] - e$y1[k])
-    cbind(x = x, y = y, t = ((x - P3[1]) * dx + (y - P3[2]) * dy) / len2)
+# The hatching segments of type `type` over the unit square: the tile's segments repeated every w.
+hatchLines <- function(type, w) {
+  s <- hatchSegments(type)
+  k <- seq(-1, ceiling(1 / w) + 1)
+  off <- expand.grid(i = k, j = k)
+  lapply(seq_len(nrow(off) * length(s$x0)), function(m) {
+    o <- off[(m - 1) %/% length(s$x0) + 1, ]
+    q <- (m - 1) %% length(s$x0) + 1
+    list(x = (c(s$x0[q], s$x1[q]) + o$i) * w, y = (c(s$y0[q], s$y1[q]) + o$j) * w)
   })
-  out <- do.call("rbind", out)
-  out <- out[order(out[, "t"]), , drop = FALSE]
-  # the hatching segments span the region's bounding box, so every crossing lies on them
-  out[, c("x", "y"), drop = FALSE]
+}
+
+#' @importFrom grid makeContent gList pathGrob polylineGrob gpar
+#' @exportS3Method grid::makeContent
+makeContent.lisaHatching <- function(x) {
+  # Each region's hatching lines, clipped to its outline, and the outline itself.
+  gp <- gpar(col = x$col, lwd = x$lwd, fill = NA, lineend = "butt")
+  kids <- list()
+  for (type in which(lengths(x$polys) > 0)) {
+    rings <- x$polys[[type]]
+    if (type > 1) {
+      pieces <- polyclip::polyclip(hatchLines(type, x$spacing), rings, op = "intersection", closed = FALSE)
+      if (length(pieces)) {
+        kids[[length(kids) + 1]] <- polylineGrob(
+          unlist(lapply(pieces, `[[`, "x")), unlist(lapply(pieces, `[[`, "y")),
+          id = rep(seq_along(pieces), lengths(lapply(pieces, `[[`, "x"))), gp = gp
+        )
+      }
+    }
+    kids[[length(kids) + 1]] <- pathGrob(
+      unlist(lapply(rings, `[[`, "x")), unlist(lapply(rings, `[[`, "y")),
+      id = rep(seq_along(rings), lengths(lapply(rings, `[[`, "x"))), rule = "evenodd", gp = gp
+    )
+  }
+  grid::setChildren(x, do.call(gList, kids))
 }

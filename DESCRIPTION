@@ -1,14 +1,14 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.21.2
+Version: 1.21.3
 Authors@R: c(
     person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
     person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
     person("Nicholas", "Robertson", , "nicholas.robertson@sydney.edu.au", role = "ctb"),
     person("Alex", "Qin", , "alex.qin@sydney.edu.au", role = "ctb"),
-    person("Shreya", "Rao", "shreya.rajeshrao@sydney.edu.au", role = "ctb"),
-    person("Farhan", "Ameen", "fame2827@uni.sydney.edu.au", role = "ctb")
+    person("Shreya", "Rao", email = "shreya.rajeshrao@sydney.edu.au", role = "ctb"),
+    person("Farhan", "Ameen", email = "fame2827@uni.sydney.edu.au", role = "ctb")
   )
 Description: lisaClust provides a series of functions to identify and visualise 
     regions of tissue where spatial associations between cell-types is similar.
@@ -27,6 +27,8 @@ Imports:
     Rcpp,
     ggplot2,
     concaveman,
+    deldir,
+    polyclip,
     grid,
     BiocParallel,
     spatstat.explore,
@@ -34,7 +36,6 @@ Imports:
     BiocGenerics,
     S4Vectors,
     methods,
-    purrr,
     stats,
     dplyr,
     SingleCellExperiment,
