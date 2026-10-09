@@ -6,3 +6,4 @@
 ^_pkgdown\.yml$
 ^\.github$
 ^src/core/src/.*\.o$
+^.*Rplots\.pdf$
