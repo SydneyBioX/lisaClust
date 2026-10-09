@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.15.6
+Version: 1.21.0
 Authors@R: c(
     person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
     person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
