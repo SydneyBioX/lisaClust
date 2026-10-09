@@ -23,7 +23,8 @@ regionMap(
 
 - type:
 
-  Make a "bubble" or "heatmap" plot.
+  Make a "bubble" or "heatmap" plot, or return the relative frequencies
+  as a "table".
 
 - cellType:
 
@@ -43,7 +44,10 @@ regionMap(
 
 ## Value
 
-A bubble plot or heatmap
+A bubble plot or heatmap, or with `type = "table"` a matrix of the
+relative frequencies with one row per cell type and one column per
+region: how much more often the cell type is found in the region than if
+cell types were spread evenly over the regions.
 
 ## Examples
 
@@ -68,4 +72,9 @@ cells <- lisaClust(cells, k = 2)
 
 regionMap(cells)
 
+regionMap(cells, type = "table")
+#>     
+#>      region_1 region_2
+#>   c1        0        2
+#>   c2        2        0
 ```

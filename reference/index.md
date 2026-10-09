@@ -12,6 +12,10 @@
 - [`lisaClust()`](https://github.com/ellispatrick/lisaClust/reference/lisaClust.md)
   : Use k-means clustering to cluster local indicators of spatial
   association. For other clustering use lisa.
+- [`nameRegions()`](https://github.com/ellispatrick/lisaClust/reference/nameRegions.md)
+  : Name regions by the cell types they are enriched for
+- [`regionBoxPlot()`](https://github.com/ellispatrick/lisaClust/reference/regionBoxPlot.md)
+  : Compare the share of each region between groups
 - [`regionMap()`](https://github.com/ellispatrick/lisaClust/reference/regionMap.md)
   : Plot heatmap of cell type enrichment for lisaClust regions
 - [`scale_region()`](https://github.com/ellispatrick/lisaClust/reference/scale_region.md)
