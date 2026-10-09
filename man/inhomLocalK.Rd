@@ -37,19 +37,22 @@ A matrix of LISA curves
 Calculate the inhomogenous local K function.
 }
 \examples{
-library(spicyR)
-# Read in data
-isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-cells <- read.table(isletFile, header = TRUE)
-cells$x <- cells$AreaShape_Center_X
-cells$y <- cells$AreaShape_Center_Y
-cells$cellType <- as.factor(sample(
-  c("big", "medium", "small"),
-  length(cells$AreaShape_Center_Y),
-  replace = TRUE
-))
-cells$cellID <- as.factor(cells$ObjectNumber)
+## Generate toy data: two images, two cell types that sit in separate bands
+set.seed(51773)
+x <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+), 4) * 100
+y <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+), 4) * 100
+cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+imageID <- rep(c("s1", "s2"), c(800, 800))
+cells <- data.frame(x, y, cellType, imageID)
+cells$cellID <- paste0("cell_", seq_len(nrow(cells)))
 
-inhom <- inhomLocalK(cells[1:100, ])
+# The curves of the first image
+inhom <- inhomLocalK(cells[cells$imageID == "s1", ], Rs = c(10, 20, 50))
 
 }

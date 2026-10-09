@@ -56,17 +56,9 @@ hatchingPlot <-
            hatching.colour = 1,
            nbp = 50,
            window.length = NULL) {
-    df <- spicyR:::getCellSummary(
-      spicyR:::.format_data(
-        cells, imageID, cellType, spatialCoords, FALSE
-      ),
-      bind = TRUE
-    )
-    
-    regionCol <- c(colData(cells)[, region])
-    
-    df <- data.frame(df, 
-                     region = regionCol)
+    df <- .formatCells(cells, imageID, cellType, spatialCoords)
+    if (!region %in% colnames(df)) stop(paste0("'", region, "' column not found in data"))
+    df <- data.frame(df[, c("imageID", "cellID", "imageCellID", "x", "y", "cellType")], region = df[[region]])
     
     if (is.null(useImages)) useImages <- df$imageID[1]
     
@@ -226,7 +218,6 @@ geom_hatching <-
 #'
 #' @examples
 #'
-#' library(spicyR)
 #' ## Generate toy data
 #' set.seed(51773)
 #' x <- round(c(
@@ -614,7 +605,6 @@ plotRegions <-
 
 
 ######## Map predicted regions to a regular grid
-#' @importFrom class knn
 #' @importFrom grid linesGrob gpar gList
 #' @importFrom spatstat.geom as.mask
 regionGrid <- function(pp, nbp = 250) {
@@ -634,16 +624,13 @@ regionGrid <- function(pp, nbp = 250) {
     )
   grid <- expand.grid(x = x, y = y)
   grid <- data.frame(x = grid[, 1], y = grid[, 2])
-  df <- as.data.frame(pp)
+  inside <- t(m)[seq_len(length(m))]
+  # the region of the nearest cell to each grid point inside the window; cells at exactly the same
+  # distance vote, and a tied vote goes to the first region
+  cl <- factor(pp$region)
   k <- rep(NA, length(m))
-  K <-
-    knn(
-      train = df[, c("x", "y")],
-      test = grid[t(m)[seq_len(length(m))], ],
-      cl = pp$region,
-      k = 1
-    )
-  k[t(m)[seq_len(length(m))]] <- as.character(K)
+  K <- .nearestLabels(pp$x, pp$y, as.integer(cl), grid$x[inside], grid$y[inside])
+  k[inside] <- levels(cl)[K]
   data.frame(grid, regions = k)
 }
 
@@ -684,6 +671,11 @@ hatchingLines <-
            ry,
            line.width = 1,
            hatching.colour = 1) {
+    # The boundary edges of each ring of the region, closed back to the first vertex
+    edges <- lapply(rPoly$bdry, function(b) {
+      n <- length(b$x)
+      list(x1 = b$x, y1 = b$y, x2 = b$x[c(seq_len(n)[-1], 1)], y2 = b$y[c(seq_len(n)[-1], 1)])
+    })
     purrr::map(seq_len(nrow(allHatch)), ~ {
       if (h90) {
         hatch <-
@@ -694,30 +686,12 @@ hatchingLines <-
       }
       
       
-      intPoints <- purrr::map_dfr(rPoly$bdry, ~ {
-        df <- do.call("cbind", .)
-        df <- rbind(df, df[1, ])
-        colnames(df) <- c("x", "y")
-        
-        int <- purrr::map_dfr(seq_len(nrow(df) - 1), ~ {
-          x1 <- df[., ]
-          x2 <- df[. + 1, ]
-          return(data.frame(t(
-            line.intersection(x1, x2, hatch[1, ], hatch[2, ], interior.only = TRUE)
-          )))
-        })
-        
-        x1 <- df[nrow(df), ]
-        x2 <- df[1, ]
-        int <-
-          rbind(
-            int,
-            line.intersection(hatch[1, ], hatch[2, ], x1, x2, interior.only = TRUE)
-          )
-        colnames(int) <- c("x", "y")
-        return(int)
-      })
-      
+      # Crossings of the hatching line with every edge of the region's boundary, all edges at once
+      intPoints <- do.call("rbind", lapply(edges, function(e) {
+        int <- segmentIntersections(e$x1, e$y1, e$x2, e$y2, hatch[1, ], hatch[2, ])
+        data.frame(x = int[, 1], y = int[, 2])
+      }))
+
       intPoints <- unique(round(intPoints, 9))
       intPoints <-
         intPoints[!rowSums(intPoints) %in% c("Inf", NA), ]
@@ -930,35 +904,45 @@ hatchPlus <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1)
 
 
 
-####### Calculate intersection of two lines.
+####### Intersections of a hatching line with many segments.
 
-line.intersection <-
-  function(P1, P2, P3, P4, interior.only = TRUE) {
-    ## Modified from the retistruct package to address edge cases.
-    P1 <- round(as.vector(P1), 10)
-    P2 <- round(as.vector(P2), 10)
-    P3 <- round(as.vector(P3), 10)
-    P4 <- round(as.vector(P4), 10)
-    dx1 <- P1[1] - P2[1]
-    dx2 <- P3[1] - P4[1]
-    dy1 <- P1[2] - P2[2]
-    dy2 <- P3[2] - P4[2]
-    D <- det(rbind(c(dx1, dy1), c(dx2, dy2)))
-    if (is.na(D) | D == 0) {
-      return(c(Inf, Inf))
-    }
-    D1 <- det(rbind(P1, P2))
-    D2 <- det(rbind(P3, P4))
-    X <- round(det(rbind(c(D1, dx1), c(D2, dx2))) / D, 10)
-    Y <- round(det(rbind(c(D1, dy1), c(D2, dy2))) / D, 10)
-    if (interior.only) {
-      lambda1 <- -((X - P1[1]) * dx1 + (Y - P1[2]) * dy1) / (dx1^2 + dy1^2)
-      lambda2 <-
-        -((X - P3[1]) * dx2 + (Y - P3[2]) * dy2) / (dx2^2 + dy2^2)
-      if (!((lambda1 >= 0) &
-            (lambda1 <= 1) & (lambda2 >= 0) & (lambda2 <= 1))) {
-        return(c(NA, NA))
-      }
-    }
-    return(c(X, Y))
-  }
+# det() of the 2 x 2 matrices rbind(c(a, b), c(c, d)), elementwise and bit for bit as base::det() computes
+# it: LAPACK's LU decomposition with partial pivoting (scaling by the reciprocal of the pivot), then the
+# product of the pivots through exp(sum(log(abs(.)))).
+det2 <- function(a, b, c, d) {
+  swap <- abs(c) > abs(a)
+  p1 <- ifelse(swap, c, a)
+  p2 <- ifelse(swap, b - (a * (1 / c)) * d, d - (c * (1 / a)) * b)
+  sgn <- ifelse(swap, -1, 1) * sign(p1) * sign(p2)
+  out <- sgn * exp(log(abs(p1)) + log(abs(p2)))
+  out[p1 == 0 | p2 == 0] <- 0
+  out
+}
+
+# Where the line through P3 and P4 crosses the segments (x1, y1) - (x2, y2), with the same rounding and
+# tests as the line intersection of the retistruct package, modified for edge cases. Returns a two-column
+# matrix with a row per segment: the crossing, NA when it is outside either segment, Inf when they are
+# parallel.
+segmentIntersections <- function(x1, y1, x2, y2, P3, P4) {
+  x1 <- round(x1, 10); y1 <- round(y1, 10); x2 <- round(x2, 10); y2 <- round(y2, 10)
+  P3 <- round(as.vector(P3), 10)
+  P4 <- round(as.vector(P4), 10)
+  dx1 <- x1 - x2
+  dy1 <- y1 - y2
+  dx2 <- P3[1] - P4[1]
+  dy2 <- P3[2] - P4[2]
+  D <- det2(dx1, dy1, dx2, dy2)
+  D1 <- det2(x1, y1, x2, y2)
+  D2 <- det2(P3[1], P3[2], P4[1], P4[2])
+  X <- round(det2(D1, dx1, D2, dx2) / D, 10)
+  Y <- round(det2(D1, dy1, D2, dy2) / D, 10)
+  lambda1 <- -((X - x1) * dx1 + (Y - y1) * dy1) / (dx1^2 + dy1^2)
+  lambda2 <- -((X - P3[1]) * dx2 + (Y - P3[2]) * dy2) / (dx2^2 + dy2^2)
+  outside <- !(lambda1 >= 0 & lambda1 <= 1 & lambda2 >= 0 & lambda2 <= 1)
+  X[outside] <- NA
+  Y[outside] <- NA
+  parallel <- is.na(D) | D == 0
+  X[parallel] <- Inf
+  Y[parallel] <- Inf
+  cbind(X, Y)
+}

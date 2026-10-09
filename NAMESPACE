@@ -10,65 +10,68 @@ export(scale_region)
 export(scale_region_manual)
 import(SingleCellExperiment)
 import(SpatialExperiment)
-importFrom(BiocGenerics,do.call)
-importFrom(BiocGenerics,rbind)
-importFrom(BiocParallel,MulticoreParam)
-importFrom(BiocParallel,bplapply)
-importFrom(S4Vectors,DataFrame)
+importFrom(BiocGenerics,
+  do.call,
+  rbind
+)
+importFrom(BiocParallel,
+  MulticoreParam,
+  SerialParam,
+  bplapply
+)
+importFrom(Rcpp,sourceCpp)
+importFrom(S4Vectors,
+  DataFrame,
+  as.data.frame,
+  split
+)
 importFrom(SpatialExperiment,spatialCoords)
 importFrom(SummarizedExperiment,colData)
-importFrom(class,knn)
 importFrom(concaveman,concaveman)
-importFrom(data.table,":=")
-importFrom(data.table,.SD)
-importFrom(data.table,CJ)
-importFrom(data.table,as.data.table)
-importFrom(data.table,dcast)
-importFrom(data.table,setkey)
-importFrom(dplyr,.data)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,discrete_scale)
-importFrom(ggplot2,facet_wrap)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,layer)
-importFrom(ggplot2,scale_colour_gradient2)
-importFrom(ggplot2,theme_minimal)
-importFrom(grid,gList)
-importFrom(grid,gpar)
-importFrom(grid,grob)
-importFrom(grid,grobTree)
-importFrom(grid,linesGrob)
-importFrom(grid,polylineGrob)
+importFrom(dplyr,
+  .data,
+  bind_rows,
+  mutate
+)
+importFrom(ggplot2,
+  aes,
+  discrete_scale,
+  facet_wrap,
+  geom_point,
+  ggplot,
+  labs,
+  layer,
+  scale_colour_gradient2,
+  theme_minimal
+)
+importFrom(grid,
+  gList,
+  gpar,
+  grob,
+  grobTree,
+  linesGrob,
+  polylineGrob
+)
 importFrom(lifecycle,deprecate_warn)
 importFrom(methods,is)
 importFrom(pheatmap,pheatmap)
-importFrom(purrr,map)
-importFrom(purrr,map_dfr)
+importFrom(purrr,
+  map,
+  map_dfr
+)
 importFrom(spatstat.explore,density.ppp)
-importFrom(spatstat.explore,localLcross)
-importFrom(spatstat.explore,localLcross.inhom)
-importFrom(spatstat.geom,area)
-importFrom(spatstat.geom,as.mask)
-importFrom(spatstat.geom,as.polygonal)
-importFrom(spatstat.geom,border)
-importFrom(spatstat.geom,closepairs)
-importFrom(spatstat.geom,convexhull)
-importFrom(spatstat.geom,inside.owin)
-importFrom(spatstat.geom,intersect.owin)
-importFrom(spatstat.geom,marks)
-importFrom(spatstat.geom,nearest.valid.pixel)
-importFrom(spatstat.geom,owin)
-importFrom(spatstat.geom,ppp)
-importFrom(spatstat.geom,solapply)
-importFrom(spatstat.geom,union.owin)
+importFrom(spatstat.geom,
+  area,
+  as.mask,
+  as.polygonal,
+  border,
+  convexhull,
+  inside.owin,
+  nearest.valid.pixel,
+  owin,
+  ppp,
+  union.owin
+)
 importFrom(spatstat.random,expand.owin)
 importFrom(stats,kmeans)
-importFrom(stats,loess)
-importFrom(stats,rpois)
-importFrom(stats,var)
-importFrom(tidyr,pivot_longer)
+useDynLib(lisaClust, .registration = TRUE)

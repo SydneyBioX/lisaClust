@@ -61,27 +61,22 @@ A matrix of LISA curves
 Generate local indicators of spatial association
 }
 \examples{
-library(spicyR)
-library(SingleCellExperiment)
-# Read in data
-isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-cells <- read.table(isletFile, header = TRUE)
-cellExp <- SingleCellExperiment(
-  assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
-  colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
-)
+## Generate toy data: two images, two cell types that sit in separate bands
+set.seed(51773)
+x <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+), 4) * 100
+y <- round(c(
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+), 4) * 100
+cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+imageID <- rep(c("s1", "s2"), c(800, 800))
+cells <- data.frame(x, y, cellType, imageID)
 
-# Cluster cell types
-markers <- t(assay(cellExp, "intensities"))
-kM <- kmeans(markers, 8)
-colData(cellExp)$cluster <- paste("cluster", kM$cluster, sep = "")
-
-# Generate LISA
-lisaCurves <- lisa(
-  cellExp,
-  spatialCoords = c("Location_Center_X", "Location_Center_Y"),
-  cellType = "cluster", imageID = "ImageNumber"
-)
+# Generate LISA curves
+lisaCurves <- lisa(cells, r = c(10, 20, 50))
 
 # Cluster the LISA curves
 kM <- kmeans(lisaCurves, 2)

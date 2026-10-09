@@ -43,11 +43,70 @@ argumentChecks = function(function_name, user_vals) {
     
   } else if ("cores" %in% names(user_vals)) {
     if (is(user_vals$cores, "numeric")) {
-      assign("cores", simpleSeg:::generateBPParam(cores = user_vals$cores))
+      # a number of cores is turned into a BiocParallel param by .bpparam()
     } else if (is(user_vals$cores, "MulticoreParam") || is(user_vals$cores, "SerialParam")) {
       assign("cores", user_vals$cores, sys.frame(sys.parent(1)))
     } else {
       stop("'cores'  must be either a numeric value, or a MulticoreParam or SerialParam object.\n")
     }
   }
+}
+
+
+# A BiocParallel param from a number of cores or a param.
+#' @importFrom BiocParallel MulticoreParam SerialParam
+.bpparam <- function(cores) {
+  if (is(cores, "BiocParallelParam")) return(cores)
+  if (is.null(cores) || cores <= 1) BiocParallel::SerialParam() else BiocParallel::MulticoreParam(workers = cores)
+}
+
+#' Put cells in a canonical data frame
+#'
+#' The columns imageID, cellType, x and y, and cellID and imageCellID when the data have none. imageID and
+#' cellType become factors with levels in order of first appearance, and the cells are ordered by image.
+#' Other columns are kept.
+#'
+#' @importFrom methods is
+#' @importFrom S4Vectors as.data.frame
+#' @noRd
+.formatCells <- function(cells, imageID, cellType, spatialCoords) {
+  if (is(cells, "SpatialExperiment")) {
+    cd <- as.data.frame(SummarizedExperiment::colData(cells))
+    sc <- data.frame(SpatialExperiment::spatialCoords(cells))
+    # a SpatialExperiment's own coordinates are used unless spatialCoords names colData columns
+    if (!all(spatialCoords %in% c(colnames(cd), colnames(sc)))) spatialCoords <- colnames(sc)[1:2]
+    cd <- cd[, setdiff(colnames(cd), c("x", "y", colnames(sc))), drop = FALSE]
+    cells <- cbind(cd, sc)
+  } else if (is(cells, "SummarizedExperiment")) {
+    cells <- as.data.frame(SummarizedExperiment::colData(cells))
+  } else if (!is.data.frame(cells)) {
+    stop("Data must be in the form of a SingleCellExperiment, SpatialExperiment, or data frame.")
+  }
+  cells <- as.data.frame(cells)
+  for (col in c(imageID, cellType, spatialCoords)) {
+    if (!col %in% colnames(cells)) stop(paste0("'", col, "' column not found in data"))
+  }
+  needed <- data.frame(
+    imageID = cells[[imageID]], cellType = cells[[cellType]],
+    x = cells[[spatialCoords[1]]], y = cells[[spatialCoords[2]]], stringsAsFactors = FALSE
+  )
+  cells <- cbind(cells[, setdiff(colnames(cells), c("imageID", "cellType", "x", "y")), drop = FALSE], needed)
+  if (!is.factor(cells$imageID)) cells$imageID <- factor(cells$imageID, levels = unique(cells$imageID))
+  if (!is.factor(cells$cellType)) cells$cellType <- factor(cells$cellType, levels = unique(cells$cellType))
+  cells$.row <- seq_len(nrow(cells))
+  cells <- cells[order(cells$imageID), , drop = FALSE]
+  if (is.null(cells$cellID)) cells$cellID <- paste0("cell_", seq_len(nrow(cells)))
+  if (is.null(cells$imageCellID)) {
+    within <- stats::ave(seq_len(nrow(cells)), cells$imageID, FUN = seq_along)
+    cells$imageCellID <- paste0(cells$imageID, "_", within)
+  }
+  rownames(cells) <- NULL
+  cells
+}
+
+# The cells of each image: imageID, cellID, imageCellID, x, y and cellType, split by image.
+#' @importFrom S4Vectors DataFrame split
+.cellsByImage <- function(cells) {
+  cells <- cells[, c("imageID", "cellID", "imageCellID", "x", "y", "cellType"), drop = FALSE]
+  S4Vectors::split(S4Vectors::DataFrame(cells), cells$imageID)
 }

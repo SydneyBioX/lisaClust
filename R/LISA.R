@@ -22,27 +22,22 @@
 #' @return A matrix of LISA curves
 #'
 #' @examples
-#' library(spicyR)
-#' library(SingleCellExperiment)
-#' # Read in data
-#' isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-#' cells <- read.table(isletFile, header = TRUE)
-#' cellExp <- SingleCellExperiment(
-#'   assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
-#'   colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
-#' )
+#' ## Generate toy data: two images, two cell types that sit in separate bands
+#' set.seed(51773)
+#' x <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+#' ), 4) * 100
+#' y <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+#' ), 4) * 100
+#' cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+#' imageID <- rep(c("s1", "s2"), c(800, 800))
+#' cells <- data.frame(x, y, cellType, imageID)
 #'
-#' # Cluster cell types
-#' markers <- t(assay(cellExp, "intensities"))
-#' kM <- kmeans(markers, 8)
-#' colData(cellExp)$cluster <- paste("cluster", kM$cluster, sep = "")
-#'
-#' # Generate LISA
-#' lisaCurves <- lisa(
-#'   cellExp,
-#'   spatialCoords = c("Location_Center_X", "Location_Center_Y"),
-#'   cellType = "cluster", imageID = "ImageNumber"
-#' )
+#' # Generate LISA curves
+#' lisaCurves <- lisa(cells, r = c(10, 20, 50))
 #'
 #' # Cluster the LISA curves
 #' kM <- kmeans(lisaCurves, 2)
@@ -107,30 +102,14 @@ lisa <- function(cells,
     stop(paste0("'", cellType, "' column not found in data"))
   }
   
-  if (methods::is(cells, "SummarizedExperiment")) {
-    cells <- spicyR:::.format_data(
-      cells, imageID, cellType, spatialCoords, FALSE
-    )
-  }
-  
-  
-  cellSummary <- spicyR:::getCellSummary(cells, bind = FALSE)
+  cells <- .formatCells(cells, imageID, cellType, spatialCoords)
+  cellSummary <- .cellsByImage(cells)
   
   if (is.null(Rs)) {
     Rs <- c(20, 50, 100)
   }
   
-  if (is(cores, "numeric")) {
-    BPPARAM = BiocParallel::MulticoreParam(workers = cores)
-  } 
-  
-  if (whichParallel == "imageID") {
-    BPimage <- cores
-  }
-  if (whichParallel == "cellType") {
-    BPcellType <- cores
-  }
-  
+  BPPARAM <- .bpparam(cores)
   
   message("Generating local indicators of spatial association.")
   
@@ -218,7 +197,9 @@ makeWindow <-
   }
 
 
-#' @importFrom spatstat.geom union.owin border inside.owin solapply intersect.owin area
+#' @importFrom spatstat.geom union.owin border inside.owin
+#' @useDynLib lisaClust, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
 borderEdge <- function(X, maxD) {
   W <- X$window
   bW <- spatstat.geom::union.owin(
@@ -228,146 +209,20 @@ borderEdge <- function(X, maxD) {
   inB <- spatstat.geom::inside.owin(X$x, X$y, bW)
   e <- rep(1, X$n)
   if (any(inB)) {
-    circs <- spatstat.geom::discs(X[inB], maxD, separate = TRUE)
-    circs <- spatstat.geom::solapply(circs, spatstat.geom::intersect.owin, X$window)
-    areas <- unlist(lapply(circs, spatstat.geom::area)) / (pi * maxD^2)
-    e[inB] <- areas
+    # area(intersect.owin(discs(X[inB], maxD), W)) / (pi maxD^2): each disc is the 128-gon
+    # spatstat.geom::disc() builds, clipped to the window in C++.
+    rings <- if (W$type == "rectangle") {
+      list(list(x = W$xrange[c(1, 2, 2, 1)], y = W$yrange[c(1, 1, 2, 2)]))
+    } else {
+      W$bdry
+    }
+    e[inB] <- .discWindowArea(X$x[inB], X$y[inB], maxD, 128L, rings) / (pi * maxD^2)
   }
-  
   e
 }
 
 
 
-
-
-#' @importFrom spatstat.geom ppp
-#' @importFrom spatstat.explore localLcross localLcross.inhom density.ppp
-#' @importFrom BiocParallel bplapply
-generateCurves <-
-  function(data,
-           Rs,
-           window,
-           window.length,
-           BPcellType = BPcellType,
-           sigma = sigma,
-           ...) {
-    ow <- makeWindow(data, window, window.length)
-    p1 <-
-      spatstat.geom::ppp(
-        x = data$x,
-        y = data$y,
-        window = ow,
-        marks = data$cellType
-      )
-    
-    if (!is.null(sigma)) {
-      d <- spatstat.explore::density.ppp(p1, sigma = sigma)
-      d <- d / mean(d)
-    }
-    
-    
-    locIJ <-
-      BiocParallel::bplapply(as.list(levels(p1$marks)), function(j) {
-        locI <- lapply(as.list(levels(p1$marks)), function(i) {
-          iID <- data$cellID[p1$marks == i]
-          jID <- data$cellID[p1$marks == j]
-          locR <- matrix(NA, length(iID), length(Rs))
-          rownames(locR) <- iID
-          
-          if (length(jID) > 1 & length(iID) > 1) {
-            if (!is.null(sigma)) {
-              dFrom <- d * (sum(p1$marks == i) - 1) / spatstat.geom::area(ow)
-              dTo <-
-                d * (sum(p1$marks == j) - 1) / spatstat.geom::area(ow)
-              localL <-
-                spatstat.explore::localLcross.inhom(
-                  p1,
-                  from = i,
-                  to = j,
-                  verbose = FALSE,
-                  lambdaFrom = dFrom,
-                  lambdaTo = dTo
-                )
-            } else {
-              localL <-
-                spatstat.explore::localLcross(
-                  p1,
-                  from = i,
-                  to = j,
-                  verbose = FALSE
-                )
-            }
-            ur <-
-              vapply(Rs, function(x) {
-                which.min(abs(localL$r - x))[1]
-              }, numeric(1))
-            locR <-
-              t(apply(
-                as.matrix(localL)[, grep("iso", colnames(localL))],
-                2, function(x) {
-                  ((x - localL$theo) / localL$theo)[ur]
-                }
-              ))
-            rownames(locR) <- iID
-          }
-          colnames(locR) <-
-            paste(j, round(Rs, 2), sep = "_")
-          
-          locR
-        })
-        do.call("rbind", locI)
-      }, BPPARAM = BPcellType)
-    do.call("cbind", locIJ)
-  }
-
-#' @importFrom stats loess rpois var
-sqrtVar <- function(x) {
-  len <- 1000
-  lambda <- (seq(1, 300, length.out = len) / 100)^x
-  mL <- max(lambda)
-  
-  
-  V <- NULL
-  for (i in 1:len) {
-    V[i] <- var(sqrt(rpois(10000, lambda[i])))
-  }
-  
-  lambda <- lambda^(1 / x)
-  V <- V
-  
-  f <- loess(V ~ lambda, span = 0.1)
-}
-
-
-
-#' @importFrom spatstat.geom nearest.valid.pixel area marks
-weightCounts <- function(dt, X, maxD, lam) {
-  maxD <- as.numeric(as.character(maxD))
-  
-  # edge correction
-  e <- borderEdge(X, maxD)
-  
-  # lambda <- as.vector(e%*%t(maxD^2*lam*pi))
-  # pred <- predict(fit,lambda^(1/4))
-  # pred[lambda < 0.001] = (lambda - 4*lambda^2)[lambda < 0.001]
-  # pred[lambda > mL^(1/4)] = 0.25
-  # V <- e%*%t(maxD^2*lam*pi)
-  # V[] <- pred
-  
-  
-  lambda <- as.vector(maxD^2 * lam * pi)
-  names(lambda) <- names(lam)
-  LE <- (e) %*% t(lambda)
-  mat <- apply(dt, 2, function(x) x)
-  mat <- ((mat) - (LE))
-  mat <- mat / sqrt(LE)
-  
-  #   # plot(apply(mat,2,sd))
-  #   # plot(apply(mat,2,mean))
-  colnames(mat) <- paste(maxD, colnames(mat), sep = "_")
-  mat
-}
 
 #' Calculate the inhomogenous local K function.
 #'
@@ -388,28 +243,29 @@ weightCounts <- function(dt, X, maxD, lam) {
 #' @return A matrix of LISA curves
 #'
 #' @examples
-#' library(spicyR)
-#' # Read in data
-#' isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-#' cells <- read.table(isletFile, header = TRUE)
-#' cells$x <- cells$AreaShape_Center_X
-#' cells$y <- cells$AreaShape_Center_Y
-#' cells$cellType <- as.factor(sample(
-#'   c("big", "medium", "small"),
-#'   length(cells$AreaShape_Center_Y),
-#'   replace = TRUE
-#' ))
-#' cells$cellID <- as.factor(cells$ObjectNumber)
+#' ## Generate toy data: two images, two cell types that sit in separate bands
+#' set.seed(51773)
+#' x <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+#' ), 4) * 100
+#' y <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+#' ), 4) * 100
+#' cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+#' imageID <- rep(c("s1", "s2"), c(800, 800))
+#' cells <- data.frame(x, y, cellType, imageID)
+#' cells$cellID <- paste0("cell_", seq_len(nrow(cells)))
 #'
-#' inhom <- inhomLocalK(cells[1:100, ])
+#' # The curves of the first image
+#' inhom <- inhomLocalK(cells[cells$imageID == "s1", ], Rs = c(10, 20, 50))
 #'
 #' @export
 #' @rdname inhomLocalK
-#' @importFrom spatstat.geom ppp closepairs marks area
+#' @importFrom spatstat.geom ppp area nearest.valid.pixel
 #' @importFrom spatstat.explore density.ppp
 #' @importFrom spatstat.random expand.owin
-#' @importFrom tidyr pivot_longer
-#' @importFrom dplyr left_join
 inhomLocalK <-
   function(data,
            Rs = c(20, 50, 100, 200),
@@ -442,100 +298,35 @@ inhomLocalK <-
     den <- den / mean(den)
     den$v <- pmax(den$v, minLambda)
     
-    p <- spatstat.geom::closepairs(X, max(Rs), what = "ijd")
-    n <- X$n
-    p$j <- data$cellID[p$j]
-    p$i <- data$cellID[p$i]
-    
-    cT <- data$cellType
-    names(cT) <- data$cellID
-    
-    p$d <- cut(p$d, Rs, labels = Rs[-1], include.lowest = TRUE)
-    
-    # inhom density
+    # inverse-density weight of each cell as a neighbour
     np <- spatstat.geom::nearest.valid.pixel(X$x, X$y, den)
     w <- den$v[cbind(np$row, np$col)]
-    names(w) <- data$cellID
-    p$wt <- 1 / w[p$j] * mean(w)
+    wt <- 1 / w * mean(w)
     rm(np)
     
-    lam <- table(data$cellType) / spatstat.geom::area(X)
+    cellType <- data$cellType
+    if (!is.factor(cellType)) cellType <- factor(cellType)
+    lam <- as.numeric(table(cellType)) / spatstat.geom::area(X)
+    edge <- vapply(Rs[-1], function(x) borderEdge(X, x), numeric(X$n))
+    edge <- matrix(edge, nrow = X$n)
+    labels <- as.character(Rs[-1])
     
+    res <- .localCurves(
+      as.numeric(data$x), as.numeric(data$y), as.integer(cellType), nlevels(cellType), as.numeric(Rs),
+      as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L"
+    )
     
-    
-    p$cellTypeJ <- cT[p$j]
-    p$cellTypeI <- cT[p$i]
-    p$i <- factor(p$i, levels = data$cellID)
-    edge <- sapply(Rs[-1], function(x) borderEdge(X, x))
-    edge <- as.data.frame(edge)
-    colnames(edge) <- Rs[-1]
-    edge$i <- data$cellID
-    edge <- tidyr::pivot_longer(edge, -i, names_to = "d")
-
-    p <- dplyr::left_join(as.data.frame(p), edge, c("i", "d"))
-    p$d <- factor(p$d, levels = Rs[-1])
-    
-    p <- as.data.frame(p)
-    
-    if (lisaFunc == "K") {
-      r <- getK(p, lam)
-    }
-    if (lisaFunc == "L") {
-      r <- getL(p, lam)
-    }
-    
-    as.matrix(r[data$cellID, ])
+    # one column per radius and neighbouring type, as radius_type, for the radii and types that occur
+    keep <- which(res$type)
+    curves <- do.call("cbind", c(list(matrix(numeric(0), nrow = X$n, ncol = 0)), lapply(which(res$bin), function(k) {
+      m <- matrix(res$value[, keep, k], nrow = X$n)
+      colnames(m) <- paste(labels[k], levels(cellType)[keep], sep = "_")
+      m
+    })))
+    curves[!res$cell, ] <- NA
+    rownames(curves) <- data$cellID
+    curves
   }
-
-
-#' @importFrom data.table as.data.table setkey CJ dcast .SD ":="
-getK <-
-  function(p, lam) {
-    r <- data.table::as.data.table(p)
-    r$wt <- r$wt
-    r <- r[, j := NULL]
-    r <- r[, cellTypeI := NULL]
-    data.table::setkey(r, i, d, cellTypeJ, value)
-    r <- r[data.table::CJ(i, d, cellTypeJ, unique = TRUE)][, lapply(.SD, sum), by = .(i, d, cellTypeJ, value)][is.na(wt), wt := 0]
-    r <- r[, wt := cumsum(wt), by = list(i, cellTypeJ)]
-    r$value[is.na(r$value)] <- 1
-    E <- as.numeric(as.character(r$d))^2 * pi * r$value * as.numeric(lam[r$cellTypeJ])
-    r$wt <- (r$wt - E) / sqrt(E)
-    r <- r[, value := NULL]
-    r <- data.table::dcast(r, i ~ d + cellTypeJ, value.var = "wt")
-    
-    r <- as.data.frame(r)
-    rownames(r) <- r$i
-    r <- r[, -1]
-    
-    r
-  }
-
-
-#' @importFrom data.table as.data.table setkey CJ dcast .SD ":="
-getL <-
-  function(p, lam) {
-    r <- data.table::as.data.table(p)
-    r$wt <- r$wt
-    r <- r[, j := NULL]
-    r <- r[, cellTypeI := NULL]
-    data.table::setkey(r, i, d, cellTypeJ, value)
-    r <- r[data.table::CJ(i, d, cellTypeJ, unique = TRUE)][, lapply(.SD, sum), by = .(i, d, cellTypeJ, value)][is.na(wt), wt := 0]
-    r <- r[, wt := cumsum(wt), by = list(i, cellTypeJ)]
-    r$value[is.na(r$value)] <- 1
-    E <- as.numeric(as.character(r$d))^2 * pi * r$value * as.numeric(lam[r$cellTypeJ])
-    r$wt <- sqrt(r$wt) - sqrt(E)
-    r <- r[, value := NULL]
-    r <- data.table::dcast(r, i ~ d + cellTypeJ, value.var = "wt")
-    
-    r <- as.data.frame(r)
-    rownames(r) <- r$i
-    r <- r[, -1]
-    
-    r
-  }
-
-
 
 
 #' Plot heatmap of cell type enrichment for lisaClust regions
@@ -574,7 +365,7 @@ getL <-
 #' @importFrom SummarizedExperiment colData
 #' @importFrom pheatmap pheatmap
 #' @importFrom ggplot2 ggplot aes geom_point scale_colour_gradient2 theme_minimal labs
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate .data
 #' @import SpatialExperiment SingleCellExperiment
 regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "region", limit = c(0.33, 3), ...) {
   if (is.data.frame(cells)) {
@@ -586,6 +377,8 @@ regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "r
   }
   
   tab <- table(df[, cellType], df[, region])
+  # cell types or regions without cells (unused factor levels) have no enrichment
+  tab <- tab[rowSums(tab) > 0, colSums(tab) > 0, drop = FALSE]
   tab <- tab / rowSums(tab) %*% t(colSums(tab)) * sum(tab)
   
   ph <- pheatmap::pheatmap(pmax(pmin(tab, limit[2]), limit[1]), cluster_cols = FALSE, silent = TRUE, ...)
@@ -593,8 +386,9 @@ regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "r
   if (type == "bubble") {
     p1 <- tab |>
       as.data.frame() |>
-      dplyr::mutate(cellType = factor(Var1, levels = levels(Var1)[ph$tree_row$order]), region = Var2, Freq2 = pmax(pmin(Freq, limit[2]), limit[1])) |>
-      ggplot2::ggplot(ggplot2::aes(x = region, y = cellType, colour = Freq2, size = Freq2)) +
+      dplyr::mutate(cellType = factor(.data$Var1, levels = levels(.data$Var1)[ph$tree_row$order]), region = .data$Var2,
+                    Freq2 = pmax(pmin(.data$Freq, limit[2]), limit[1])) |>
+      ggplot2::ggplot(ggplot2::aes(x = .data$region, y = .data$cellType, colour = .data$Freq2, size = .data$Freq2)) +
       ggplot2::geom_point() +
       ggplot2::scale_colour_gradient2(low = "#4575B4", mid = "grey90", high = "#D73027", midpoint = 1, guide = "legend") +
       ggplot2::theme_minimal() +

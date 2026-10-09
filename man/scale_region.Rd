@@ -29,7 +29,6 @@ Region scale constructor.
 }
 \examples{
 
-library(spicyR)
 ## Generate toy data
 set.seed(51773)
 x <- round(c(

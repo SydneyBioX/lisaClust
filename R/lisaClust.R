@@ -24,29 +24,23 @@
 #' @return A matrix of LISA curves
 #'
 #' @examples
-#' library(spicyR)
-#' library(SingleCellExperiment)
-#' # Read in data
-#' isletFile <- system.file("extdata", "isletCells.txt.gz", package = "spicyR")
-#' cells <- read.table(isletFile, header = TRUE)
-#' cellExp <- SingleCellExperiment(
-#'     assay = list(intensities = t(cells[, grepl(names(cells), pattern = "Intensity_")])),
-#'     colData = cells[, !grepl(names(cells), pattern = "Intensity_")]
-#' )
+#' ## Generate toy data: two images, two cell types that sit in separate bands
+#' set.seed(51773)
+#' x <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
+#' ), 4) * 100
+#' y <- round(c(
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
+#'   runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
+#' ), 4) * 100
+#' cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
+#' imageID <- rep(c("s1", "s2"), c(800, 800))
+#' cells <- data.frame(x, y, cellType, imageID)
 #'
-#' # Cluster cell types
-#' markers <- t(assay(cellExp, "intensities"))
-#' kM <- kmeans(markers, 8)
-#' colData(cellExp)$cluster <- paste("cluster", kM$cluster, sep = "")
-#'
-#' # Generate LISA
-#' cellExp <- lisaClust(cellExp,
-#'     k = 2,
-#'     imageID = "ImageNumber",
-#'     cellType = "cluster",
-#'     spatialCoords = c("Location_Center_X", "Location_Center_Y")
-#' )
-
+#' # Cluster the cells into two regions
+#' cells <- lisaClust(cells, k = 2)
+#' table(cells$region, cells$cellType)
 #'
 #' @export
 #' @rdname lisaClust
@@ -85,73 +79,33 @@ lisaClust <-
     
     
   
-    if (is(cells, "SummarizedExperiment")) {
-      cols = colnames(colData(cells))
-    } else if (is(cells, "data.frame")) {
-      cols = colnames(cells)
-    } else {
+    if (!is(cells, "SummarizedExperiment") && !is(cells, "data.frame")) {
       stop("Data must be in the form of a SingleCellExperiment, SpatialExperiment, or data frame.")
     }
     
-    if (!(imageID %in% cols)) {
-      stop(paste0("'", imageID, "' column not found in data"))
-    }
+    cd <- .formatCells(cells, imageID, cellType, spatialCoords)
+    # lisa() orders the cells by image; .row records where each one came from
+    rowOf <- stats::setNames(cd$.row, cd$cellID)
+    cd <- cd[, c("imageID", "cellType", "x", "y", "cellID", "imageCellID")]
     
-    if (!(cellType %in% cols)) {
-      stop(paste0("'", cellType, "' column not found in data"))
-    }
+    lisaCurves <- lisa(cd,
+                       r = Rs,
+                       cores = cores,
+                       window = window,
+                       window.length = window.length,
+                       whichParallel = whichParallel,
+                       sigma = sigma,
+                       lisaFunc = lisaFunc,
+                       minLambda = minLambda
+    )
+    kM <- kmeans(lisaCurves, k)
+    regions <- character(length(rowOf))
+    regions[rowOf[rownames(lisaCurves)]] <- paste("region", kM$cluster, sep = "_")
     
-    if (methods::is(cells, "SummarizedExperiment")) {
-      
-      cd = cells
-      
-      colData(cd) <- colData(cd)[, c(cellType, imageID, spatialCoords), drop = FALSE]
-      
-      cd <- spicyR:::.format_data(
-        cd, imageID, cellType, spatialCoords, FALSE
-      )
-      
-      lisaCurves <- lisa(cd,
-                         r = r,
-                         cores = cores,
-                         window = window,
-                         window.length = window.length,
-                         whichParallel = whichParallel,
-                         sigma = sigma,
-                         lisaFunc = lisaFunc,
-                         minLambda = minLambda
-      )
-      kM <- kmeans(lisaCurves, k)
-      regions <- paste("region", kM$cluster, sep = "_")
-      
+    if (is(cells, "SummarizedExperiment")) {
       SummarizedExperiment::colData(cells)[regionName] <- regions
-    } else if (is(cells, "data.frame")) {
-      cd <- cells
-      cd <- cd[, c(cellType, imageID, spatialCoords)]
-      colnames(cd) <- c("cellType", "imageID", "x", "y")
-      cd$cellID <- as.character(seq_len(nrow(cd)))
-      cd$imageCellID <- as.character(seq_len(nrow(cd)))
-      
-      lisaCurves <- lisa(cd,
-                         r = r,
-                         cores = cores,
-                         window = window,
-                         window.length = window.length,
-                         whichParallel = whichParallel,
-                         sigma = sigma,
-                         lisaFunc = lisaFunc,
-                         minLambda = minLambda
-      )
-      
-      kM <- kmeans(lisaCurves, k)
-      regions <- paste("region", kM$cluster, sep = "_")
-      
-      cells[regionName] <- regions
     } else {
-      stop(
-        "Unsupported datatype for cells: please use",
-        "SingleCellExperiment or SpatialExperiment"
-      )
+      cells[regionName] <- regions
     }
     
     cells

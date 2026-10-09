@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.21.0
+Version: 1.21.1
 Authors@R: c(
     person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
     person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
@@ -19,13 +19,13 @@ License: GPL (>=2)
 biocViews: 
     SingleCell, CellBasedAssays, Spatial
 Encoding: UTF-8
-Depends: R (>= 4.0)
+Depends: R (>= 4.1.0)
 VignetteBuilder: knitr
 BugReports: https://github.com/ellispatrick/lisaClust/issues
 URL: https://ellispatrick.github.io/lisaClust/, https://github.com/ellispatrick/lisaClust
 Imports: 
+    Rcpp,
     ggplot2,
-    class,
     concaveman,
     grid,
     BiocParallel,
@@ -34,25 +34,23 @@ Imports:
     BiocGenerics,
     S4Vectors,
     methods,
-    spicyR,
     purrr,
     stats,
-    data.table,
     dplyr,
-    tidyr,
     SingleCellExperiment,
     SpatialExperiment,
     SummarizedExperiment,
     pheatmap,
     spatstat.random,
     lifecycle,
-    simpleSeg,
-    rlang,
+    rlang
 Suggests: 
     SpatialDatasets,
     BiocStyle,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-RoxygenNote: 7.3.2
+LinkingTo: Rcpp
+SystemRequirements: C++17
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

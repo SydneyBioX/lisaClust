@@ -13,3 +13,7 @@ Meta
 .vscode
 small_data.rds
 test.R
+src/*.o
+src/*.so
+src/*.dll
+src/core/src/*.o

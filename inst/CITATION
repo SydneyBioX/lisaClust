@@ -1,0 +1,11 @@
+bibentry(
+  bibtype = "Article",
+  title = "Spatial analysis for highly multiplexed imaging data to identify tissue microenvironments",
+  author = c(person("Ellis", "Patrick"), person(c("Nicolas", "P."), "Canete"), person(c("Sourish", "S."), "Iyengar"),
+             person(c("Andrew", "N."), "Harman"), person(c("Greg", "T."), "Sutherland"), person("Pengyi", "Yang")),
+  journal = "Cytometry Part A",
+  volume = "103",
+  pages = "593--599",
+  year = "2023",
+  doi = "10.1002/cyto.a.24729"
+)

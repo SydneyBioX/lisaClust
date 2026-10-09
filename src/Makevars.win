@@ -1,0 +1,12 @@
+# The numeric core (src/core) is plain C++17, shared verbatim with the Python package lisaclust.
+# src/bindings.cpp holds the R bindings only.
+CXX_STD = CXX17
+PKG_CPPFLAGS = -Icore/include
+
+CORE_OBJECTS = core/src/geometry.o core/src/local.o
+OBJECTS = RcppExports.o bindings.o $(CORE_OBJECTS)
+
+# `all` must stay the first target
+all: $(SHLIB)
+
+$(OBJECTS): core/include/lisaclust/core.hpp

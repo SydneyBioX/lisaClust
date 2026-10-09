@@ -1,254 +1,367 @@
 ---
-title: "Introduction to Clustering of Local Indicators of Spatial Assocation (LISA) curves"
+title: "Introduction to lisaClust"
 date: "`r BiocStyle::doc_date()`"
 author:
-- name: Nicolas Canete
-  affiliation:  
-  - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
-  email: nicolas.canete@sydney.edu.au
 - name: Ellis Patrick
-  affiliation:
-  - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
-  - School of Mathematics and Statistics, University of Sydney, Australia
-  email: ellis.patrick@sydney.edu.au
+  affiliation: School of Mathematics and Statistics, and Westmead Institute for Medical Research, University of Sydney, Australia
+- name: Nicolas Canete
+  affiliation: Westmead Institute for Medical Research, University of Sydney, Australia
 - name: Alex Run Qin
-  affiliation:
-  - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
-  - School of Mathematics and Statistics, University of Sydney, Australia
-  email: alex.qin@sydney.edu.au
+  affiliation: School of Mathematics and Statistics, University of Sydney, Australia
 package: "`r BiocStyle::pkg_ver('lisaClust')`"
-abstract: > 
-  Identify and visualise regions of cell type colocalization in multiplexed imaging data that has been segmented at a single-cell resolution.
+abstract: >
+  Which parts of a tumour are tumour cells, which are immune infiltrate and which are stroma? Which local
+  neighbourhoods of cells are more common in one group of patients than another? lisaClust describes, for every
+  cell, which cell types surround it, and groups cells with similar surroundings into regions. With a few regions
+  these are tissue domains; with many they are cellular niches. This vignette finds domains in triple-negative
+  breast cancers and niches in colorectal cancers, and compares them between groups of patients.
 vignette: >
-  %\VignetteIndexEntry{"Inroduction to lisaClust"}
-  %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Introduction to lisaClust}
   %\VignetteEngine{knitr::rmarkdown}
-output: 
-  BiocStyle::html_document
+  %\VignetteEncoding{UTF-8}
+output:
+  BiocStyle::html_document:
+    toc_float: true
+    toc_depth: 2
 bibliography: REFERENCES.bib
-editor_options: 
-  markdown: 
-    wrap: 72
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE, message = FALSE, warning = FALSE
-)
-library(BiocStyle)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = FALSE, message = FALSE, fig.retina = 1,
+                      fig.width = 7, fig.height = 4.5, fig.align = "center")
 ```
+
+```{css, echo = FALSE}
+.callout { border-left: 4px solid; border-radius: 4px; padding: 0.6em 1em; margin: 1em 0; }
+.callout > p:last-child { margin-bottom: 0; }
+.callout-note { border-color: #1f6fb4; background: #eef4fb; }
+.callout-tip { border-color: #2e7d32; background: #eef7ee; }
+.callout-important { border-color: #b3261e; background: #fbeeee; }
+```
+
+# Introduction
+
+For each cell, lisaClust [@patrick2023] counts the cells of every type within a few radii of it and compares each count with
+what would be expected if that type were spread evenly over the image. These local indicators of spatial
+association (LISA) describe the cell's surroundings: a tumour cell deep in a tumour nest has many tumour neighbours
+and few immune neighbours, while a tumour cell at the invasive margin has both. Clustering the cells by their
+LISA groups cells with similar surroundings, whatever their own type, into **regions**.
+
+The number of regions sets the scale of the question. With a few regions, they are broad tissue **domains**, such
+as tumour, stroma and immune infiltrate. With 20 or more, they are cellular **niches**: recurring local
+combinations of cell types, such as T cells mixed with macrophages at a tumour border.
+
+lisaClust needs only the type and position of every cell, so it applies to any technology that gives segmented,
+typed cells: spatial proteomics such as imaging mass cytometry, MIBI and CODEX, and spatial transcriptomics such
+as Xenium, CosMx, MERSCOPE or high-definition spatial transcriptomics [@patrick2023]. It is not designed for
+spot-based data such as Visium, where a spot holds several cells. It works alongside other SydneyBioX packages: *spicyR* tests whether pairs
+of cell types co-localise differently between groups of patients, and *Statial* tests co-localisation within
+tissue compartments.
 
 # Installation
 
-```{r, eval = FALSE}
-if (!require("BiocManager")) {
-  install.packages("BiocManager")
-}
+```{r install, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 BiocManager::install("lisaClust")
 ```
 
-```{r message=FALSE, warning=FALSE}
-# load required packages
+```{r packages}
 library(lisaClust)
-library(spicyR)
-library(ggplot2)
-library(SingleCellExperiment)
+library(SpatialExperiment)
 library(SpatialDatasets)
+library(ggplot2)
+theme_set(theme_classic())
 ```
 
-# Overview
+# Tissue domains in triple-negative breast cancer
 
-Clustering local indicators of spatial association (LISA) functions is a
-methodology for identifying consistent spatial organisation of multiple
-cell-types in an unsupervised way. This can be used to enable the
-characterization of interactions between multiple cell-types
-simultaneously and can complement traditional pairwise analysis. In our
-implementation our LISA curves are a localised summary of an L-function
-from a Poisson point process model. Our framework `lisaClust` can be
-used to provide a high-level summary of cell-type colocalization in
-high-parameter spatial cytometry data, facilitating the identification
-of distinct tissue compartments or identification of complex cellular
-microenvironments.
+## The data
 
-# Quick start
+@keren2018 imaged tumours from 40 patients with triple-negative breast cancer by MIBI-TOF, one image per patient,
+and classified each tumour by how its immune and tumour cells are arranged: *compartmentalised*, where immune
+cells and tumour cells occupy separate areas; *mixed*, where they are interspersed; and *cold*, with few immune
+cells. The data are a `SpatialExperiment` in the SpatialDatasets package, with the coordinates in pixels.
 
-## Generate toy data
+```{r keren-data}
+kerenSPE <- spe_Keren_2018()
+patients <- unique(as.data.frame(colData(kerenSPE))[, c("imageID", "tumour_type")])
+table(patients$tumour_type)
+sort(table(kerenSPE$cellType), decreasing = TRUE)
+```
 
-To illustrate our `lisaClust` framework, we consider a very simple
-toy example where two cell-types are completely separated spatially. We
-simulate data for two different images.
+## Finding domains
 
-```{r eval=T}
+`lisaClust()` computes the LISA of every cell and clusters them with k-means into `k` regions, stored in a new
+`colData` column (`region` by default). It looks for columns called `imageID` and `cellType`, and takes the
+coordinates of a `SpatialExperiment` from `spatialCoords()`. Here we ask for four domains, describing each cell's
+surroundings within 20, 50 and 100 pixels.
+
+```{r keren-lisaclust}
 set.seed(51773)
-x <- round(c(
-  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
-  runif(200) + 3, runif(200) + 2, runif(200) + 1, runif(200)
-), 4) * 100
-y <- round(c(
-  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3,
-  runif(200), runif(200) + 1, runif(200) + 2, runif(200) + 3
-), 4) * 100
-cellType <- factor(paste("c", rep(rep(c(1:2), rep(200, 2)), 4), sep = ""))
-imageID <- rep(c("s1", "s2"), c(800, 800))
-
-cells <- data.frame(x, y, cellType, imageID)
-
-ggplot(cells, aes(x, y, colour = cellType)) +
-  geom_point() +
-  facet_wrap(~imageID) +
-  theme_minimal()
+kerenSPE <- lisaClust(kerenSPE, k = 4, r = c(20, 50, 100))
+table(kerenSPE$region)
 ```
 
-## Create Single Cell Experiment object
+k-means starts from random centres, so set a seed to make the regions reproducible.
 
-First we store our data in a `SingleCellExperiment` object.
+## What is in each domain?
 
-```{r}
-SCE <- SingleCellExperiment(colData = cells)
-SCE
+`regionMap()` shows how much more often each cell type is found in each region than if cell types were spread
+evenly over the regions: above one, the type is enriched in that region.
+
+```{r keren-region-map, fig.width = 5, fig.height = 5}
+regionMap(kerenSPE, type = "bubble")
 ```
 
-## Running lisaCLust
+The regions are numbered arbitrarily, so we name each one by the cell type it is most enriched for, among tumour
+cells, CD8 T cells, B cells and mesenchymal cells.
 
-We can then use the convenience function `lisaClust` to simultaneously
-calculate local indicators of spatial association (LISA) functions and perform 
-k-means clustering. The number of clusters can be specified with the `k =` parameter. 
-In the example below, we've chosen `k = 2`, resulting in a total of 2 clusters. The cell type column can be specified using the `cellType = ` argument. By default, `lisaClust` uses the column named `cellType`.
-
-The clusters identified by `lisaClust` are stored in `colData` of the `SingleCellExperiment`
-object as a new column called `regions`.
-
-```{r}
-SCE <- lisaClust(SCE, k = 2)
-colData(SCE) |> head()
+```{r keren-domain-names}
+tab <- table(kerenSPE$cellType, kerenSPE$region)
+enrichment <- tab / outer(rowSums(tab), colSums(tab)) * sum(tab)
+markers <- c(tumour = "Keratin_Tumour", `T cell` = "CD8_T_cell", `B cell` = "B_cell", stroma = "Mesenchymal")
+domainOf <- setNames(names(markers)[apply(enrichment[markers, ], 2, which.max)], colnames(enrichment))
+domainOf
+kerenSPE$domain <- domainOf[kerenSPE$region]
+round(100 * prop.table(table(kerenSPE$domain)), 1)
 ```
 
-## Plot identified regions
+The cell types most enriched in each domain:
 
-`lisaClust` also provides the convenient `hatchingPlot` function to
-visualise the different regions that have been demarcated by the
-clustering. `hatchingPlot` outputs a `ggplot` object where the regions
-are marked by different hatching patterns. In a real biological dataset,
-this allows us to plot both regions and cell-types on the same
-visualization.
-
-In the example below, we can visualise our stimulated data where our 2
-cell types have been separated neatly into 2 distinct regions based on
-which cell type each region is dominated by. `region_2` is dominated by
-the red cell type `c1`, and `region_1` is dominated by the blue cell
-type `c2`.
-
-```{r}
-hatchingPlot(SCE, useImages = c("s1", "s2"))
-```
-## Using other clustering methods.
-
-While the `lisaClust` function is convenient, we have not implemented an exhaustive
-suite of clustering methods as it is very easy to do this yourself. There are 
-just two simple steps.
-
-### Generate LISA curves
-
-We can calculate local indicators of spatial association (LISA) functions 
-using the `lisa` function. Here the LISA curves are a 
-localised summary of an L-function from a Poisson point process model. The radii 
-that will be calculated over can be set with `Rs`.
-
-```{r}
-lisaCurves <- lisa(SCE, Rs = c(20, 50, 100))
-
-head(lisaCurves)
+```{r keren-domain-contents}
+sapply(split(names(domainOf), domainOf), function(r) {
+  e <- rowMeans(enrichment[, r, drop = FALSE])
+  paste(names(sort(e, decreasing = TRUE))[1:4], collapse = ", ")
+})
 ```
 
-### Perform some clustering
+## Domains in two tumours
 
-The LISA curves can then be used to cluster the cells. Here we use k-means 
-clustering. However, other clustering methods like SOM could also be used. We can store these 
-cell clusters or cell "regions" in our `SingleCellExperiment` object.
+`hatchingPlot()` draws the cells coloured by type, with each region outlined and filled with its own hatching, so
+types and regions can be seen together. Here are the compartmentalised tumour and the mixed tumour with the most
+cells in the T cell domain.
 
-```{r}
-# Custom clustering algorithm
-kM <- kmeans(lisaCurves, 2)
-
-# Storing clusters into colData
-colData(SCE)$custom_region <- paste("region", kM$cluster, sep = "_")
-colData(SCE) |> head()
+```{r keren-examples}
+domainShare <- prop.table(table(kerenSPE$imageID, kerenSPE$domain), 1)
+type <- patients$tumour_type[match(rownames(domainShare), patients$imageID)]
+examples <- sapply(c("compartmentalised", "mixed"), function(t) {
+  im <- rownames(domainShare)[type == t]
+  im[which.max(domainShare[im, "T cell"])]
+})
+examples
 ```
 
-
-# Keren et al. breast cancer data.
-
-Next, we apply our `lisaClust` framework to two images of breast cancer obtained by @keren2018.
-
-## Read in data
-
-We will start by reading in the data from the `SpatialDatasets` package
-as a `SingleCellExperiment` object. Here the data is in a format consistent with
-that outputted by CellProfiler.
-
-```{r}
-kerenSPE <- SpatialDatasets::spe_Keren_2018()
+```{r keren-hatching, fig.width = 10, fig.height = 5.5}
+hatchingPlot(kerenSPE, useImages = examples, region = "domain", nbp = 200)
 ```
 
-## Generate LISA curves
+## Do the domains differ between kinds of tumour?
 
-This data includes annotation of the cell-types of each cell. Hence, we can
-move directly to performing k-means clustering on the local indicators of
-spatial association (LISA) functions using the `lisaClust` function, remembering
-to specify the `imageID`, `cellType`, and `spatialCoords` 
-columns in `colData`. For the purpose of demonstration, we will be using
-only images 5 and 6 of the `kerenSPE` dataset.
+Each patient has one image, so the share of each domain in an image is a value per patient.
 
-```{r}
-kerenSPE <- kerenSPE[,kerenSPE$imageID %in% c("5", "6")]
-
-kerenSPE <- lisaClust(kerenSPE,
-  k = 5
-)
+```{r keren-domain-share, fig.width = 8, fig.height = 4}
+shares <- data.frame(imageID = rep(rownames(domainShare), ncol(domainShare)),
+                     domain = rep(colnames(domainShare), each = nrow(domainShare)),
+                     share = as.vector(domainShare))
+shares$tumour_type <- patients$tumour_type[match(shares$imageID, patients$imageID)]
+ggplot(shares, aes(tumour_type, share, colour = tumour_type)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, height = 0, size = 1) +
+  facet_wrap(~ domain, nrow = 1) +
+  scale_y_continuous(labels = function(v) paste0(100 * v, "%")) +
+  labs(x = NULL, y = "share of the image's cells") +
+  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-These regions are stored in `colData` and can be extracted.
-
-```{r}
-colData(kerenSPE)[, c("imageID", "region")] |>
-  head(20)
+```{r keren-domain-test}
+tcell <- domainShare[, "T cell"]
+medians <- tapply(tcell, type, median)
+round(100 * medians, 1)
+pT <- wilcox.test(tcell[type == "compartmentalised"], tcell[type == "mixed"])$p.value
+pT
 ```
 
-## Examine cell type enrichment
+The T cell domain makes up a median of `r round(100 * medians["compartmentalised"], 1)`% of the cells in a
+compartmentalised tumour and `r round(100 * medians["mixed"], 1)`% in a mixed one (Wilcoxon p =
+`r format(pT, digits = 2)`). `r if (medians["compartmentalised"] > medians["mixed"]) "In compartmentalised tumours the immune cells form their own areas, which become a domain; in mixed tumours they sit among the tumour cells and fall into the tumour domain." else ""`
 
-`lisaClust` also provides a convenient function, `regionMap`, for examining which 
-cell types are located in which regions. In this example, we use this to check
-which cell types appear more frequently in each region than expected by chance.
+::: {.callout .callout-important}
+@keren2018 classified the tumours from how their immune and tumour cells are arranged, so this difference is a
+check that the domains capture that arrangement, not an independent finding.
+:::
 
-Here, we clearly see that healthy epithelial and mesenchymal tissue are highly
-concentrated in region 1, immune cells are concentrated in regions 2 and 4, 
-whilst tumour cells are concentrated in region 3.
+# Cellular niches in colorectal cancer
 
-We can further segregate these cells by increasing the number of clusters, i.e.,
-increasing the parameter `k = ` in the `lisaClust()` function. For the purposes
-of demonstration, let's take a look at the `hatchingPlot` of these regions.
+## The data
 
-```{r}
-regionMap(kerenSPE,
-  type = "bubble"
-)
+@schurch2020 imaged colorectal cancers from 35 patients by CODEX, four tissue microarray cores per patient. The
+patients had one of two patterns of immune response: a Crohn's-like reaction (CLR, with lymphoid follicles; 17
+patients) or diffuse inflammatory infiltration (DII; 18 patients). We leave out the objects the authors labelled
+as debris (`dirt`).
+
+```{r schurch-data}
+schurchSPE <- spe_Schurch_2020()
+schurchSPE <- schurchSPE[, schurchSPE$cellType != "dirt"]
+schurchSPE$condition <- factor(ifelse(schurchSPE$group == 1, "CLR", "DII"))
+table(unique(as.data.frame(colData(schurchSPE))[, c("patients", "condition")])$condition)
+length(unique(schurchSPE$cellType))
 ```
 
-## Plot identified regions
+## Finding niches
 
-Finally, we can use `hatchingPlot` to construct a `ggplot` object where
-the regions are marked by different hatching patterns. This allows us to
-visualize the 5 regions and 17 cell-types simultaneously.
+With 20 regions, the regions are finer combinations of cell types. We store them in a column called `niche`.
 
-```{r fig.height=7, fig.width=9}
-hatchingPlot(kerenSPE, nbp = 300)
+```{r schurch-lisaclust}
+set.seed(51773)
+schurchSPE <- lisaClust(schurchSPE, k = 20, r = c(20, 50, 100), regionName = "niche")
+```
+
+```{r schurch-region-map, fig.width = 9, fig.height = 7}
+regionMap(schurchSPE, region = "niche", type = "bubble") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+## Comparing niches between groups of patients
+
+The question is whether a niche makes up more of the tissue in one group of patients than in the other. The four
+cores of a patient come from the same tumour, so they are not independent: we pool the cells of each patient's
+cores, so that each patient contributes one share of each niche, and compare the two groups of patients. With 20
+niches tested, the p-values are adjusted for multiple testing.
+
+```{r schurch-patient-test}
+cd <- as.data.frame(colData(schurchSPE))
+byPatient <- prop.table(table(cd$patients, cd$niche), 1)
+groupOf <- unique(cd[, c("patients", "condition")])
+group <- groupOf$condition[match(rownames(byPatient), groupOf$patients)]
+
+nicheTest <- function(share, group) {
+  p <- apply(share, 2, function(v) wilcox.test(v[group == "CLR"], v[group == "DII"], exact = FALSE)$p.value)
+  data.frame(niche = colnames(share),
+             CLR = apply(share[group == "CLR", , drop = FALSE], 2, median),
+             DII = apply(share[group == "DII", , drop = FALSE], 2, median),
+             p_value = p, p_adj = p.adjust(p, "BH"))
+}
+patientTests <- nicheTest(byPatient, group)
+head(patientTests[order(patientTests$p_value), ], 5)
+```
+
+```{r schurch-core-test}
+byCore <- prop.table(table(cd$imageID, cd$niche), 1)
+coreGroup <- unique(cd[, c("imageID", "condition")])
+coreTests <- nicheTest(byCore, coreGroup$condition[match(rownames(byCore), coreGroup$imageID)])
+c(patients = sum(patientTests$p_adj < 0.05), cores = sum(coreTests$p_adj < 0.05))
+```
+
+```{r schurch-counts, include = FALSE}
+nPatients <- sum(patientTests$p_adj < 0.05)
+nCores <- sum(coreTests$p_adj < 0.05)
+niches <- function(n) if (n == 1) "1 niche differs" else paste(n, "niches differ")
+```
+
+With the 35 patients as the units, `r niches(nPatients)` between CLR and DII patients at a 5% false discovery rate
+(smallest adjusted p-value `r format(min(patientTests$p_adj), digits = 2)`). Treating each of the 140 cores as an
+independent sample instead, `r niches(nCores)`.
+
+::: {.callout .callout-important}
+Cores or images from the same patient are alike, so treating them as independent overstates the evidence
+and turns up differences that the patients do not support. Compare niches with patients as the units, and adjust
+for the number of niches tested.
+:::
+
+```{r schurch-top-niche-types}
+top <- patientTests$niche[which.min(patientTests$p_value)]
+nicheTab <- table(cd$cellType, cd$niche)
+nicheEnrichment <- nicheTab / outer(rowSums(nicheTab), colSums(nicheTab)) * sum(nicheTab)
+round(sort(nicheEnrichment[, top], decreasing = TRUE)[1:5], 1)
+```
+
+The niche with the smallest p-value, `r top`, is most enriched for
+`r paste(names(sort(nicheEnrichment[, top], decreasing = TRUE))[1:3], collapse = ", ")`. It makes up a median of
+`r round(100 * patientTests[top, "CLR"], 1)`% of the cells in CLR patients and
+`r round(100 * patientTests[top, "DII"], 1)`% in DII patients`r if (names(which.max(nicheEnrichment[, top])) == "b_cells" && patientTests[top, "CLR"] > patientTests[top, "DII"]) ", as expected for the lymphoid follicles that define a Crohn's-like reaction" else ""`:
+
+```{r schurch-top-niche, fig.width = 4, fig.height = 4}
+ggplot(data.frame(share = byPatient[, top], group = group), aes(group, share, colour = group)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, height = 0, size = 1.5) +
+  scale_y_continuous(labels = function(v) paste0(100 * v, "%")) +
+  labs(x = NULL, y = paste("share of", top)) +
+  theme(legend.position = "none")
+```
+
+# Using your own clustering
+
+`lisa()` returns the LISA themselves, one row per cell and one column per radius and cell type, so you can
+cluster them any way you like.
+
+```{r lisa-curves}
+curves <- lisa(kerenSPE[, kerenSPE$imageID %in% examples], r = c(20, 50, 100))
+dim(curves)
+curves[1:3, 1:4]
+
+# for example, k-means with several random starts
+set.seed(51773)
+km <- kmeans(curves, centers = 4, nstart = 10, iter.max = 50)
+table(km$cluster)
+```
+
+# Choosing the settings
+
+::: {.callout .callout-tip}
+**The number of regions.** A few regions describe the large compartments of a tissue; many regions separate finer
+neighbourhoods but split rarer combinations across several regions and make each one harder to interpret. Look at
+`regionMap()` for a few values of `k` and choose the coarsest one that separates the structures you care about;
+generic rules for the number of clusters, such as the elbow or silhouette, can merge tissue structures that are
+known to be distinct [@patrick2023].
+:::
+
+::: {.callout .callout-tip}
+**The radii.** Choose them from the scales of interaction you expect, in the units of the coordinates: a radius of
+two or three cell diameters describes the cell's immediate neighbours, and larger radii describe its wider
+surroundings. Several radii (`r`) are used together; run
+time grows with the number and size of the radii, so a few well-chosen ones are better than many.
+:::
+
+::: {.callout .callout-note}
+**Uneven cell density.** By default the expected count assumes cells are spread evenly over the image. With
+`sigma`, each neighbour is weighted by the inverse of the local density of all cells, estimated with a Gaussian
+kernel of bandwidth `sigma`, so that a dense area does not by itself look enriched for every cell type.
+:::
+
+# How it works
+
+For cell *i*, cell type *j* and radius *r*, let *n<sub>ij</sub>(r)* be the number of cells of type *j* within *r*
+of cell *i*. If the cells of type *j* were spread evenly over the image window *W*, with density
+$\lambda_j = N_j / |W|$, the expected count would be
+
+$$E_{ij}(r) = \lambda_j \, \pi r^2 e_i(r),$$
+
+where $e_i(r)$ is the share of the disc of radius *r* around cell *i* that lies inside the window, which corrects
+for cells near the edge. The LISA is the standardised difference
+
+$$\frac{n_{ij}(r) - E_{ij}(r)}{\sqrt{E_{ij}(r)}},$$
+
+a local version of Ripley's K function for the pair (`lisaFunc = "L"` gives
+$\sqrt{n_{ij}(r)} - \sqrt{E_{ij}(r)}$ instead). The window is the convex hull of the image's cells by default
+(`window`). The neighbour search and the edge correction run in C++, so the LISA of hundreds of thousands of cells
+take seconds.
+
+# Reporting results
+
+A methods sentence might read: "We used lisaClust (version `r packageVersion("lisaClust")`) to compute, for each
+cell, local indicators of spatial association with every cell type at radii of 20, 50 and 100 pixels, and
+clustered the cells into 20 niches by k-means. The share of each niche in each patient was compared between
+groups with a Wilcoxon test, with patients as the units, and p-values were adjusted across niches by the
+Benjamini–Hochberg method." Show `regionMap()` and a `hatchingPlot()` of example images with the results.
+
+```{r citation}
+citation("lisaClust")
+```
+
+# Session information
+
+```{r session}
+sessionInfo()
 ```
 
 # References
-
-
-# sessionInfo()
-
-```{r}
-sessionInfo()
-```

@@ -1,0 +1,24 @@
+CHANGES IN VERSION 1.21.1
+-------------------------
+
+    o The neighbour counts and edge corrections of lisa(), lisaClust() and inhomLocalK() are computed in C++
+      (src/core, shared with the Python package lisaclust): about 8 to 18 times faster. The edge correction
+      intersects each disc with the window exactly instead of through spatstat's integer-rounded polygon
+      clipping, which changes the LISA by less than 1e-6; regions are otherwise unchanged.
+
+    o hatchingPlot() and geom_hatching() are about 10 times faster: the hatching lines are intersected with the
+      region outlines all at once, and the region of each grid point is that of the nearest cell, found in
+      C++. Equidistant cells vote and a tied vote goes to the first region, so the plot no longer depends on the
+      random seed.
+
+    o Bug fix: lisaClust() assigned the regions to the wrong cells when the cells of different images were
+      interleaved rather than ordered by image. Regions are now matched to cells by their position in the input.
+      hatchingPlot() had the same problem with the region column, and now also accepts a data.frame.
+
+    o Bug fix: regionMap() failed when a cell type had no cells (an unused factor level).
+
+    o Bug fix: lisaClust() failed on a SpatialExperiment whose coordinates are only in spatialCoords().
+
+    o lisaClust no longer depends on spicyR, simpleSeg, class, data.table or tidyr. The examples use simulated
+      data, and the vignette finds tissue domains in triple-negative breast cancer and cellular niches in
+      colorectal cancer, compared between groups of patients.

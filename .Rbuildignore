@@ -5,3 +5,4 @@
 ^\.vscode$
 ^_pkgdown\.yml$
 ^\.github$
+^src/core/src/.*\.o$
