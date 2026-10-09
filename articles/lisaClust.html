@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -183,7 +183,7 @@ each cell’s surroundings within 20, 50 and 100 pixels.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">region</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; region_1 region_2 region_3 region_4 </span></span>
-<span><span class="co">#&gt;    67383   101637    21806     6852</span></span></code></pre></div>
+<span><span class="co">#&gt;    62148   104863    23516     7151</span></span></code></pre></div>
 <p>k-means starts from random centres, so set a seed to make the regions
 reproducible.</p>
 </div>
@@ -211,7 +211,7 @@ and mesenchymal cells.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">kerenSPE</span><span class="op">$</span><span class="va">domain</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; B cell stroma T cell tumour </span></span>
-<span><span class="co">#&gt;    3.5   34.1   11.0   51.4</span></span></code></pre></div>
+<span><span class="co">#&gt;    3.6   31.4   11.9   53.0</span></span></code></pre></div>
 <p>The cell types most enriched in each domain:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">domainOf</span><span class="op">)</span>, <span class="va">domainOf</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">{</span></span>
@@ -221,11 +221,11 @@ and mesenchymal cells.</p>
 <span><span class="co">#&gt;                                                 B cell </span></span>
 <span><span class="co">#&gt;                     "B_cell, CD4_T_cell, DC, dn_T_CD3" </span></span>
 <span><span class="co">#&gt;                                                 stroma </span></span>
-<span><span class="co">#&gt; "Other_Immune, Unidentified, Endothelial, Mesenchymal" </span></span>
+<span><span class="co">#&gt; "Other_Immune, Endothelial, Unidentified, Mesenchymal" </span></span>
 <span><span class="co">#&gt;                                                 T cell </span></span>
-<span><span class="co">#&gt;               "CD4_T_cell, NK, DC_or_Mono, CD8_T_cell" </span></span>
+<span><span class="co">#&gt;               "CD4_T_cell, NK, CD8_T_cell, DC_or_Mono" </span></span>
 <span><span class="co">#&gt;                                                 tumour </span></span>
-<span><span class="co">#&gt;           "Keratin_Tumour, Tumour, Tregs, Neutrophils"</span></span></code></pre></div>
+<span><span class="co">#&gt;            "Keratin_Tumour, Tumour, Tregs, CD8_T_cell"</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="domains-in-two-tumours">Domains in two tumours<a class="anchor" aria-label="anchor" href="#domains-in-two-tumours"></a>
@@ -271,12 +271,12 @@ is a value per patient.</p>
 <span><span class="va">medians</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">tcell</span>, <span class="va">type</span>, <span class="va">median</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="va">medians</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              cold compartmentalised             mixed </span></span>
-<span><span class="co">#&gt;               1.3              15.0               3.6</span></span>
+<span><span class="co">#&gt;               1.3              15.2               4.5</span></span>
 <span><span class="va">pT</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/wilcox.test.html" class="external-link">wilcox.test</a></span><span class="op">(</span><span class="va">tcell</span><span class="op">[</span><span class="va">type</span> <span class="op">==</span> <span class="st">"compartmentalised"</span><span class="op">]</span>, <span class="va">tcell</span><span class="op">[</span><span class="va">type</span> <span class="op">==</span> <span class="st">"mixed"</span><span class="op">]</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
 <span><span class="va">pT</span></span>
 <span><span class="co">#&gt; [1] 9.138522e-05</span></span></code></pre></div>
-<p>The T cell domain makes up a median of 15% of the cells in a
-compartmentalised tumour and 3.6% in a mixed one (Wilcoxon p = 9.1e-05).
+<p>The T cell domain makes up a median of 15.2% of the cells in a
+compartmentalised tumour and 4.5% in a mixed one (Wilcoxon p = 9.1e-05).
 In compartmentalised tumours the immune cells form their own areas,
 which become a domain; in mixed tumours they sit among the tumour cells
 and fall into the tumour domain.</p>
@@ -349,26 +349,26 @@ the p-values are adjusted for multiple testing.</p>
 <span><span class="op">}</span></span>
 <span><span class="va">patientTests</span> <span class="op">&lt;-</span> <span class="fu">nicheTest</span><span class="op">(</span><span class="va">byPatient</span>, <span class="va">group</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>, <span class="op">]</span>, <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co">#&gt;               niche        CLR         DII      p_value       p_adj</span></span>
-<span><span class="co">#&gt; region_13 region_13 0.04152047 0.008741548 0.0002652751 0.005305502</span></span>
-<span><span class="co">#&gt; region_11 region_11 0.01593220 0.044091471 0.0071473256 0.071473256</span></span>
-<span><span class="co">#&gt; region_5   region_5 0.02458821 0.042001232 0.0237693593 0.130436442</span></span>
-<span><span class="co">#&gt; region_10 region_10 0.01383192 0.018377385 0.0360988449 0.130436442</span></span>
-<span><span class="co">#&gt; region_15 region_15 0.01299103 0.008435928 0.0391172031 0.130436442</span></span></code></pre></div>
+<span><span class="co">#&gt;               niche         CLR         DII     p_value      p_adj</span></span>
+<span><span class="co">#&gt; region_13 region_13 0.064181874 0.034373672 0.002266000 0.02667551</span></span>
+<span><span class="co">#&gt; region_7   region_7 0.015971606 0.001893183 0.002667551 0.02667551</span></span>
+<span><span class="co">#&gt; region_11 region_11 0.025140491 0.053914772 0.005288485 0.03525657</span></span>
+<span><span class="co">#&gt; region_4   region_4 0.031240960 0.048529593 0.009572918 0.04786459</span></span>
+<span><span class="co">#&gt; region_5   region_5 0.005341982 0.002529402 0.021762678 0.08705071</span></span></code></pre></div>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">byCore</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cd</span><span class="op">$</span><span class="va">imageID</span>, <span class="va">cd</span><span class="op">$</span><span class="va">niche</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">coreGroup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">cd</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"imageID"</span>, <span class="st">"condition"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">coreTests</span> <span class="op">&lt;-</span> <span class="fu">nicheTest</span><span class="op">(</span><span class="va">byCore</span>, <span class="va">coreGroup</span><span class="op">$</span><span class="va">condition</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">byCore</span><span class="op">)</span>, <span class="va">coreGroup</span><span class="op">$</span><span class="va">imageID</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>patients <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">patientTests</span><span class="op">$</span><span class="va">p_adj</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span>, cores <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">coreTests</span><span class="op">$</span><span class="va">p_adj</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; patients    cores </span></span>
-<span><span class="co">#&gt;        1        4</span></span></code></pre></div>
-<p>With the 35 patients as the units, 1 niche differs between CLR and
+<span><span class="co">#&gt;        4        4</span></span></code></pre></div>
+<p>With the 35 patients as the units, 4 niches differ between CLR and
 DII patients at a 5% false discovery rate (smallest adjusted p-value
-0.0053). Treating each of the 140 cores as an independent sample
-instead, 4 niches differ.</p>
+0.027). Treating each of the 140 cores as an independent sample instead,
+4 niches differ, with a smallest adjusted p-value of 0.00087.</p>
 <div class="callout callout-important">
 <p>Cores or images from the same patient are alike, so treating them as
-independent overstates the evidence and turns up differences that the
+independent overstates the evidence and can turn up differences that the
 patients do not support. Compare niches with patients as the units, and
 adjust for the number of niches tested.</p>
 </div>
@@ -377,13 +377,13 @@ adjust for the number of niches tested.</p>
 <span><span class="va">nicheTab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">cd</span><span class="op">$</span><span class="va">cellType</span>, <span class="va">cd</span><span class="op">$</span><span class="va">niche</span><span class="op">)</span></span>
 <span><span class="va">nicheEnrichment</span> <span class="op">&lt;-</span> <span class="va">nicheTab</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/outer.html" class="external-link">outer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">nicheTab</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">nicheEnrichment</span><span class="op">[</span>, <span class="va">top</span><span class="op">]</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                b_cells            cd4_t_cells      cd163_macrophages </span></span>
-<span><span class="co">#&gt;                   10.1                    2.8                    2.6 </span></span>
-<span><span class="co">#&gt;     cd4_t_cells_cd45ro cd68_macrophages_gzm_b </span></span>
-<span><span class="co">#&gt;                    1.5                    1.4</span></span></code></pre></div>
+<span><span class="co">#&gt;            b_cells        cd4_t_cells        cd3_t_cells         cd11c_d_cs </span></span>
+<span><span class="co">#&gt;                8.3                2.1                2.1                1.4 </span></span>
+<span><span class="co">#&gt; cd4_t_cells_cd45ro </span></span>
+<span><span class="co">#&gt;                1.4</span></span></code></pre></div>
 <p>The niche with the smallest p-value, region_13, is most enriched for
-b_cells, cd4_t_cells, cd163_macrophages. It makes up a median of 4.2% of
-the cells in CLR patients and 0.9% in DII patients, as expected for the
+b_cells, cd4_t_cells, cd3_t_cells. It makes up a median of 6.4% of the
+cells in CLR patients and 3.4% in DII patients, as expected for the
 lymphoid follicles that define a Crohn’s-like reaction:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>share <span class="op">=</span> <span class="va">byPatient</span><span class="op">[</span>, <span class="va">top</span><span class="op">]</span>, group <span class="op">=</span> <span class="va">group</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">group</span>, <span class="va">share</span>, colour <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -407,9 +407,9 @@ like.</p>
 <span><span class="co">#&gt; [1] 13031    51</span></span>
 <span><span class="va">curves</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span>
 <span><span class="co">#&gt;        20_Keratin_Tumour 20_CD8_T_cell 20_dn_T_CD3 20_CD4_T_cell</span></span>
-<span><span class="co">#&gt; cell_1         1.6233015    -0.8831332  -0.2041394    -0.8778542</span></span>
-<span><span class="co">#&gt; cell_2        -0.7323238     4.0046288  -0.2041394    -0.8778542</span></span>
-<span><span class="co">#&gt; cell_3        -0.7323238     3.9443524  -0.2041394    -0.8778542</span></span>
+<span><span class="co">#&gt; cell_1         3.7228902    -0.8831332  -0.2041394    -0.8778542</span></span>
+<span><span class="co">#&gt; cell_2        -0.7323238     5.5545686  -0.2041394    -0.8778542</span></span>
+<span><span class="co">#&gt; cell_3        -0.7323238     5.4766730  -0.2041394    -0.8778542</span></span>
 <span></span>
 <span><span class="co"># for example, k-means with several random starts</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">51773</span><span class="op">)</span></span>
@@ -417,7 +417,7 @@ like.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">km</span><span class="op">$</span><span class="va">cluster</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    1    2    3    4 </span></span>
-<span><span class="co">#&gt; 5555 1380 5934  162</span></span></code></pre></div>
+<span><span class="co">#&gt; 5466 1362 6043  160</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="choosing-the-settings">Choosing the settings<a class="anchor" aria-label="anchor" href="#choosing-the-settings"></a>
@@ -455,8 +455,9 @@ type.</p>
 </h2>
 <p>For cell <em>i</em>, cell type <em>j</em> and radius <em>r</em>, let
 <em>n<sub>ij</sub>(r)</em> be the number of cells of type <em>j</em>
-within <em>r</em> of cell <em>i</em>. If the cells of type <em>j</em>
-were spread evenly over the image window <em>W</em>, with density
+within <em>r</em> of cell <em>i</em>, counting cell <em>i</em> itself
+when it is of type <em>j</em>. If the cells of type <em>j</em> were
+spread evenly over the image window <em>W</em>, with density
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>j</mi></msub><mo>=</mo><msub><mi>N</mi><mi>j</mi></msub><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>W</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\lambda_j = N_j / |W|</annotation></semantics></math>,
 the expected count would be</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>λ</mi><mi>j</mi></msub><mspace width="0.167em"></mspace><mi>π</mi><msup><mi>r</mi><mn>2</mn></msup><msub><mi>e</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">E_{ij}(r) = \lambda_j \, \pi r^2 e_i(r),</annotation></semantics></math></p>
@@ -476,7 +477,7 @@ in C++, so the LISA of hundreds of thousands of cells take seconds.</p>
 <div class="section level2">
 <h2 id="reporting-results">Reporting results<a class="anchor" aria-label="anchor" href="#reporting-results"></a>
 </h2>
-<p>A methods sentence might read: “We used lisaClust (version 1.21.1) to
+<p>A methods sentence might read: “We used lisaClust (version 1.21.2) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -542,7 +543,7 @@ Benjamini–Hochberg method.” Show <code><a href="../reference/regionMap.html"
 <span><span class="co">#&gt; [13] IRanges_2.46.0              S4Vectors_0.50.3           </span></span>
 <span><span class="co">#&gt; [15] BiocGenerics_0.58.1         generics_0.1.4             </span></span>
 <span><span class="co">#&gt; [17] MatrixGenerics_1.24.0       matrixStats_1.5.0          </span></span>
-<span><span class="co">#&gt; [19] lisaClust_1.21.1            BiocStyle_2.40.0           </span></span>
+<span><span class="co">#&gt; [19] lisaClust_1.21.2            BiocStyle_2.40.0           </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] DBI_1.3.0              deldir_2.0-4           httr2_1.3.0           </span></span>

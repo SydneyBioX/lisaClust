@@ -128,6 +128,6 @@ cells <- lisaClust(cells, k = 2)
 table(cells$region, cells$cellType)
 #>           
 #>             c1  c2
-#>   region_1   1 800
-#>   region_2 799   0
+#>   region_1   0 800
+#>   region_2 800   0
 ```

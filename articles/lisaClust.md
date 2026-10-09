@@ -106,7 +106,7 @@ kerenSPE <- lisaClust(kerenSPE, k = 4, r = c(20, 50, 100))
 table(kerenSPE$region)
 #> 
 #> region_1 region_2 region_3 region_4 
-#>    67383   101637    21806     6852
+#>    62148   104863    23516     7151
 ```
 
 k-means starts from random centres, so set a seed to make the regions
@@ -143,7 +143,7 @@ kerenSPE$domain <- domainOf[kerenSPE$region]
 round(100 * prop.table(table(kerenSPE$domain)), 1)
 #> 
 #> B cell stroma T cell tumour 
-#>    3.5   34.1   11.0   51.4
+#>    3.6   31.4   11.9   53.0
 ```
 
 The cell types most enriched in each domain:
@@ -157,11 +157,11 @@ sapply(split(names(domainOf), domainOf), function(r) {
 #>                                                 B cell 
 #>                     "B_cell, CD4_T_cell, DC, dn_T_CD3" 
 #>                                                 stroma 
-#> "Other_Immune, Unidentified, Endothelial, Mesenchymal" 
+#> "Other_Immune, Endothelial, Unidentified, Mesenchymal" 
 #>                                                 T cell 
-#>               "CD4_T_cell, NK, DC_or_Mono, CD8_T_cell" 
+#>               "CD4_T_cell, NK, CD8_T_cell, DC_or_Mono" 
 #>                                                 tumour 
-#>           "Keratin_Tumour, Tumour, Tregs, Neutrophils"
+#>            "Keratin_Tumour, Tumour, Tregs, CD8_T_cell"
 ```
 
 ### Domains in two tumours
@@ -220,14 +220,14 @@ tcell <- domainShare[, "T cell"]
 medians <- tapply(tcell, type, median)
 round(100 * medians, 1)
 #>              cold compartmentalised             mixed 
-#>               1.3              15.0               3.6
+#>               1.3              15.2               4.5
 pT <- wilcox.test(tcell[type == "compartmentalised"], tcell[type == "mixed"])$p.value
 pT
 #> [1] 9.138522e-05
 ```
 
-The T cell domain makes up a median of 15% of the cells in a
-compartmentalised tumour and 3.6% in a mixed one (Wilcoxon p = 9.1e-05).
+The T cell domain makes up a median of 15.2% of the cells in a
+compartmentalised tumour and 4.5% in a mixed one (Wilcoxon p = 9.1e-05).
 In compartmentalised tumours the immune cells form their own areas,
 which become a domain; in mixed tumours they sit among the tumour cells
 and fall into the tumour domain.
@@ -304,12 +304,12 @@ nicheTest <- function(share, group) {
 }
 patientTests <- nicheTest(byPatient, group)
 head(patientTests[order(patientTests$p_value), ], 5)
-#>               niche        CLR         DII      p_value       p_adj
-#> region_13 region_13 0.04152047 0.008741548 0.0002652751 0.005305502
-#> region_11 region_11 0.01593220 0.044091471 0.0071473256 0.071473256
-#> region_5   region_5 0.02458821 0.042001232 0.0237693593 0.130436442
-#> region_10 region_10 0.01383192 0.018377385 0.0360988449 0.130436442
-#> region_15 region_15 0.01299103 0.008435928 0.0391172031 0.130436442
+#>               niche         CLR         DII     p_value      p_adj
+#> region_13 region_13 0.064181874 0.034373672 0.002266000 0.02667551
+#> region_7   region_7 0.015971606 0.001893183 0.002667551 0.02667551
+#> region_11 region_11 0.025140491 0.053914772 0.005288485 0.03525657
+#> region_4   region_4 0.031240960 0.048529593 0.009572918 0.04786459
+#> region_5   region_5 0.005341982 0.002529402 0.021762678 0.08705071
 ```
 
 ``` r
@@ -319,16 +319,16 @@ coreGroup <- unique(cd[, c("imageID", "condition")])
 coreTests <- nicheTest(byCore, coreGroup$condition[match(rownames(byCore), coreGroup$imageID)])
 c(patients = sum(patientTests$p_adj < 0.05), cores = sum(coreTests$p_adj < 0.05))
 #> patients    cores 
-#>        1        4
+#>        4        4
 ```
 
-With the 35 patients as the units, 1 niche differs between CLR and DII
-patients at a 5% false discovery rate (smallest adjusted p-value
-0.0053). Treating each of the 140 cores as an independent sample
-instead, 4 niches differ.
+With the 35 patients as the units, 4 niches differ between CLR and DII
+patients at a 5% false discovery rate (smallest adjusted p-value 0.027).
+Treating each of the 140 cores as an independent sample instead, 4
+niches differ, with a smallest adjusted p-value of 0.00087.
 
 Cores or images from the same patient are alike, so treating them as
-independent overstates the evidence and turns up differences that the
+independent overstates the evidence and can turn up differences that the
 patients do not support. Compare niches with patients as the units, and
 adjust for the number of niches tested.
 
@@ -338,15 +338,15 @@ top <- patientTests$niche[which.min(patientTests$p_value)]
 nicheTab <- table(cd$cellType, cd$niche)
 nicheEnrichment <- nicheTab / outer(rowSums(nicheTab), colSums(nicheTab)) * sum(nicheTab)
 round(sort(nicheEnrichment[, top], decreasing = TRUE)[1:5], 1)
-#>                b_cells            cd4_t_cells      cd163_macrophages 
-#>                   10.1                    2.8                    2.6 
-#>     cd4_t_cells_cd45ro cd68_macrophages_gzm_b 
-#>                    1.5                    1.4
+#>            b_cells        cd4_t_cells        cd3_t_cells         cd11c_d_cs 
+#>                8.3                2.1                2.1                1.4 
+#> cd4_t_cells_cd45ro 
+#>                1.4
 ```
 
 The niche with the smallest p-value, region_13, is most enriched for
-b_cells, cd4_t_cells, cd163_macrophages. It makes up a median of 4.2% of
-the cells in CLR patients and 0.9% in DII patients, as expected for the
+b_cells, cd4_t_cells, cd3_t_cells. It makes up a median of 6.4% of the
+cells in CLR patients and 3.4% in DII patients, as expected for the
 lymphoid follicles that define a Crohn’s-like reaction:
 
 ``` r
@@ -374,9 +374,9 @@ dim(curves)
 #> [1] 13031    51
 curves[1:3, 1:4]
 #>        20_Keratin_Tumour 20_CD8_T_cell 20_dn_T_CD3 20_CD4_T_cell
-#> cell_1         1.6233015    -0.8831332  -0.2041394    -0.8778542
-#> cell_2        -0.7323238     4.0046288  -0.2041394    -0.8778542
-#> cell_3        -0.7323238     3.9443524  -0.2041394    -0.8778542
+#> cell_1         3.7228902    -0.8831332  -0.2041394    -0.8778542
+#> cell_2        -0.7323238     5.5545686  -0.2041394    -0.8778542
+#> cell_3        -0.7323238     5.4766730  -0.2041394    -0.8778542
 
 # for example, k-means with several random starts
 set.seed(51773)
@@ -384,7 +384,7 @@ km <- kmeans(curves, centers = 4, nstart = 10, iter.max = 50)
 table(km$cluster)
 #> 
 #>    1    2    3    4 
-#> 5555 1380 5934  162
+#> 5466 1362 6043  160
 ```
 
 ## Choosing the settings
@@ -415,8 +415,9 @@ itself look enriched for every cell type.
 ## How it works
 
 For cell *i*, cell type *j* and radius *r*, let *n_(ij)(r)* be the
-number of cells of type *j* within *r* of cell *i*. If the cells of type
-*j* were spread evenly over the image window *W*, with density
+number of cells of type *j* within *r* of cell *i*, counting cell *i*
+itself when it is of type *j*. If the cells of type *j* were spread
+evenly over the image window *W*, with density
 $`\lambda_j = N_j / |W|`$, the expected count would be
 
 ``` math
@@ -439,7 +440,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.1) to
+A methods sentence might read: “We used lisaClust (version 1.21.2) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -511,7 +512,7 @@ sessionInfo()
 #> [13] IRanges_2.46.0              S4Vectors_0.50.3           
 #> [15] BiocGenerics_0.58.1         generics_0.1.4             
 #> [17] MatrixGenerics_1.24.0       matrixStats_1.5.0          
-#> [19] lisaClust_1.21.1            BiocStyle_2.40.0           
+#> [19] lisaClust_1.21.2            BiocStyle_2.40.0           
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] DBI_1.3.0              deldir_2.0-4           httr2_1.3.0           
