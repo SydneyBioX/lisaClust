@@ -17,7 +17,8 @@
 #' when estimating concave windows.
 #'
 #' @details Each region is outlined by the union of the Voronoi tiles of its cells, clipped to the window, and
-#' its hatching lines are clipped to that outline.
+#' its hatching is clipped to that outline. Up to 12 regions have their own hatching: none, /, \\, -, |, x, +,
+#' dots, circles, / with dots, \\ with dots and - with dots.
 #'
 #' @return A ggplot object
 #'
@@ -280,8 +281,8 @@ scale_region_manual <- function(..., values) {
         call. = FALSE
       )
     }
-    if (any(!values %in% seq_len(7))) {
-      stop("values must be between 1 and 7")
+    if (any(!values %in% seq_len(nHatchings))) {
+      stop("values must be between 1 and ", nHatchings)
     }
     
     values
@@ -292,143 +293,16 @@ scale_region_manual <- function(..., values) {
 
 ggname <- getFromNamespace("ggname", "ggplot2")
 
-#' @importFrom grid grob polylineGrob gpar
+#' @importFrom grid grob polylineGrob pointsGrob rectGrob gpar gTree gList unit
 draw_key_region <- function(data, params, size) {
-  grobs <- grob()
+  # the region's hatching in a unit square, three repeats across, inside a frame
   hatching.colour <- params$hatching.colour
-  
-  if (data$region == 1) {
-    grobs <-
-      polylineGrob(
-        x = c(0, 0, 1, 1, 0),
-        y = c(0, 1, 1, 0, 0),
-        id = c(
-          1,
-          1, 1, 1, 1
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  
-  if (data$region == 2) {
-    grobs <-
-      polylineGrob(
-        x = c(c(0, 0.5), c(0, 1), c(0.5, 1), c(
-          0, 0, 1, 1,
-          0
-        )),
-        y = c(c(0.5, 1), c(0, 1), c(0, 0.5), c(0, 1, 1, 0, 0)),
-        id = c(
-          1,
-          1, 2, 2, 3, 3, 4, 4, 4, 4, 4
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  if (data$region == 3) {
-    grobs <-
-      polylineGrob(
-        x = c(c(1, 0.5), c(1, 0), c(0.5, 0), c(
-          0, 0, 1, 1,
-          0
-        )),
-        y = c(c(0.5, 1), c(0, 1), c(0, 0.5), c(0, 1, 1, 0, 0)),
-        id = c(
-          1,
-          1, 2, 2, 3, 3, 4, 4, 4, 4, 4
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  
-  if (data$region == 4) {
-    grobs <-
-      polylineGrob(
-        x = c(c(0, 1), c(0, 1), c(0, 0, 1, 1, 0)),
-        y = c(c(
-          0.33,
-          0.33
-        ), c(0.66, 0.66), c(0, 1, 1, 0, 0)),
-        id = c(
-          1, 1, 2, 2, 3, 3, 3,
-          3, 3
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  
-  if (data$region == 5) {
-    grobs <-
-      polylineGrob(
-        x = c(c(0.33, 0.33), c(0.66, 0.66), c(0, 0, 1, 1, 0)),
-        y = c(c(0, 1), c(0, 1), c(0, 1, 1, 0, 0)),
-        id = c(
-          1, 1, 2, 2, 3, 3, 3,
-          3, 3
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  
-  
-  if (data$region == 6) {
-    grobs <-
-      polylineGrob(
-        x = c(
-          c(1, 0.5),
-          c(1, 0),
-          c(0.5, 0),
-          c(0, 0.5),
-          c(
-            0,
-            1
-          ),
-          c(0.5, 1),
-          c(0, 0, 1, 1, 0)
-        ),
-        y = c(
-          c(0.5, 1),
-          c(0, 1),
-          c(0, 0.5),
-          c(0.5, 1),
-          c(0, 1),
-          c(0, 0.5),
-          c(0, 1, 1, 0, 0)
-        ),
-        id = c(
-          1, 1, 2, 2,
-          3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 7, 7, 7
-        ),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  
-  if (data$region == 7) {
-    grobs <-
-      polylineGrob(
-        x = c(
-          c(0, 1),
-          c(0, 1),
-          c(0.33, 0.33),
-          c(0.66, 0.66),
-          c(0, 0, 1, 1, 0)
-        ),
-        y = c(
-          c(0.33, 0.33),
-          c(0.66, 0.66),
-          c(0, 1),
-          c(
-            0,
-            1
-          ),
-          c(0, 1, 1, 0, 0)
-        ),
-        id = c(1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5),
-        gp = gpar(col = hatching.colour, lwd = 1)
-      )
-  }
-  grobs$name <- "region_key"
-  grobs
+  if (is.null(hatching.colour)) hatching.colour <- 1
+  type <- as.integer(data$region)
+  square <- list(list(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1)))
+  kids <- hatchGrobs(type, square, 1 / 3, gpar(col = hatching.colour, lwd = 1, fill = NA), size = 0.8)
+  kids[[length(kids) + 1]] <- rectGrob(gp = gpar(col = hatching.colour, lwd = 1, fill = NA))
+  gTree(children = do.call(gList, kids), name = "region_key")
 }
 
 
@@ -438,8 +312,8 @@ hatchingLevels <- function(data, hatching = NULL) {
     data$region <- factor(data$region)
   }
   regionLevels <- levels(data$region)
-  if (!any(hatching %in% seq_len(7)) & !is.null(hatching)) {
-    stop("hatching must equal the number of regions and be <= 7.")
+  if (!any(hatching %in% seq_len(nHatchings)) & !is.null(hatching)) {
+    stop("hatching must equal the number of regions and be <= ", nHatchings, ".")
   }
   if (all(regionLevels %in% names(hatching))) {
     hatching <- hatching[regionLevels]
@@ -495,9 +369,10 @@ GeomHatching <-
       region <- data$region
       if (is.factor(region)) region <- as.numeric(region)
       if (is.character(region)) region <- as.numeric(as.factor(region))
-      if (max(region) > 7) {
-        warning("Can not plot more than 7 regions. Adding regions greater than 7 to region 1.")
-        region[region > 7] <- 1
+      if (max(region) > nHatchings) {
+        warning("Can not plot more than ", nHatchings, " regions. Adding regions greater than ", nHatchings,
+                " to region 1.")
+        region[region > nHatchings] <- 1
       }
       
       # The region outlines depend only on the cells, their regions and the window, so a plot that is printed
@@ -554,7 +429,7 @@ regionPolygons <- function(x, y, region, window) {
   }
   keep <- !duplicated(cbind(x, y))
   x <- x[keep]; y <- y[keep]; region <- region[keep]
-  out <- vector("list", 7)
+  out <- vector("list", nHatchings)
   if (length(unique(region)) == 1 || length(x) < 3) {
     out[[region[1]]] <- win
     return(out)
@@ -588,9 +463,13 @@ regionPolygons <- function(x, y, region, window) {
 }
 
 
-# Line segments for hatching type `type` (2 to 7), as list(x0, y0, x1, y1) in units of the spacing, within one
-# tile; repeated every tile, they join into continuous lines.
+# The number of hatchings: none, /, \, -, |, x, +, dots, circles, / with dots, \ with dots, - with dots.
+nHatchings <- 12
+
+# Line segments for hatching type `type`, as list(x0, y0, x1, y1) in units of the spacing, within one tile;
+# repeated every tile, they join into continuous lines. NULL for a hatching without lines.
 hatchSegments <- function(type) {
+  type <- c(`10` = 2, `11` = 3, `12` = 4)[as.character(type)] %|NA|% type
   switch(as.character(type),
     `2` = list(x0 = c(-1, 0, 1), y0 = c(0, 0, 0), x1 = c(0, 1, 2), y1 = c(1, 1, 1)),
     `3` = list(x0 = c(-1, 0, 1), y0 = c(1, 1, 1), x1 = c(0, 1, 2), y1 = c(0, 0, 0)),
@@ -602,9 +481,19 @@ hatchSegments <- function(type) {
   )
 }
 
+`%|NA|%` <- function(a, b) if (is.na(a)) b else unname(a)
+
+# The marks of hatching type `type`: "dot", "circle" or NULL. Dots or circles alone sit on a staggered grid, two
+# per tile at (0.5, 0) and (0, 0.5); with lines, one per tile at (0.5, 0) in units of the spacing, which lies
+# between the lines of /, \ and -.
+hatchMarks <- function(type) {
+  if (type %in% c(8, 10, 11, 12)) "dot" else if (type == 9) "circle" else NULL
+}
+
 # The hatching segments of type `type` over the unit square: the tile's segments repeated every w.
 hatchLines <- function(type, w) {
   s <- hatchSegments(type)
+  if (is.null(s)) return(list())
   k <- seq(-1, ceiling(1 / w) + 1)
   off <- expand.grid(i = k, j = k)
   lapply(seq_len(nrow(off) * length(s$x0)), function(m) {
@@ -614,23 +503,59 @@ hatchLines <- function(type, w) {
   })
 }
 
+# Whether points are strictly inside the rings, by the even-odd rule (holes are rings inside rings).
+#' @importFrom polyclip pointinpolygon
+insideRings <- function(x, y, rings) {
+  odd <- logical(length(x))
+  for (r in rings) odd <- xor(odd, polyclip::pointinpolygon(list(x = x, y = y), r) == 1)
+  odd
+}
+
+# The grobs of hatching type `type` clipped to `rings`: its lines, clipped by polyclip, and its marks inside.
+hatchGrobs <- function(type, rings, w, gp, size = 1) {
+  kids <- list()
+  if (type <= 1) return(kids)
+  lines <- hatchLines(type, w)
+  if (length(lines)) {
+    pieces <- polyclip::polyclip(lines, rings, op = "intersection", closed = FALSE)
+    if (length(pieces)) {
+      kids[[length(kids) + 1]] <- polylineGrob(
+        unlist(lapply(pieces, `[[`, "x")), unlist(lapply(pieces, `[[`, "y")),
+        id = rep(seq_along(pieces), lengths(lapply(pieces, `[[`, "x"))), gp = gp
+      )
+    }
+  }
+  marks <- hatchMarks(type)
+  if (!is.null(marks)) {
+    k <- seq(-1, ceiling(1 / w) + 1)
+    g <- expand.grid(i = k, j = k)
+    px <- (g$i + 0.5) * w
+    py <- g$j * w
+    if (type %in% c(8, 9)) {
+      px <- c(px, g$i * w)
+      py <- c(py, (g$j + 0.5) * w)
+    }
+    keep <- insideRings(px, py, rings)
+    if (any(keep)) {
+      lwd <- if (is.null(gp$lwd)) 1 else gp$lwd
+      kids[[length(kids) + 1]] <- pointsGrob(
+        px[keep], py[keep], pch = if (marks == "dot") 16 else 1,
+        size = unit(size * (if (marks == "dot") 3 else 4.5) * lwd, "pt"), gp = gp
+      )
+    }
+  }
+  kids
+}
+
 #' @importFrom grid makeContent gList pathGrob polylineGrob gpar
 #' @exportS3Method grid::makeContent
 makeContent.lisaHatching <- function(x) {
-  # Each region's hatching lines, clipped to its outline, and the outline itself.
+  # Each region's hatching, clipped to its outline, and the outline itself.
   gp <- gpar(col = x$col, lwd = x$lwd, fill = NA, lineend = "butt")
   kids <- list()
   for (type in which(lengths(x$polys) > 0)) {
     rings <- x$polys[[type]]
-    if (type > 1) {
-      pieces <- polyclip::polyclip(hatchLines(type, x$spacing), rings, op = "intersection", closed = FALSE)
-      if (length(pieces)) {
-        kids[[length(kids) + 1]] <- polylineGrob(
-          unlist(lapply(pieces, `[[`, "x")), unlist(lapply(pieces, `[[`, "y")),
-          id = rep(seq_along(pieces), lengths(lapply(pieces, `[[`, "x"))), gp = gp
-        )
-      }
-    }
+    kids <- c(kids, hatchGrobs(type, rings, x$spacing, gp))
     kids[[length(kids) + 1]] <- pathGrob(
       unlist(lapply(rings, `[[`, "x")), unlist(lapply(rings, `[[`, "y")),
       id = rep(seq_along(rings), lengths(lapply(rings, `[[`, "x"))), rule = "evenodd", gp = gp

@@ -116,6 +116,43 @@ test_that("hatching lines clipped to a region stay inside it", {
   }
 })
 
+test_that("all 12 hatchings draw inside their region, with legend keys", {
+  ring <- list(list(x = c(0.1, 0.9, 0.9, 0.5, 0.1), y = c(0.1, 0.1, 0.9, 0.5, 0.9)))
+  W <- spatstat.geom::owin(poly = ring, check = FALSE)
+  gp <- grid::gpar(col = "black", lwd = 1)
+  expect_length(lisaClust:::hatchGrobs(1, ring, 1 / 20, gp), 0)
+  for (type in 2:12) {
+    kids <- lisaClust:::hatchGrobs(type, ring, 1 / 20, gp)
+    expect_true(length(kids) > 0)
+    for (k in kids) {
+      if (inherits(k, "points")) {
+        expect_true(all(spatstat.geom::inside.owin(as.numeric(k$x), as.numeric(k$y), W)))
+      }
+    }
+    expect_equal(any(vapply(kids, inherits, TRUE, "points")), type >= 8)
+    expect_equal(any(vapply(kids, inherits, TRUE, "polyline")), !type %in% c(8, 9))
+    key <- lisaClust:::draw_key_region(data.frame(region = type), list(hatching.colour = 1), NULL)
+    expect_s3_class(key, "gTree")
+  }
+  # a hole is left empty
+  holed <- list(list(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1)), list(x = c(0.3, 0.3, 0.7, 0.7), y = c(0.3, 0.7, 0.7, 0.3)))
+  pts <- Filter(function(k) inherits(k, "points"), lisaClust:::hatchGrobs(8, holed, 1 / 20, gp))[[1]]
+  px <- as.numeric(pts$x); py <- as.numeric(pts$y)
+  expect_false(any(px > 0.3 & px < 0.7 & py > 0.3 & py < 0.7))
+})
+
+test_that("12 regions each get a hatching; a 13th falls back to the first with a warning", {
+  set.seed(7)
+  d <- data.frame(x = runif(1300, 0, 130), y = runif(1300, 0, 50))
+  d$region <- sprintf("region_%02d", pmin(floor(d$x / 10) + 1, 13))
+  p12 <- ggplot2::ggplot(d[d$x < 120, ], ggplot2::aes(x, y, region = region)) + geom_hatching(window = "square") +
+    scale_region()
+  pdf(NULL); on.exit(dev.off())
+  expect_silent(print(p12))
+  p13 <- ggplot2::ggplot(d, ggplot2::aes(x, y, region = region)) + geom_hatching(window = "square") + scale_region()
+  expect_warning(print(p13), "more than 12 regions")
+})
+
 test_that("a hatching plot drawn again reuses the region outlines", {
   set.seed(6)
   d <- data.frame(x = runif(400, 0, 100), y = runif(400, 0, 100), imageID = "a")

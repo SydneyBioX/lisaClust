@@ -1,3 +1,10 @@
+CHANGES IN VERSION 1.21.4
+-------------------------
+
+    o hatchingPlot(), geom_hatching() and scale_region_manual() have 12 hatchings instead of 7: none, /, \, -,
+      |, x, +, dots, circles, / with dots, \ with dots and - with dots (in that order). Regions beyond the
+      twelfth are drawn as the first. Legend keys are drawn from the same definitions as the hatching.
+
 CHANGES IN VERSION 1.21.3
 -------------------------
 

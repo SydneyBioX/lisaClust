@@ -110,7 +110,8 @@ The hatching geom is used to create hatching patterns for representation of spat
 }
 \details{
 Each region is outlined by the union of the Voronoi tiles of its cells, clipped to the window, and
-its hatching lines are clipped to that outline.
+its hatching is clipped to that outline. Up to 12 regions have their own hatching: none, /, \\, -, |, x, +,
+dots, circles, / with dots, \\ with dots and - with dots.
 }
 \examples{
 ## Generate toy data

@@ -48,16 +48,23 @@ importFrom(ggplot2,
 )
 importFrom(grid,
   gList,
+  gTree,
   gpar,
   grob,
   makeContent,
   pathGrob,
-  polylineGrob
+  pointsGrob,
+  polylineGrob,
+  rectGrob,
+  unit
 )
 importFrom(lifecycle,deprecate_warn)
 importFrom(methods,is)
 importFrom(pheatmap,pheatmap)
-importFrom(polyclip,polyclip)
+importFrom(polyclip,
+  pointinpolygon,
+  polyclip
+)
 importFrom(spatstat.explore,density.ppp)
 importFrom(spatstat.geom,
   area,
