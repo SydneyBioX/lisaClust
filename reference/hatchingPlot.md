@@ -19,7 +19,7 @@ hatchingPlot(
   window = "concave",
   line.spacing = 21,
   hatching.colour = 1,
-  nbp = 50,
+  nbp = NULL,
   window.length = NULL
 )
 
@@ -35,7 +35,7 @@ geom_hatching(
   hatching.colour = 1,
   window = "concave",
   window.length = NULL,
-  nbp = 250,
+  nbp = NULL,
   line.width = 1,
   ...
 )
@@ -83,8 +83,7 @@ geom_hatching(
 
 - nbp:
 
-  An integer tuning the granularity of the grid used when defining
-  regions
+  Not used: regions are outlined by the Voronoi tiles of their cells.
 
 - window.length:
 
@@ -154,6 +153,12 @@ geom_hatching(
 A ggplot object
 
 A ggplot geom
+
+## Details
+
+Each region is outlined by the union of the Voronoi tiles of its cells,
+clipped to the window, and its hatching lines are clipped to that
+outline.
 
 ## Examples
 

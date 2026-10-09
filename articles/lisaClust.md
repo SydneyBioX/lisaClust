@@ -187,7 +187,7 @@ examples
 
 ``` r
 
-hatchingPlot(kerenSPE, useImages = examples, region = "domain", nbp = 200)
+hatchingPlot(kerenSPE, useImages = examples, region = "domain")
 ```
 
 ![](lisaClust_files/figure-html/keren-hatching-1.png)
@@ -440,7 +440,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.2) to
+A methods sentence might read: “We used lisaClust (version 1.21.3) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -512,7 +512,7 @@ sessionInfo()
 #> [13] IRanges_2.46.0              S4Vectors_0.50.3           
 #> [15] BiocGenerics_0.58.1         generics_0.1.4             
 #> [17] MatrixGenerics_1.24.0       matrixStats_1.5.0          
-#> [19] lisaClust_1.21.2            BiocStyle_2.40.0           
+#> [19] lisaClust_1.21.3            BiocStyle_2.40.0           
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] DBI_1.3.0              deldir_2.0-4           httr2_1.3.0           

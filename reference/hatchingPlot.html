@@ -11,7 +11,7 @@ The hatching geom is used to create hatching patterns for representation of spat
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@ spatial regions and cell-types.</p>
 <span>  window <span class="op">=</span> <span class="st">"concave"</span>,</span>
 <span>  line.spacing <span class="op">=</span> <span class="fl">21</span>,</span>
 <span>  hatching.colour <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  nbp <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  nbp <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  window.length <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -71,7 +71,7 @@ spatial regions and cell-types.</p>
 <span>  hatching.colour <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  window <span class="op">=</span> <span class="st">"concave"</span>,</span>
 <span>  window.length <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  nbp <span class="op">=</span> <span class="fl">250</span>,</span>
+<span>  nbp <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  line.width <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -118,7 +118,7 @@ spatial regions and cell-types.</p>
 
 
 <dt id="arg-nbp">nbp<a class="anchor" aria-label="anchor" href="#arg-nbp"></a></dt>
-<dd><p>An integer tuning the granularity of the grid used when defining regions</p></dd>
+<dd><p>Not used: regions are outlined by the Voronoi tiles of their cells.</p></dd>
 
 
 <dt id="arg-window-length">window.length<a class="anchor" aria-label="anchor" href="#arg-window-length"></a></dt>
@@ -184,6 +184,11 @@ They may also be parameters to the paired geom/stat.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A ggplot object</p>
 <p>A ggplot geom</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Each region is outlined by the union of the Voronoi tiles of its cells, clipped to the window, and
+its hatching lines are clipped to that outline.</p>
     </div>
 
     <div class="section level2">

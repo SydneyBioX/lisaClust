@@ -10,9 +10,9 @@
 
 - **Alex Qin**. Contributor.
 
-- **Shreya shreya.rajeshrao@sydney.edu.au Rao**. Contributor.
+- **Shreya Rao**. Contributor.
 
-- **Farhan fame2827@uni.sydney.edu.au Ameen**. Contributor.
+- **Farhan Ameen**. Contributor.
 
 ## Citation
 
