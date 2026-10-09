@@ -56,18 +56,20 @@ typed cells: spatial proteomics such as imaging mass cytometry, MIBI and CODEX, 
 as Xenium, CosMx, MERSCOPE or high-definition spatial transcriptomics [@patrick2023]. It is not designed for
 spot-based data such as Visium, where a spot holds several cells. It works alongside other SydneyBioX packages: *spicyR* tests whether pairs
 of cell types co-localise differently between groups of patients, and *Statial* tests co-localisation within
-tissue compartments.
+tissue compartments. Here we use spicyR's `colTest()` to compare regions between groups of patients, and
+*tidySpatialExperiment* to summarise the cells of each image with dplyr verbs.
 
 # Installation
 
 ```{r install, eval = FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
-BiocManager::install("lisaClust")
+BiocManager::install(c("lisaClust", "spicyR", "tidySpatialExperiment", "SpatialDatasets"))
 ```
 
 ```{r packages}
 library(lisaClust)
-library(SpatialExperiment)
+library(spicyR)
+library(tidySpatialExperiment)
 library(SpatialDatasets)
 library(ggplot2)
 theme_set(theme_classic())
@@ -84,8 +86,7 @@ cells. The data are a `SpatialExperiment` in the SpatialDatasets package, with t
 
 ```{r keren-data}
 kerenSPE <- spe_Keren_2018()
-patients <- unique(as.data.frame(colData(kerenSPE))[, c("imageID", "tumour_type")])
-table(patients$tumour_type)
+kerenSPE |> distinct(imageID, tumour_type) |> count(tumour_type)
 sort(table(kerenSPE$cellType), decreasing = TRUE)
 ```
 
@@ -113,72 +114,64 @@ evenly over the regions: above one, the type is enriched in that region.
 regionMap(kerenSPE, type = "bubble")
 ```
 
-The regions are numbered arbitrarily, so we name each one by the cell type it is most enriched for, among tumour
-cells, CD8 T cells, B cells and mesenchymal cells.
+The regions are numbered arbitrarily. `nameRegions()` names each one by the marker cell type it is most
+enriched for, here among tumour cells, CD8 T cells, B cells and mesenchymal cells. Regions most enriched for the
+same marker get the same name, so they are merged into one domain.
 
 ```{r keren-domain-names}
-tab <- table(kerenSPE$cellType, kerenSPE$region)
-enrichment <- tab / outer(rowSums(tab), colSums(tab)) * sum(tab)
 markers <- c(tumour = "Keratin_Tumour", `T cell` = "CD8_T_cell", `B cell` = "B_cell", stroma = "Mesenchymal")
-domainOf <- setNames(names(markers)[apply(enrichment[markers, ], 2, which.max)], colnames(enrichment))
-domainOf
-kerenSPE$domain <- domainOf[kerenSPE$region]
+kerenSPE <- nameRegions(kerenSPE, markers, regionName = "domain")
 round(100 * prop.table(table(kerenSPE$domain)), 1)
 ```
 
-The cell types most enriched in each domain:
+The cell types in each domain:
 
-```{r keren-domain-contents}
-sapply(split(names(domainOf), domainOf), function(r) {
-  e <- rowMeans(enrichment[, r, drop = FALSE])
-  paste(names(sort(e, decreasing = TRUE))[1:4], collapse = ", ")
-})
+```{r keren-domain-map, fig.width = 4.5, fig.height = 5}
+regionMap(kerenSPE, region = "domain", type = "bubble")
 ```
 
 ## Domains in two tumours
 
 `hatchingPlot()` draws the cells coloured by type, with each region outlined and filled with its own hatching, so
 types and regions can be seen together. Here are the compartmentalised tumour and the mixed tumour with the most
-cells in the T cell domain.
+cells in the T cell domain. With tidySpatialExperiment, `group_by()` and `summarise()` work on the cells of a
+`SpatialExperiment` and return a table.
 
 ```{r keren-examples}
-domainShare <- prop.table(table(kerenSPE$imageID, kerenSPE$domain), 1)
-type <- patients$tumour_type[match(rownames(domainShare), patients$imageID)]
-examples <- sapply(c("compartmentalised", "mixed"), function(t) {
-  im <- rownames(domainShare)[type == t]
-  im[which.max(domainShare[im, "T cell"])]
-})
+tcellShare <- kerenSPE |>
+  group_by(imageID, tumour_type) |>
+  summarise(share = mean(domain == "T cell"), .groups = "drop")
+examples <- tcellShare |>
+  filter(tumour_type != "cold") |>
+  group_by(tumour_type) |>
+  slice_max(share)
 examples
 ```
 
 ```{r keren-hatching, fig.width = 10, fig.height = 5.5}
-hatchingPlot(kerenSPE, useImages = examples, region = "domain")
+hatchingPlot(kerenSPE, useImages = examples$imageID, region = "domain")
 ```
 
 ## Do the domains differ between kinds of tumour?
 
-Each patient has one image, so the share of each domain in an image is a value per patient.
+Each patient has one image, so the share of each domain in an image is a value per patient. `regionBoxPlot()`
+draws these shares by group.
 
 ```{r keren-domain-share, fig.width = 8, fig.height = 4}
-shares <- data.frame(imageID = rep(rownames(domainShare), ncol(domainShare)),
-                     domain = rep(colnames(domainShare), each = nrow(domainShare)),
-                     share = as.vector(domainShare))
-shares$tumour_type <- patients$tumour_type[match(shares$imageID, patients$imageID)]
-ggplot(shares, aes(tumour_type, share, colour = tumour_type)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, height = 0, size = 1) +
-  facet_wrap(~ domain, nrow = 1) +
-  scale_y_continuous(labels = function(v) paste0(100 * v, "%")) +
-  labs(x = NULL, y = "share of the image's cells") +
-  theme(legend.position = "none", axis.text.x = element_text(angle = 45, hjust = 1))
+regionBoxPlot(kerenSPE, condition = "tumour_type", region = "domain")
 ```
 
+spicyR's `colTest()` computes the share of each domain in each image and compares the groups with a Wilcoxon
+test; here we compare compartmentalised with mixed tumours.
+
 ```{r keren-domain-test}
-tcell <- domainShare[, "T cell"]
-medians <- tapply(tcell, type, median)
+domainTests <- kerenSPE |>
+  filter(tumour_type != "cold") |>
+  colTest(condition = "tumour_type", feature = "domain", type = "wilcox")
+domainTests
+medians <- with(tcellShare, tapply(share, tumour_type, median))
 round(100 * medians, 1)
-pT <- wilcox.test(tcell[type == "compartmentalised"], tcell[type == "mixed"])$p.value
-pT
+pT <- domainTests["T cell", "pval"]
 ```
 
 The T cell domain makes up a median of `r round(100 * medians["compartmentalised"], 1)`% of the cells in a
@@ -200,10 +193,10 @@ patients) or diffuse inflammatory infiltration (DII; 18 patients). We leave out 
 as debris (`dirt`).
 
 ```{r schurch-data}
-schurchSPE <- spe_Schurch_2020()
-schurchSPE <- schurchSPE[, schurchSPE$cellType != "dirt"]
-schurchSPE$condition <- factor(ifelse(schurchSPE$group == 1, "CLR", "DII"))
-table(unique(as.data.frame(colData(schurchSPE))[, c("patients", "condition")])$condition)
+schurchSPE <- spe_Schurch_2020() |>
+  filter(cellType != "dirt") |>
+  mutate(condition = ifelse(group == 1, "CLR", "DII"))
+schurchSPE |> distinct(patients, condition) |> count(condition)
 length(unique(schurchSPE$cellType))
 ```
 
@@ -225,43 +218,34 @@ regionMap(schurchSPE, region = "niche", type = "bubble") +
 
 The question is whether a niche makes up more of the tissue in one group of patients than in the other. The four
 cores of a patient come from the same tumour, so they are not independent: we pool the cells of each patient's
-cores, so that each patient contributes one share of each niche, and compare the two groups of patients. With 20
-niches tested, the p-values are adjusted for multiple testing.
+cores, so that each patient contributes one share of each niche, and compare the two groups of patients. Setting
+`imageID = "patients"` in `colTest()` does this pooling. With 20 niches tested, `colTest()` also adjusts the
+p-values for multiple testing (`adjPval`).
 
 ```{r schurch-patient-test}
-cd <- as.data.frame(colData(schurchSPE))
-byPatient <- prop.table(table(cd$patients, cd$niche), 1)
-groupOf <- unique(cd[, c("patients", "condition")])
-group <- groupOf$condition[match(rownames(byPatient), groupOf$patients)]
-
-nicheTest <- function(share, group) {
-  p <- apply(share, 2, function(v) wilcox.test(v[group == "CLR"], v[group == "DII"], exact = FALSE)$p.value)
-  data.frame(niche = colnames(share),
-             CLR = apply(share[group == "CLR", , drop = FALSE], 2, median),
-             DII = apply(share[group == "DII", , drop = FALSE], 2, median),
-             p_value = p, p_adj = p.adjust(p, "BH"))
-}
-patientTests <- nicheTest(byPatient, group)
-head(patientTests[order(patientTests$p_value), ], 5)
+patientTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
+                        imageID = "patients", type = "wilcox")
+head(patientTests, 5)
 ```
 
+For comparison, the same test treating each core as an independent sample:
+
 ```{r schurch-core-test}
-byCore <- prop.table(table(cd$imageID, cd$niche), 1)
-coreGroup <- unique(cd[, c("imageID", "condition")])
-coreTests <- nicheTest(byCore, coreGroup$condition[match(rownames(byCore), coreGroup$imageID)])
-c(patients = sum(patientTests$p_adj < 0.05), cores = sum(coreTests$p_adj < 0.05))
+coreTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
+                     imageID = "imageID", type = "wilcox")
+c(patients = sum(patientTests$adjPval < 0.05), cores = sum(coreTests$adjPval < 0.05))
 ```
 
 ```{r schurch-counts, include = FALSE}
-nPatients <- sum(patientTests$p_adj < 0.05)
-nCores <- sum(coreTests$p_adj < 0.05)
+nPatients <- sum(patientTests$adjPval < 0.05)
+nCores <- sum(coreTests$adjPval < 0.05)
 niches <- function(n) if (n == 1) "1 niche differs" else paste(n, "niches differ")
 ```
 
 With the 35 patients as the units, `r niches(nPatients)` between CLR and DII patients at a 5% false discovery rate
-(smallest adjusted p-value `r format(min(patientTests$p_adj), digits = 2)`). Treating each of the 140 cores as an
+(smallest adjusted p-value `r format(min(patientTests$adjPval), digits = 2)`). Treating each of the 140 cores as an
 independent sample instead, `r niches(nCores)`, with a smallest adjusted p-value of
-`r format(min(coreTests$p_adj), digits = 2)`.`r if (nCores > nPatients) " The extra niches are not supported by the patients." else ""`
+`r format(min(coreTests$adjPval), digits = 2)`.`r if (nCores > nPatients) " The extra niches are not supported by the patients." else ""`
 
 ::: {.callout .callout-important}
 Cores or images from the same patient are alike, so treating them as independent overstates the evidence
@@ -269,25 +253,29 @@ and can turn up differences that the patients do not support. Compare niches wit
 for the number of niches tested.
 :::
 
+`regionMap(type = "table")` gives the enrichment of each cell type in each niche as a matrix, so we can list
+the cell types the niche with the smallest p-value is most enriched for, and its median share in each group.
+
 ```{r schurch-top-niche-types}
-top <- patientTests$niche[which.min(patientTests$p_value)]
-nicheTab <- table(cd$cellType, cd$niche)
-nicheEnrichment <- nicheTab / outer(rowSums(nicheTab), colSums(nicheTab)) * sum(nicheTab)
-round(sort(nicheEnrichment[, top], decreasing = TRUE)[1:5], 1)
+top <- patientTests$cluster[1]
+enrichment <- regionMap(schurchSPE, region = "niche", type = "table")
+topTypes <- sort(enrichment[, top], decreasing = TRUE)
+round(topTypes[1:5], 1)
+
+topMedians <- schurchSPE |>
+  group_by(patients, condition) |>
+  summarise(share = mean(niche == top), .groups = "drop") |>
+  with(tapply(share, condition, median))
+round(100 * topMedians, 1)
 ```
 
 The niche with the smallest p-value, `r top`, is most enriched for
-`r paste(names(sort(nicheEnrichment[, top], decreasing = TRUE))[1:3], collapse = ", ")`. It makes up a median of
-`r round(100 * patientTests[top, "CLR"], 1)`% of the cells in CLR patients and
-`r round(100 * patientTests[top, "DII"], 1)`% in DII patients`r if (names(which.max(nicheEnrichment[, top])) == "b_cells" && patientTests[top, "CLR"] > patientTests[top, "DII"]) ", as expected for the lymphoid follicles that define a Crohn's-like reaction" else ""`:
+`r paste(names(topTypes)[1:3], collapse = ", ")`. It makes up a median of
+`r round(100 * topMedians["CLR"], 1)`% of the cells in CLR patients and
+`r round(100 * topMedians["DII"], 1)`% in DII patients`r if (names(topTypes)[1] == "b_cells" && topMedians["CLR"] > topMedians["DII"]) ", as expected for the lymphoid follicles that define a Crohn's-like reaction" else ""`:
 
-```{r schurch-top-niche, fig.width = 4, fig.height = 4}
-ggplot(data.frame(share = byPatient[, top], group = group), aes(group, share, colour = group)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.15, height = 0, size = 1.5) +
-  scale_y_continuous(labels = function(v) paste0(100 * v, "%")) +
-  labs(x = NULL, y = paste("share of", top)) +
-  theme(legend.position = "none")
+```{r schurch-top-niche, fig.width = 3, fig.height = 4}
+regionBoxPlot(schurchSPE, condition = "condition", region = "niche", imageID = "patients", regions = top)
 ```
 
 # Using your own clustering
@@ -296,7 +284,7 @@ ggplot(data.frame(share = byPatient[, top], group = group), aes(group, share, co
 cluster them any way you like.
 
 ```{r lisa-curves}
-curves <- lisa(kerenSPE[, kerenSPE$imageID %in% examples], r = c(20, 50, 100))
+curves <- lisa(kerenSPE[, kerenSPE$imageID %in% examples$imageID], r = c(20, 50, 100))
 dim(curves)
 curves[1:3, 1:4]
 
@@ -352,7 +340,7 @@ take seconds.
 A methods sentence might read: "We used lisaClust (version `r packageVersion("lisaClust")`) to compute, for each
 cell, local indicators of spatial association with every cell type at radii of 20, 50 and 100 pixels, and
 clustered the cells into 20 niches by k-means. The share of each niche in each patient was compared between
-groups with a Wilcoxon test, with patients as the units, and p-values were adjusted across niches by the
+groups with a Wilcoxon test (spicyR's colTest), with patients as the units, and p-values were adjusted across niches by the
 Benjamini–Hochberg method." Show `regionMap()` and a `hatchingPlot()` of example images with the results.
 
 ```{r citation}

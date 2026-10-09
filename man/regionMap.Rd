@@ -16,7 +16,7 @@ regionMap(
 \arguments{
 \item{cells}{SingleCellExperiment, SpatialExperiment or data.frame}
 
-\item{type}{Make a "bubble" or "heatmap" plot.}
+\item{type}{Make a "bubble" or "heatmap" plot, or return the relative frequencies as a "table".}
 
 \item{cellType}{The column storing the cell types}
 
@@ -27,7 +27,9 @@ regionMap(
 \item{...}{Any arguments to be passed to the pheatmap package}
 }
 \value{
-A bubble plot or heatmap
+A bubble plot or heatmap, or with \code{type = "table"} a matrix of the relative frequencies with
+one row per cell type and one column per region: how much more often the cell type is found in the region
+than if cell types were spread evenly over the regions.
 }
 \description{
 Plot heatmap of cell type enrichment for lisaClust regions
@@ -51,5 +53,6 @@ cells <- data.frame(x, y, cellType, imageID)
 cells <- lisaClust(cells, k = 2)
 
 regionMap(cells)
+regionMap(cells, type = "table")
 
 }

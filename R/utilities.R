@@ -110,3 +110,12 @@ argumentChecks = function(function_name, user_vals) {
   cells <- cells[, c("imageID", "cellID", "imageCellID", "x", "y", "cellType"), drop = FALSE]
   S4Vectors::split(S4Vectors::DataFrame(cells), cells$imageID)
 }
+
+# The given columns of a data frame, or of the colData of a SingleCellExperiment or SpatialExperiment.
+.colDataFrame <- function(cells, columns) {
+  if (is(cells, "SummarizedExperiment")) cells <- as.data.frame(SummarizedExperiment::colData(cells))
+  if (!is.data.frame(cells)) stop("Data must be in the form of a SingleCellExperiment, SpatialExperiment, or data frame.")
+  missing <- setdiff(columns, colnames(cells))
+  if (length(missing)) stop("column(s) not found in data: ", paste0("'", missing, "'", collapse = ", "))
+  as.data.frame(cells)[, columns, drop = FALSE]
+}

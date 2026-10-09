@@ -330,13 +330,15 @@ inhomLocalK <-
 #' Plot heatmap of cell type enrichment for lisaClust regions
 #'
 #' @param cells SingleCellExperiment, SpatialExperiment or data.frame
-#' @param type Make a "bubble" or "heatmap" plot.
+#' @param type Make a "bubble" or "heatmap" plot, or return the relative frequencies as a "table".
 #' @param region The column storing the regions
 #' @param cellType The column storing the cell types
 #' @param limit limits to the lower and upper relative frequencies
 #' @param ... Any arguments to be passed to the pheatmap package
 #'
-#' @return A bubble plot or heatmap
+#' @return A bubble plot or heatmap, or with \code{type = "table"} a matrix of the relative frequencies with
+#' one row per cell type and one column per region: how much more often the cell type is found in the region
+#' than if cell types were spread evenly over the regions.
 #'
 #'
 #' @examples
@@ -358,6 +360,7 @@ inhomLocalK <-
 #' cells <- lisaClust(cells, k = 2)
 #'
 #' regionMap(cells)
+#' regionMap(cells, type = "table")
 #'
 #' @export
 #' @importFrom SummarizedExperiment colData
@@ -366,18 +369,8 @@ inhomLocalK <-
 #' @importFrom dplyr mutate .data
 #' @import SpatialExperiment SingleCellExperiment
 regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "region", limit = c(0.33, 3), ...) {
-  if (is.data.frame(cells)) {
-    df <- cells[, c(cellType, region)]
-  }
-  
-  if (is(cells, "SingleCellExperiment") | is(cells, "SpatialExperiment")) {
-    df <- as.data.frame(SummarizedExperiment::colData(cells))[, c(cellType, region)]
-  }
-  
-  tab <- table(df[, cellType], df[, region])
-  # cell types or regions without cells (unused factor levels) have no enrichment
-  tab <- tab[rowSums(tab) > 0, colSums(tab) > 0, drop = FALSE]
-  tab <- tab / rowSums(tab) %*% t(colSums(tab)) * sum(tab)
+  tab <- .regionEnrichment(cells, cellType, region)
+  if (type == "table") return(unclass(tab))
   
   ph <- pheatmap::pheatmap(pmax(pmin(tab, limit[2]), limit[1]), cluster_cols = FALSE, silent = TRUE, ...)
   
@@ -396,4 +389,15 @@ regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "r
   }
   
   pheatmap::pheatmap(pmax(pmin(tab, limit[2]), limit[1]), cluster_cols = FALSE, ...)
+}
+
+
+# The relative frequency of each cell type (rows) in each region (columns): observed count over the count
+# expected if cell types were spread evenly over the regions.
+.regionEnrichment <- function(cells, cellType, region) {
+  df <- .colDataFrame(cells, c(cellType, region))
+  tab <- table(df[, cellType], df[, region])
+  # cell types or regions without cells (unused factor levels) have no enrichment
+  tab <- tab[rowSums(tab) > 0, colSums(tab) > 0, drop = FALSE]
+  tab / rowSums(tab) %*% t(colSums(tab)) * sum(tab)
 }

@@ -6,6 +6,8 @@ export(hatchingPlot)
 export(inhomLocalK)
 export(lisa)
 export(lisaClust)
+export(nameRegions)
+export(regionBoxPlot)
 export(regionMap)
 export(scale_region)
 export(scale_region_manual)
@@ -38,12 +40,17 @@ importFrom(dplyr,
 importFrom(ggplot2,
   aes,
   discrete_scale,
+  element_text,
   facet_wrap,
+  geom_boxplot,
   geom_point,
   ggplot,
   labs,
   layer,
+  position_jitter,
   scale_colour_gradient2,
+  scale_y_continuous,
+  theme,
   theme_minimal
 )
 importFrom(grid,

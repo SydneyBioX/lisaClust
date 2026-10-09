@@ -1,3 +1,16 @@
+CHANGES IN VERSION 1.21.5
+-------------------------
+
+    o nameRegions() names each region by the marker cell type it is most enriched for; regions most enriched
+      for the same marker get the same name.
+
+    o regionBoxPlot() draws the share of each region in each image, or each patient, by group.
+
+    o regionMap(type = "table") returns the relative frequency of each cell type in each region as a matrix.
+
+    o The vignette uses spicyR's colTest() to compare regions between groups and tidySpatialExperiment to
+      summarise the cells of each image.
+
 CHANGES IN VERSION 1.21.4
 -------------------------
 
