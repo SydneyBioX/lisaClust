@@ -260,11 +260,12 @@ niches <- function(n) if (n == 1) "1 niche differs" else paste(n, "niches differ
 
 With the 35 patients as the units, `r niches(nPatients)` between CLR and DII patients at a 5% false discovery rate
 (smallest adjusted p-value `r format(min(patientTests$p_adj), digits = 2)`). Treating each of the 140 cores as an
-independent sample instead, `r niches(nCores)`.
+independent sample instead, `r niches(nCores)`, with a smallest adjusted p-value of
+`r format(min(coreTests$p_adj), digits = 2)`.`r if (nCores > nPatients) " The extra niches are not supported by the patients." else ""`
 
 ::: {.callout .callout-important}
 Cores or images from the same patient are alike, so treating them as independent overstates the evidence
-and turns up differences that the patients do not support. Compare niches with patients as the units, and adjust
+and can turn up differences that the patients do not support. Compare niches with patients as the units, and adjust
 for the number of niches tested.
 :::
 
@@ -331,7 +332,7 @@ kernel of bandwidth `sigma`, so that a dense area does not by itself look enrich
 # How it works
 
 For cell *i*, cell type *j* and radius *r*, let *n<sub>ij</sub>(r)* be the number of cells of type *j* within *r*
-of cell *i*. If the cells of type *j* were spread evenly over the image window *W*, with density
+of cell *i*, counting cell *i* itself when it is of type *j*. If the cells of type *j* were spread evenly over the image window *W*, with density
 $\lambda_j = N_j / |W|$, the expected count would be
 
 $$E_{ij}(r) = \lambda_j \, \pi r^2 e_i(r),$$

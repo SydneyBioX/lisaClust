@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.21.1
+Version: 1.21.2
 Authors@R: c(
     person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
     person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
@@ -43,7 +43,7 @@ Imports:
     pheatmap,
     spatstat.random,
     lifecycle,
-    rlang
+    rlang (>= 1.0.0)
 Suggests: 
     SpatialDatasets,
     BiocStyle,

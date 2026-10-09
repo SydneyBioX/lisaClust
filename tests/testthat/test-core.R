@@ -8,9 +8,10 @@ sim <- function(n = 300, seed = 1) {
 
 # The local indicators from a distance matrix: weighted counts per distance band, accumulated over the bands
 # with any pair, and the expectation with the cell's edge share where it has a neighbour of that type in the band.
-refCurves <- function(d, Rs, wt, lam, edge, L = FALSE) {
+refCurves <- function(d, Rs, wt, lam, edge, L = FALSE, self = TRUE) {
   n <- nrow(d); K <- nlevels(d$cellType); nb <- length(Rs) - 1
-  D <- as.matrix(dist(d[, c("x", "y")])); diag(D) <- Inf
+  # with self, each cell is its own neighbour at distance 0
+  D <- as.matrix(dist(d[, c("x", "y")])); diag(D) <- if (self) 0 else Inf
   band <- matrix(findInterval(D, Rs, left.open = TRUE, rightmost.closed = FALSE), n)
   band[D == 0] <- 1; band[D > max(Rs)] <- NA
   type <- as.integer(d$cellType)
@@ -33,13 +34,13 @@ refCurves <- function(d, Rs, wt, lam, edge, L = FALSE) {
 }
 
 test_that("the local curves match the plain-R reference", {
-  for (seed in 1:3) for (L in c(FALSE, TRUE)) {
+  for (seed in 1:3) for (L in c(FALSE, TRUE)) for (self in c(TRUE, FALSE)) {
     d <- sim(seed = seed)
     Rs <- c(0, 10, 25, 40)
     wt <- runif(nrow(d), 0.5, 1.5); lam <- as.numeric(table(d$cellType)) / (200 * 150)
     edge <- matrix(runif(nrow(d) * 3, 0.5, 1), nrow(d))
-    got <- lisaClust:::.localCurves(d$x, d$y, as.integer(d$cellType), 3L, Rs, Rs[-1], wt, lam, edge, L)
-    ref <- refCurves(d, Rs, wt, lam, edge, L)
+    got <- lisaClust:::.localCurves(d$x, d$y, as.integer(d$cellType), 3L, Rs, Rs[-1], wt, lam, edge, L, self)
+    ref <- refCurves(d, Rs, wt, lam, edge, L, self)
     expect_equal(got$cell, ref$cell)
     expect_equal(got$type, ref$type)
     expect_equal(got$bin, ref$bin)
@@ -80,8 +81,33 @@ test_that("nearest labels match a brute-force search", {
   expect_equal(lisaClust:::.nearestLabels(c(0, 2, 1), c(0, 0, 1), c(2L, 1L, 2L), 1, 0), 2L)
 })
 
-test_that("hatching intersections match the scalar line intersection", {
-  # the scalar version lisaClust used before
+test_that("hatching lines cross each outline an even number of times, with their midpoints inside", {
+  # a region on a grid, like those regionPoly() makes: outlines with many vertices on grid lines
+  set.seed(4)
+  mat <- matrix(runif(400) < 0.5, 20, 20)
+  W <- spatstat.geom::as.polygonal(spatstat.geom::owin(c(0, 20), c(0, 20), mask = mat))
+  edges <- lapply(W$bdry, function(b) {
+    n <- length(b$x)
+    list(x1 = b$x, y1 = b$y, x2 = b$x[c(seq_len(n)[-1], 1)], y2 = b$y[c(seq_len(n)[-1], 1)])
+  })
+  vx <- unlist(lapply(W$bdry, `[[`, "x")); vy <- unlist(lapply(W$bdry, `[[`, "y"))
+  lines <- list(rbind(c(-1, 5), c(21, 5)),                 # along grid lines: through vertices and along edges
+                rbind(c(vx[3], -1), c(vx[3], 21)),
+                rbind(c(vx[7] - 30, vy[7] - 30), c(vx[7] + 30, vy[7] + 30)),  # diagonal through a vertex
+                rbind(c(-1, 3.3), c(21, 7.7)))              # general position
+  for (h in lines) {
+    cr <- lisaClust:::hatchCrossings(edges, h[1, ], h[2, ])
+    expect_true(nrow(cr) %% 2 == 0)
+    if (nrow(cr) >= 2) {
+      mid <- (cr[c(TRUE, FALSE), , drop = FALSE] + cr[c(FALSE, TRUE), , drop = FALSE]) / 2
+      long <- sqrt(rowSums((cr[c(TRUE, FALSE), , drop = FALSE] - cr[c(FALSE, TRUE), , drop = FALSE])^2)) > 1e-9
+      expect_true(all(spatstat.geom::inside.owin(mid[long, 1], mid[long, 2], W)))
+    }
+  }
+})
+
+test_that("hatching crossings agree with the line intersection used before, in general position", {
+  # the scalar version lisaClust used before 1.21.1
   lineIntersection <- function(P1, P2, P3, P4) {
     P1 <- round(as.vector(P1), 10); P2 <- round(as.vector(P2), 10); P3 <- round(as.vector(P3), 10); P4 <- round(as.vector(P4), 10)
     dx1 <- P1[1] - P2[1]; dx2 <- P3[1] - P4[1]; dy1 <- P1[2] - P2[2]; dy2 <- P3[2] - P4[2]
@@ -94,15 +120,33 @@ test_that("hatching intersections match the scalar line intersection", {
     if (!((l1 >= 0) & (l1 <= 1) & (l2 >= 0) & (l2 <= 1))) return(c(NA, NA))
     c(X, Y)
   }
-  set.seed(4)
-  seg <- matrix(round(runif(400, 0, 100), sample(0:3, 400, TRUE)), ncol = 4)
-  seg[1:20, 3] <- seg[1:20, 1]  # vertical edges
-  seg[21:40, 4] <- seg[21:40, 2]  # horizontal edges
-  for (h in list(rbind(c(10, 0), c(60, 100)), rbind(c(0, 37), c(100, 37)), rbind(c(42, 0), c(42, 100)))) {
-    got <- lisaClust:::segmentIntersections(seg[, 1], seg[, 2], seg[, 3], seg[, 4], h[1, ], h[2, ])
-    ref <- t(apply(seg, 1, function(s) lineIntersection(s[1:2], s[3:4], h[1, ], h[2, ])))
-    expect_identical(unname(got), unname(ref))
-  }
+  set.seed(5)
+  th <- sort(runif(30, 0, 2 * pi)); rr <- runif(30, 5, 10)
+  ring <- list(x1 = rr * cos(th), y1 = rr * sin(th))
+  ring$x2 <- ring$x1[c(2:30, 1)]; ring$y2 <- ring$y1[c(2:30, 1)]
+  h <- rbind(c(-12, -3.1), c(12, 4.7))
+  got <- lisaClust:::hatchCrossings(list(ring), h[1, ], h[2, ])
+  old <- t(vapply(1:30, function(i) lineIntersection(c(ring$x1[i], ring$y1[i]), c(ring$x2[i], ring$y2[i]), h[1, ], h[2, ]),
+                  numeric(2)))
+  old <- old[!is.na(old[, 1]), , drop = FALSE]
+  old <- old[order(old[, 1]), , drop = FALSE]
+  expect_equal(unname(got), unname(old), tolerance = 1e-9)
+})
+
+test_that("a hatching plot drawn again comes from the cache", {
+  set.seed(6)
+  d <- data.frame(x = runif(400, 0, 100), y = runif(400, 0, 100), imageID = "a")
+  d$cellType <- ifelse(d$x < 50, "l", "r")
+  d$region <- ifelse(d$x < 50, "region_1", "region_2")
+  p <- ggplot2::ggplot(d, ggplot2::aes(x, y, region = region)) + geom_hatching(window = "square", nbp = 50)
+  lisaClust:::.hatchingCache$clear()
+  t1 <- system.time(g1 <- ggplot2::ggplotGrob(p))[3]
+  t2 <- system.time(g2 <- ggplot2::ggplotGrob(p))[3]
+  panel <- function(g) g$grobs[[grep("panel", g$layout$name)[1]]]
+  h1 <- panel(g1)$children[[grep("hatching", names(panel(g1)$children))]]
+  h2 <- panel(g2)$children[[grep("hatching", names(panel(g2)$children))]]
+  expect_identical(h1, h2)
+  expect_length(environment(lisaClust:::.hatchingCache$get)$store, 1)
 })
 
 test_that("regions go back to the right cells when the images are not in order", {

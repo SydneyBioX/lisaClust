@@ -313,7 +313,7 @@ inhomLocalK <-
     
     res <- .localCurves(
       as.numeric(data$x), as.numeric(data$y), as.integer(cellType), nlevels(cellType), as.numeric(Rs),
-      as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L"
+      as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L", includeSelf = TRUE
     )
     
     # one column per radius and neighbouring type, as radius_type, for the radii and types that occur

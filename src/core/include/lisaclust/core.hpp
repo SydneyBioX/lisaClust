@@ -26,6 +26,7 @@ void discAreas(const double* x, const double* y, std::size_t n, double r, int np
 //   lam[J]: cells of type J per unit area. edge: n x (Rs.size() - 1), column-major, the share of each
 //   cell's disc inside the window.
 //   Lfunction: false for K, (sum - E) / sqrt(E); true for L, sqrt(sum) - sqrt(E).
+//   includeSelf: count each cell among its own neighbours, at distance 0 (as Patrick et al. 2023 define the LISA).
 // For cell i, radius k and type J, sum is the weighted count of type-J neighbours within Rs[k + 1],
 // accumulated over the radii at which the image has any pair, and E = Rs[k + 1]^2 pi e lam[J], where e is
 // the cell's edge share at that radius when it has a type-J neighbour in that distance band, else 1.
@@ -39,7 +40,7 @@ struct LocalCurves {
 LocalCurves localCurves(const double* x, const double* y, const int* type, int n, int K,
                         const std::vector<double>& Rs, const std::vector<double>& labelVal,
                         const double* wt, const std::vector<double>& lam, const double* edge,
-                        bool Lfunction);
+                        bool Lfunction, bool includeSelf);
 
 // The label of the nearest training point to each query point. Points at exactly the nearest distance
 // vote; ties between labels go to the smallest label. Labels are 0-based.

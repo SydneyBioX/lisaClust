@@ -458,6 +458,21 @@ hatchingLevels <- function(data, hatching = NULL) {
 
 
 
+# The hatching grobs of the most recently drawn panels, by a hash of their inputs.
+.hatchingCache <- local({
+  store <- list()
+  size <- 20
+  list(
+    get = function(key) store[[key]],
+    set = function(key, value) {
+      store[[key]] <<- value
+      if (length(store) > size) store <<- store[seq(length(store) - size + 1, length(store))]
+      invisible(value)
+    },
+    clear = function() store <<- list()
+  )
+})
+
 GeomHatching <-
   ggplot2::ggproto(
     "GeomHatching",
@@ -477,6 +492,13 @@ GeomHatching <-
                           line.width = 1,
                           hatching.colour = 1) {
       coords <- coord$transform(data, panel_params)
+      
+      # The hatching depends only on the cells' positions in the panel, their regions and the settings, so a
+      # plot that is printed again (for example when its window is resized) reuses it.
+      key <- rlang::hash(list(coords$x, coords$y, coords$region, line.spacing, window, window.length, nbp,
+                              line.width, hatching.colour))
+      cached <- .hatchingCache$get(key)
+      if (!is.null(cached)) return(cached)
       
       if (is.factor(coords$region)) {
         coords$region <-
@@ -511,6 +533,7 @@ GeomHatching <-
         )
       grob$name <-
         "geom_hatching"
+      .hatchingCache$set(key, grob)
       return(grob)
     },
     draw_key = draw_key_region,
@@ -686,34 +709,22 @@ hatchingLines <-
       }
       
       
-      # Crossings of the hatching line with every edge of the region's boundary, all edges at once
-      intPoints <- do.call("rbind", lapply(edges, function(e) {
-        int <- segmentIntersections(e$x1, e$y1, e$x2, e$y2, hatch[1, ], hatch[2, ])
-        data.frame(x = int[, 1], y = int[, 2])
-      }))
-
-      intPoints <- unique(round(intPoints, 9))
-      intPoints <-
-        intPoints[!rowSums(intPoints) %in% c("Inf", NA), ]
+      # Where the hatching line crosses the region's outline, in order along the line. Consecutive pairs of
+      # crossings bound the parts of the line inside the region (holes included, by the even-odd rule).
+      cross <- hatchCrossings(edges, hatch[1, ], hatch[2, ])
       linesH <- NULL
       
-      if (length(unlist(intPoints)) > 2) {
-        intPoints <- intPoints[order(intPoints[, ordColumn]), ]
-        from <-
-          sort(rep(seq(1, nrow(
-            intPoints
-          ) - 1, by = 2), 2))
-        pointSplit <- split(intPoints, from)
-        
-        linesH <- purrr::map(pointSplit, ~ {
-          return(linesGrob(
-            x = .$x / rx[2],
-            y = .$y / ry[2],
+      if (nrow(cross) >= 2) {
+        pair <- rep(seq_len(nrow(cross) / 2), each = 2)
+        linesH <- lapply(split(seq_len(nrow(cross)), pair), function(k) {
+          linesGrob(
+            x = cross[k, 1] / rx[2],
+            y = cross[k, 2] / ry[2],
             gp = gpar(
               col = hatching.colour,
               lwd = line.width
             )
-          ))
+          )
         })
       }
       return(linesH)
@@ -904,45 +915,28 @@ hatchPlus <- function(rPoly, width, rx, ry, line.width = 1, hatching.colour = 1)
 
 
 
-####### Intersections of a hatching line with many segments.
+####### Crossings of a hatching line with a region's outline.
 
-# det() of the 2 x 2 matrices rbind(c(a, b), c(c, d)), elementwise and bit for bit as base::det() computes
-# it: LAPACK's LU decomposition with partial pivoting (scaling by the reciprocal of the pivot), then the
-# product of the pivots through exp(sum(log(abs(.)))).
-det2 <- function(a, b, c, d) {
-  swap <- abs(c) > abs(a)
-  p1 <- ifelse(swap, c, a)
-  p2 <- ifelse(swap, b - (a * (1 / c)) * d, d - (c * (1 / a)) * b)
-  sgn <- ifelse(swap, -1, 1) * sign(p1) * sign(p2)
-  out <- sgn * exp(log(abs(p1)) + log(abs(p2)))
-  out[p1 == 0 | p2 == 0] <- 0
-  out
-}
-
-# Where the line through P3 and P4 crosses the segments (x1, y1) - (x2, y2), with the same rounding and
-# tests as the line intersection of the retistruct package, modified for edge cases. Returns a two-column
-# matrix with a row per segment: the crossing, NA when it is outside either segment, Inf when they are
-# parallel.
-segmentIntersections <- function(x1, y1, x2, y2, P3, P4) {
-  x1 <- round(x1, 10); y1 <- round(y1, 10); x2 <- round(x2, 10); y2 <- round(y2, 10)
-  P3 <- round(as.vector(P3), 10)
-  P4 <- round(as.vector(P4), 10)
-  dx1 <- x1 - x2
-  dy1 <- y1 - y2
-  dx2 <- P3[1] - P4[1]
-  dy2 <- P3[2] - P4[2]
-  D <- det2(dx1, dy1, dx2, dy2)
-  D1 <- det2(x1, y1, x2, y2)
-  D2 <- det2(P3[1], P3[2], P4[1], P4[2])
-  X <- round(det2(D1, dx1, D2, dx2) / D, 10)
-  Y <- round(det2(D1, dy1, D2, dy2) / D, 10)
-  lambda1 <- -((X - x1) * dx1 + (Y - y1) * dy1) / (dx1^2 + dy1^2)
-  lambda2 <- -((X - P3[1]) * dx2 + (Y - P3[2]) * dy2) / (dx2^2 + dy2^2)
-  outside <- !(lambda1 >= 0 & lambda1 <= 1 & lambda2 >= 0 & lambda2 <= 1)
-  X[outside] <- NA
-  Y[outside] <- NA
-  parallel <- is.na(D) | D == 0
-  X[parallel] <- Inf
-  Y[parallel] <- Inf
-  cbind(X, Y)
+# The points where the line from P3 to P4 crosses the edges of the rings in `edges` (lists of x1, y1, x2, y2),
+# ordered along the line, within the segment P3-P4. An edge is crossed when its two ends lie on opposite sides
+# of the line, counting a vertex on the line as being on the left (a half-open rule): a line through a vertex
+# then crosses the outline once, a line touching it at a vertex crosses it twice or not at all, and an edge
+# lying along the line is not crossed. Each closed ring therefore gives an even number of crossings.
+hatchCrossings <- function(edges, P3, P4) {
+  dx <- P4[1] - P3[1]
+  dy <- P4[2] - P3[2]
+  len2 <- dx^2 + dy^2
+  out <- lapply(edges, function(e) {
+    s1 <- dx * (e$y1 - P3[2]) - dy * (e$x1 - P3[1])
+    s2 <- dx * (e$y2 - P3[2]) - dy * (e$x2 - P3[1])
+    k <- (s1 >= 0) != (s2 >= 0)
+    f <- s1[k] / (s1[k] - s2[k])
+    x <- e$x1[k] + f * (e$x2[k] - e$x1[k])
+    y <- e$y1[k] + f * (e$y2[k] - e$y1[k])
+    cbind(x = x, y = y, t = ((x - P3[1]) * dx + (y - P3[2]) * dy) / len2)
+  })
+  out <- do.call("rbind", out)
+  out <- out[order(out[, "t"]), , drop = FALSE]
+  # the hatching segments span the region's bounding box, so every crossing lies on them
+  out[, c("x", "y"), drop = FALSE]
 }

@@ -29,14 +29,15 @@ Rcpp::NumericVector discWindowArea(Rcpp::NumericVector x, Rcpp::NumericVector y,
 // [[Rcpp::export(.localCurves)]]
 Rcpp::List localCurvesR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::IntegerVector type, int nTypes,
                         Rcpp::NumericVector Rs, Rcpp::NumericVector labelVal, Rcpp::NumericVector wt,
-                        Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction) {
+                        Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction,
+                        bool includeSelf = true) {
   const int n = x.size();
   std::vector<int> t0(n);
   for (int i = 0; i < n; ++i) t0[i] = type[i] - 1;
   lisaclust::LocalCurves res = lisaclust::localCurves(
       x.begin(), y.begin(), t0.data(), n, nTypes, std::vector<double>(Rs.begin(), Rs.end()),
       std::vector<double>(labelVal.begin(), labelVal.end()), wt.begin(),
-      std::vector<double>(lam.begin(), lam.end()), edge.begin(), Lfunction);
+      std::vector<double>(lam.begin(), lam.end()), edge.begin(), Lfunction, includeSelf);
   Rcpp::NumericVector value(res.value.begin(), res.value.end());
   for (double& v : value) if (std::isnan(v)) v = NA_REAL;
   value.attr("dim") = Rcpp::IntegerVector::create(res.n, res.K, res.nb);

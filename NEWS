@@ -1,3 +1,20 @@
+CHANGES IN VERSION 1.21.2
+-------------------------
+
+    o A cell now counts itself among the cells of its type (at distance 0), as the local indicators are defined in
+      Patrick et al. (2023). Before, it was left out of its own count. This changes the LISA of every cell for its
+      own type, and so the regions; cells with no neighbour within the largest radius now have LISA values
+      rather than zeros.
+
+    o hatchingPlot() and geom_hatching(): a hatching line that passed exactly through or touched a corner of a
+      region's outline could be counted as crossing it an odd number of times, which put later segments of the
+      line out of step and drew them across neighbouring regions (with the warning "data length is not a
+      multiple of split variable"). Crossings now follow a half-open rule, so each outline is crossed an even
+      number of times.
+
+    o geom_hatching() keeps the hatching of the most recently drawn panels, so printing a plot again (for
+      example when resizing its window) does not recompute it.
+
 CHANGES IN VERSION 1.21.1
 -------------------------
 

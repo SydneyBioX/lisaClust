@@ -26,8 +26,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // localCurvesR
-Rcpp::List localCurvesR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::IntegerVector type, int nTypes, Rcpp::NumericVector Rs, Rcpp::NumericVector labelVal, Rcpp::NumericVector wt, Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction);
-RcppExport SEXP _lisaClust_localCurvesR(SEXP xSEXP, SEXP ySEXP, SEXP typeSEXP, SEXP nTypesSEXP, SEXP RsSEXP, SEXP labelValSEXP, SEXP wtSEXP, SEXP lamSEXP, SEXP edgeSEXP, SEXP LfunctionSEXP) {
+Rcpp::List localCurvesR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::IntegerVector type, int nTypes, Rcpp::NumericVector Rs, Rcpp::NumericVector labelVal, Rcpp::NumericVector wt, Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction, bool includeSelf);
+RcppExport SEXP _lisaClust_localCurvesR(SEXP xSEXP, SEXP ySEXP, SEXP typeSEXP, SEXP nTypesSEXP, SEXP RsSEXP, SEXP labelValSEXP, SEXP wtSEXP, SEXP lamSEXP, SEXP edgeSEXP, SEXP LfunctionSEXP, SEXP includeSelfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -41,7 +41,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type lam(lamSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type edge(edgeSEXP);
     Rcpp::traits::input_parameter< bool >::type Lfunction(LfunctionSEXP);
-    rcpp_result_gen = Rcpp::wrap(localCurvesR(x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction));
+    Rcpp::traits::input_parameter< bool >::type includeSelf(includeSelfSEXP);
+    rcpp_result_gen = Rcpp::wrap(localCurvesR(x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -63,7 +64,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_lisaClust_discWindowArea", (DL_FUNC) &_lisaClust_discWindowArea, 5},
-    {"_lisaClust_localCurvesR", (DL_FUNC) &_lisaClust_localCurvesR, 10},
+    {"_lisaClust_localCurvesR", (DL_FUNC) &_lisaClust_localCurvesR, 11},
     {"_lisaClust_nearestLabelsR", (DL_FUNC) &_lisaClust_nearestLabelsR, 5},
     {NULL, NULL, 0}
 };

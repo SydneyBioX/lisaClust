@@ -5,8 +5,8 @@
     .Call(`_lisaClust_discWindowArea`, x, y, r, npoly, rings)
 }
 
-.localCurves <- function(x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction) {
-    .Call(`_lisaClust_localCurvesR`, x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction)
+.localCurves <- function(x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf = TRUE) {
+    .Call(`_lisaClust_localCurvesR`, x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf)
 }
 
 .nearestLabels <- function(tx, ty, label, qx, qy) {

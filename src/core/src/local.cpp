@@ -8,7 +8,8 @@
 // The local indicators of inhomLocalK(), which before lisaClust 1.21.1 were computed in R with
 // spatstat.geom::closepairs(), cut(), dplyr and data.table. This reproduces that computation:
 // - ordered pairs (i, j), i != j, with distance <= the largest radius, the distance put in band k when
-//   Rs[k] < d <= Rs[k + 1] (cut(d, Rs, include.lowest = TRUE));
+//   Rs[k] < d <= Rs[k + 1] (cut(d, Rs, include.lowest = TRUE)); with includeSelf (from 1.21.2) also the pair
+//   (i, i) at distance 0, so that a cell counts itself;
 // - the pairs' weights wt[j] summed per (i, band, type of j), then accumulated over the bands of the
 //   image (data.table's CJ() crosses only the cells, bands and types that occur among the pairs, and
 //   both sums accumulate in long double, as data.table's sum() and base cumsum() do);
@@ -17,7 +18,7 @@
 lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, const int* type, int n, int K,
                                               const std::vector<double>& Rs, const std::vector<double>& labelVal,
                                               const double* wt, const std::vector<double>& lam, const double* edge,
-                                              bool Lfunction) {
+                                              bool Lfunction, bool includeSelf) {
   LocalCurves out;
   const int nb = static_cast<int>(Rs.size()) - 1;
   out.n = n;
@@ -92,6 +93,11 @@ lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, 
       }
     }
   }
+
+  // Each cell is one of its own neighbours, at distance 0 (Patrick et al. 2023 sum over every cell of the type,
+  // the cell itself included).
+  if (includeSelf)
+    for (int i = 0; i < n; ++i) add(i, i, 0);
 
   out.value.assign(size, std::numeric_limits<double>::quiet_NaN());
   for (int J = 0; J < K; ++J) {
