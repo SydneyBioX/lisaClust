@@ -452,7 +452,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.5) to
+A methods sentence might read: “We used lisaClust (version 1.21.7) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -527,7 +527,7 @@ sessionInfo()
 #> [19] S4Vectors_0.50.3                BiocGenerics_0.58.1            
 #> [21] generics_0.1.4                  MatrixGenerics_1.24.0          
 #> [23] matrixStats_1.5.0               spicyR_1.24.0                  
-#> [25] lisaClust_1.21.5                BiocStyle_2.40.0               
+#> [25] lisaClust_1.21.7                BiocStyle_2.40.0               
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] splines_4.6.1               later_1.4.8                
@@ -598,12 +598,12 @@ sessionInfo()
 #> [131] viridisLite_0.4.3           deldir_2.0-4               
 #> [133] BiocParallel_1.46.0         Biostrings_2.80.2          
 #> [135] lmerTest_3.2-1              spatstat.geom_3.8-3        
-#> [137] V8_8.2.0                    Matrix_1.7-5               
-#> [139] bit64_4.8.6                 KEGGREST_1.52.2            
-#> [141] shiny_1.14.0                rbibutils_2.4.1            
-#> [143] tidygate_1.0.19             igraph_2.3.4               
-#> [145] broom_1.0.13                memoise_2.0.1              
-#> [147] bslib_0.12.0                bit_4.6.0
+#> [137] Matrix_1.7-5                bit64_4.8.6                
+#> [139] KEGGREST_1.52.2             shiny_1.14.0               
+#> [141] rbibutils_2.4.1             tidygate_1.0.19            
+#> [143] memoise_2.0.1               igraph_2.3.4               
+#> [145] broom_1.0.13                bslib_0.12.0               
+#> [147] bit_4.6.0
 ```
 
 ## References
