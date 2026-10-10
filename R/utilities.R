@@ -119,12 +119,3 @@ argumentChecks = function(function_name, user_vals) {
   if (length(missing)) stop("column(s) not found in data: ", paste0("'", missing, "'", collapse = ", "))
   as.data.frame(cells)[, columns, drop = FALSE]
 }
-
-# Stops with an install hint if suggested package `pkg` is missing.
-.need <- function(pkg, why = NULL) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    stop("Package '", pkg, "' is needed", if (!is.null(why)) paste0(" ", why) else "",
-         ". Install it with BiocManager::install(\"", pkg, "\").", call. = FALSE)
-  }
-  invisible(TRUE)
-}

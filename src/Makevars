@@ -3,10 +3,10 @@
 CXX_STD = CXX17
 PKG_CPPFLAGS = -Icore/include
 
-CORE_OBJECTS = core/src/geometry.o core/src/local.o
+CORE_OBJECTS = core/src/concaveman.o core/src/geometry.o core/src/local.o
 OBJECTS = RcppExports.o bindings.o $(CORE_OBJECTS)
 
 # `all` must stay the first target
 all: $(SHLIB)
 
-$(OBJECTS): core/include/lisaclust/core.hpp
+$(OBJECTS): core/include/lisaclust/core.hpp core/include/lisaclust/concaveman.hpp

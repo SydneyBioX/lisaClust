@@ -1,7 +1,7 @@
 Package: lisaClust
 Type: Package
 Title: lisaClust: Clustering of Local Indicators of Spatial Association
-Version: 1.21.6
+Version: 1.21.7
 Authors@R: c(
     person("Ellis", "Patrick", , "ellis.patrick@sydney.edu.au", role = c("aut", "cre")),
     person("Nicolas", "Canete", , "nicolas.canete@sydney.edu.au", role = "aut"),
@@ -16,6 +16,7 @@ Description: lisaClust provides a series of functions to identify and visualise
     colocalization in multiplexed imaging data that has been segmented at a 
     single-cell resolution.
 License: GPL (>=2)
+Copyright: The C++ port of concaveman in src/core: see inst/COPYRIGHTS.
 biocViews: 
     SingleCell, CellBasedAssays, Spatial
 Encoding: UTF-8
@@ -45,7 +46,6 @@ Imports:
     lifecycle,
     rlang (>= 1.0.0)
 Suggests: 
-    concaveman,
     SpatialDatasets,
     spicyR,
     tidySpatialExperiment,

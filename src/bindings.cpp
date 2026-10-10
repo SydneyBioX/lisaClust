@@ -1,9 +1,11 @@
 // R bindings of the numeric core in src/core (shared with the Python package lisaclust).
 #include <Rcpp.h>
 
+#include <array>
 #include <cmath>
 #include <vector>
 
+#include "lisaclust/concaveman.hpp"
 #include "lisaclust/core.hpp"
 
 namespace {
@@ -57,5 +59,18 @@ Rcpp::IntegerVector nearestLabelsR(Rcpp::NumericVector tx, Rcpp::NumericVector t
                                                   qy.begin(), qx.size());
   Rcpp::IntegerVector out(res.size());
   for (std::size_t i = 0; i < res.size(); ++i) out[i] = res[i] < 0 ? NA_INTEGER : res[i] + 1;
+  return out;
+}
+
+// [[Rcpp::export(.concaveHull)]]
+Rcpp::NumericMatrix concaveHullR(Rcpp::NumericVector x, Rcpp::NumericVector y, double concavity,
+                                 double lengthThreshold) {
+  std::vector<std::array<double, 2>> ring = concaveman::concaveman_r(
+      std::vector<double>(x.begin(), x.end()), std::vector<double>(y.begin(), y.end()), concavity, lengthThreshold);
+  Rcpp::NumericMatrix out(ring.size(), 2);
+  for (std::size_t i = 0; i < ring.size(); ++i) {
+    out(i, 0) = ring[i][0];
+    out(i, 1) = ring[i][1];
+  }
   return out;
 }

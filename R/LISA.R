@@ -164,7 +164,6 @@ makeWindow <-
       ow <- spatstat.geom::convexhull(p)
     }
     if (window == "concave") {
-      .need("concaveman", "for concave windows")
       message("Concave windows are temperamental. Try choosing values of window.length > and < 1 if you have problems.")
       if (is.null(window.length)) {
         window.length <- (max(data$x) - min(data$x)) / 20
@@ -177,11 +176,8 @@ makeWindow <-
         rep(data$x, each = 9) + rep(c(0, 1, 0, -1, -1, 0, 1, -1, 1) * dist, times = nrow(data)),
         rep(data$y, each = 9) + rep(c(0, 1, 1, 1, -1, -1, -1, 0, 0) * dist, times = nrow(data))
       )
-      ch <-
-        concaveman::concaveman(bigDat,
-                               length_threshold = window.length,
-                               concavity = 1
-        )
+      # concaveman's concave hull (C++ port in src/core, giving the same polygon as concaveman::concaveman())
+      ch <- .concaveHull(bigDat[, 1], bigDat[, 2], concavity = 1, lengthThreshold = window.length)
       poly <- as.data.frame(ch[nrow(ch):1, ])
       colnames(poly) <- c("x", "y")
       ow <-

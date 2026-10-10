@@ -13,3 +13,7 @@
     .Call(`_lisaClust_nearestLabelsR`, tx, ty, label, qx, qy)
 }
 
+.concaveHull <- function(x, y, concavity, lengthThreshold) {
+    .Call(`_lisaClust_concaveHullR`, x, y, concavity, lengthThreshold)
+}
+

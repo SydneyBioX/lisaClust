@@ -61,11 +61,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// concaveHullR
+Rcpp::NumericMatrix concaveHullR(Rcpp::NumericVector x, Rcpp::NumericVector y, double concavity, double lengthThreshold);
+RcppExport SEXP _lisaClust_concaveHullR(SEXP xSEXP, SEXP ySEXP, SEXP concavitySEXP, SEXP lengthThresholdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type concavity(concavitySEXP);
+    Rcpp::traits::input_parameter< double >::type lengthThreshold(lengthThresholdSEXP);
+    rcpp_result_gen = Rcpp::wrap(concaveHullR(x, y, concavity, lengthThreshold));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_lisaClust_discWindowArea", (DL_FUNC) &_lisaClust_discWindowArea, 5},
     {"_lisaClust_localCurvesR", (DL_FUNC) &_lisaClust_localCurvesR, 11},
     {"_lisaClust_nearestLabelsR", (DL_FUNC) &_lisaClust_nearestLabelsR, 5},
+    {"_lisaClust_concaveHullR", (DL_FUNC) &_lisaClust_concaveHullR, 4},
     {NULL, NULL, 0}
 };
 
