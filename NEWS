@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.21.6
+-------------------------
+
+    o concaveman moves to Suggests: it is needed only for window = "concave".
+
 CHANGES IN VERSION 1.21.5
 -------------------------
 

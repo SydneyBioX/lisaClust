@@ -151,7 +151,6 @@ pppGenerate <- function(cells, window, window.length) {
 }
 
 #' @importFrom spatstat.geom owin convexhull ppp
-#' @importFrom concaveman concaveman
 makeWindow <-
   function(data,
            window = "square",
@@ -165,6 +164,7 @@ makeWindow <-
       ow <- spatstat.geom::convexhull(p)
     }
     if (window == "concave") {
+      .need("concaveman", "for concave windows")
       message("Concave windows are temperamental. Try choosing values of window.length > and < 1 if you have problems.")
       if (is.null(window.length)) {
         window.length <- (max(data$x) - min(data$x)) / 20

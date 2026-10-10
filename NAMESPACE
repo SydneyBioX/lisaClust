@@ -30,7 +30,6 @@ importFrom(S4Vectors,
 )
 importFrom(SpatialExperiment,spatialCoords)
 importFrom(SummarizedExperiment,colData)
-importFrom(concaveman,concaveman)
 importFrom(deldir,deldir)
 importFrom(dplyr,
   .data,
