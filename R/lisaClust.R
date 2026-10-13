@@ -59,7 +59,7 @@ lisaClust <-
            cores = 1,
            window = "convex",
            window.length = NULL,
-           whichParallel = "imimageID",
+           whichParallel = "imageID",
            sigma = NULL,
            lisaFunc = "K",
            minLambda = 0.05,

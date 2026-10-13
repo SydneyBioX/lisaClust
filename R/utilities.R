@@ -38,7 +38,7 @@ argumentChecks = function(function_name, user_vals) {
     if (is(user_vals$BPPARAM, "MulticoreParam") || is(user_vals$BPPARAM, "SerialParam")) {
       assign("cores", user_vals$BPPARAM, envir = sys.frame(sys.parent(1)))
     } else {
-      stop("'BBPARAM' must be a MulticoreParam or SerialParam object.")
+      stop("'BPPARAM' must be a MulticoreParam or SerialParam object.")
     }
     
   } else if ("cores" %in% names(user_vals)) {
