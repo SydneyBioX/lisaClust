@@ -60,6 +60,65 @@ argumentChecks = function(function_name, user_vals) {
   if (is.null(cores) || cores <= 1) BiocParallel::SerialParam() else BiocParallel::MulticoreParam(workers = cores)
 }
 
+# The task function and elements of the current .par_lapply() call, found by forked workers in their copy of
+# this environment.
+.parallel_env <- new.env(parent = emptyenv())
+.run_task <- function(i) .parallel_env$task(.parallel_env$X[[i]])
+
+# lapply(X, FUN, ...) over the workers of `cores` (a number or a BiocParallel param).
+# - Forked workers start once, after the task exists, so they share the session's data without being sent it,
+#   and only task numbers and results pass between processes. Forking a new process for every chunk
+#   instead copies much of the session into each one.
+# - BLAS runs one thread in each worker during the call. OpenBLAS otherwise starts one thread per core in every
+#   worker (128 on a 128-core server), which slows the workers down many times. The setting is changed in this
+#   session before the workers start, because changing it inside a worker first restarts every thread.
+# - Tasks are handed out in about eight chunks per worker, so that quick and slow tasks balance out.
+.par_lapply <- function(X, FUN, ..., cores = 1) {
+  BPPARAM <- .bpparam(cores)
+  workers <- BiocParallel::bpnworkers(BPPARAM)
+  if (workers <= 1L || length(X) <= 1L) return(lapply(X, FUN, ...))
+  task <- FUN
+  if (...length()) {
+    # The task's environment holds only FUN and the extra arguments, not X, so that socket workers aren't
+    # sent all of X with every chunk.
+    taskEnv <- list2env(list(FUN = FUN, args = list(...)), parent = asNamespace("lisaClust"))
+    task <- function(x) do.call(FUN, c(list(x), args))
+    environment(task) <- taskEnv
+  }
+
+  blasThreads <- RhpcBLASctl::blas_get_num_procs()
+  RhpcBLASctl::blas_set_num_threads(1L)
+  on.exit(RhpcBLASctl::blas_set_num_threads(blasThreads), add = TRUE)
+  if (BiocParallel::bpisup(BPPARAM) || !is(BPPARAM, "MulticoreParam")) {
+    # Workers that are already running, or are new R sessions, are sent the task with each chunk.
+    threadVars <- Sys.getenv(c("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS"), unset = NA)
+    Sys.setenv(OPENBLAS_NUM_THREADS = 1L, OMP_NUM_THREADS = 1L)
+    on.exit(.restoreEnv(threadVars), add = TRUE)
+    return(BiocParallel::bplapply(X, task, BPPARAM = BPPARAM))
+  }
+
+  assign("task", task, envir = .parallel_env)
+  assign("X", X, envir = .parallel_env)
+  on.exit(rm(list = c("task", "X"), envir = .parallel_env), add = TRUE)
+  tasks <- BiocParallel::bptasks(BPPARAM)
+  if (tasks == 0L) {
+    BiocParallel::bptasks(BPPARAM) <- min(length(X), 8L * workers)
+    on.exit(BiocParallel::bptasks(BPPARAM) <- tasks, add = TRUE, after = FALSE)
+  }
+  BiocParallel::bpstart(BPPARAM)
+  on.exit(BiocParallel::bpstop(BPPARAM), add = TRUE, after = FALSE)
+  out <- BiocParallel::bplapply(seq_along(X), .run_task, BPPARAM = BPPARAM)
+  names(out) <- names(X)
+  out
+}
+
+# Put environment variables back as they were (NA: unset).
+.restoreEnv <- function(values) {
+  for (name in names(values)) {
+    if (is.na(values[[name]])) Sys.unsetenv(name) else do.call(Sys.setenv, as.list(values[name]))
+  }
+}
+
 #' Put cells in a canonical data frame
 #'
 #' The columns imageID, cellType, x and y, and cellID and imageCellID when the data have none. imageID and

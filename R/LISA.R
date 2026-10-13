@@ -45,7 +45,7 @@
 #' @export
 #' @rdname lisa
 #' @importFrom methods is
-#' @importFrom BiocParallel MulticoreParam bplapply
+#' @importFrom BiocParallel MulticoreParam
 #' @importFrom S4Vectors DataFrame
 #' @importFrom BiocGenerics do.call rbind
 #' @importFrom dplyr bind_rows
@@ -109,12 +109,10 @@ lisa <- function(cells,
     Rs <- c(20, 50, 100)
   }
   
-  BPPARAM <- .bpparam(cores)
-  
   message("Generating local indicators of spatial association.")
   
   curveList <-
-    BiocParallel::bplapply(
+    .par_lapply(
       cellSummary,
       inhomLocalK,
       Rs = Rs,
@@ -123,7 +121,7 @@ lisa <- function(cells,
       window.length = window.length,
       minLambda = minLambda,
       lisaFunc = lisaFunc,
-      BPPARAM = BPPARAM
+      cores = cores
     )
   
   curvelist <- lapply(curveList, as.data.frame)

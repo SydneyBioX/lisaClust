@@ -1,3 +1,11 @@
+CHANGES IN VERSION 1.21.8
+-------------------------
+
+    o lisa() and lisaClust() with cores > 1 start their workers once per call and send them only the number
+      of each image, in about eight chunks per worker, instead of forking a new process for every chunk.
+      BLAS runs one thread in each worker during the call (RhpcBLASctl, now imported), so OpenBLAS no longer
+      starts one thread per core in every worker. Results are unchanged.
+
 CHANGES IN VERSION 1.21.7
 -------------------------
 
