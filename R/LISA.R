@@ -7,7 +7,8 @@
 #' @param cellType The column which contains the cell types.
 #' @param spatialCoords The columns which contain the x and y spatial coordinates.
 #' @param cores Number of cores to use for parallel processing, or a BiocParallel
-#' MulticoreParam or SerialParam object.
+#' param object (such as MulticoreParam,
+#' SnowParam or SerialParam).
 #' @param window Should the window around the regions be 'square', 'convex' or 'concave'.
 #' @param window.length A tuning parameter for controlling the level of concavity
 #' when estimating concave windows.
@@ -16,7 +17,7 @@
 #' @param sigma A numeric variable used for scaling when filting inhomogeneous L-curves.
 #' @param lisaFunc Either "K" or "L" curve.
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
-#' @param BPPARAM \{DEPRECATED\} A BiocParallel MulticoreParam or SerialParam object. 
+#' @param BPPARAM \{DEPRECATED\} A BiocParallel param object. 
 #' @param Rs \{DEPRECATED\} A vector of the radii that the measures of association should be calculated.
 #' 
 #' @return A matrix of LISA curves

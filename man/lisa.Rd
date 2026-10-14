@@ -34,7 +34,8 @@ variables x and y, giving the  coordinates of each cell, imageID and cellType.}
 \item{spatialCoords}{The columns which contain the x and y spatial coordinates.}
 
 \item{cores}{Number of cores to use for parallel processing, or a BiocParallel
-MulticoreParam or SerialParam object.}
+param object (such as MulticoreParam,
+SnowParam or SerialParam).}
 
 \item{window}{Should the window around the regions be 'square', 'convex' or 'concave'.}
 
@@ -50,7 +51,7 @@ the cellType.}
 
 \item{minLambda}{Minimum value for density for scaling when fitting inhomogeneous L-curves.}
 
-\item{BPPARAM}{\{DEPRECATED\} A BiocParallel MulticoreParam or SerialParam object.}
+\item{BPPARAM}{\{DEPRECATED\} A BiocParallel param object.}
 
 \item{Rs}{\{DEPRECATED\} A vector of the radii that the measures of association should be calculated.}
 }

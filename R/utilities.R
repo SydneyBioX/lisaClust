@@ -35,35 +35,43 @@ argumentChecks = function(function_name, user_vals) {
     # warning("'BPPARAM' was deprecated in 1.18.0. Please use 'cores' instead.\n")
     deprecate_warn("1.14.4", paste0(function_name, "(BPPARAM)"), paste0(function_name, "(cores)"))
     
-    if (is(user_vals$BPPARAM, "MulticoreParam") || is(user_vals$BPPARAM, "SerialParam")) {
+    if (is(user_vals$BPPARAM, "BiocParallelParam")) {
       assign("cores", user_vals$BPPARAM, envir = sys.frame(sys.parent(1)))
     } else {
-      stop("'BPPARAM' must be a MulticoreParam or SerialParam object.")
+      stop("'BPPARAM' must be a BiocParallel param object.")
     }
     
   } else if ("cores" %in% names(user_vals)) {
     if (is(user_vals$cores, "numeric")) {
       # a number of cores is turned into a BiocParallel param by .bpparam()
-    } else if (is(user_vals$cores, "MulticoreParam") || is(user_vals$cores, "SerialParam")) {
+    } else if (is(user_vals$cores, "BiocParallelParam")) {
       assign("cores", user_vals$cores, sys.frame(sys.parent(1)))
     } else {
-      stop("'cores'  must be either a numeric value, or a MulticoreParam or SerialParam object.\n")
+      stop("'cores' must be either a numeric value or a BiocParallel param object.\n")
     }
   }
 }
 
 
-# A BiocParallel param from a number of cores or a param.
+# A BiocParallel param from a number of cores (forked workers, or socket workers on Windows) or a param.
 #' @importFrom BiocParallel MulticoreParam SerialParam
 .bpparam <- function(cores) {
   if (is(cores, "BiocParallelParam")) return(cores)
-  if (is.null(cores) || cores <= 1) BiocParallel::SerialParam() else BiocParallel::MulticoreParam(workers = cores)
+  if (is.null(cores) || cores <= 1) return(BiocParallel::SerialParam())
+  if (.Platform$OS.type == "windows") BiocParallel::SnowParam(workers = cores) else BiocParallel::MulticoreParam(workers = cores)
 }
 
 # The task function and elements of the current .par_lapply() call, found by forked workers in their copy of
 # this environment.
 .parallel_env <- new.env(parent = emptyenv())
 .run_task <- function(i) .parallel_env$task(.parallel_env$X[[i]])
+
+## task(x) in a worker with one BLAS and OpenMP thread, for workers this session did not start itself.
+.one_thread_task <- function(x, task) {
+  if (isTRUE(RhpcBLASctl::blas_get_num_procs() > 1L)) RhpcBLASctl::blas_set_num_threads(1L)
+  if (isTRUE(RhpcBLASctl::omp_get_max_threads() > 1L)) RhpcBLASctl::omp_set_num_threads(1L)
+  task(x)
+}
 
 # lapply(X, FUN, ...) over the workers of `cores` (a number or a BiocParallel param).
 # - Forked workers start once, after the task exists, so they share the session's data without being sent it,
@@ -99,22 +107,25 @@ argumentChecks = function(function_name, user_vals) {
     RhpcBLASctl::omp_set_num_threads(1L)
     on.exit(RhpcBLASctl::omp_set_num_threads(ompThreads), add = TRUE)
   }
+  # About eight chunks per worker, unless the param sets its own number of tasks.
+  tasks <- BiocParallel::bptasks(BPPARAM)
+  if (tasks == 0L && !BiocParallel::bpisup(BPPARAM)) {
+    BiocParallel::bptasks(BPPARAM) <- min(length(X), 8L * workers)
+    on.exit(BiocParallel::bptasks(BPPARAM) <- tasks, add = TRUE, after = FALSE)
+  }
   if (BiocParallel::bpisup(BPPARAM) || !is(BPPARAM, "MulticoreParam")) {
-    # Workers that are already running, or are new R sessions, are sent the task with each chunk.
+    # Workers that are already running, or are new R sessions, are sent the task with each chunk. New
+    # socket workers start with one BLAS and OpenMP thread; workers that were already running set
+    # one thread themselves before their first task.
     threadVars <- Sys.getenv(c("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS"), unset = NA)
     Sys.setenv(OPENBLAS_NUM_THREADS = 1L, OMP_NUM_THREADS = 1L)
     on.exit(.restoreEnv(threadVars), add = TRUE)
-    return(BiocParallel::bplapply(X, task, BPPARAM = BPPARAM))
+    return(BiocParallel::bplapply(X, .one_thread_task, task = task, BPPARAM = BPPARAM))
   }
 
   assign("task", task, envir = .parallel_env)
   assign("X", X, envir = .parallel_env)
   on.exit(rm(list = c("task", "X"), envir = .parallel_env), add = TRUE)
-  tasks <- BiocParallel::bptasks(BPPARAM)
-  if (tasks == 0L) {
-    BiocParallel::bptasks(BPPARAM) <- min(length(X), 8L * workers)
-    on.exit(BiocParallel::bptasks(BPPARAM) <- tasks, add = TRUE, after = FALSE)
-  }
   BiocParallel::bpstart(BPPARAM)
   on.exit(BiocParallel::bpstop(BPPARAM), add = TRUE, after = FALSE)
   out <- BiocParallel::bplapply(seq_along(X), .run_task, BPPARAM = BPPARAM)
