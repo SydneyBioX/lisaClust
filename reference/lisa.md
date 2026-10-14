@@ -51,7 +51,7 @@ lisa(
 - cores:
 
   Number of cores to use for parallel processing, or a BiocParallel
-  MulticoreParam or SerialParam object.
+  param object (such as MulticoreParam, SnowParam or SerialParam).
 
 - window:
 
@@ -83,7 +83,7 @@ lisa(
 
 - BPPARAM:
 
-  {DEPRECATED} A BiocParallel MulticoreParam or SerialParam object.
+  {DEPRECATED} A BiocParallel param object.
 
 - Rs:
 

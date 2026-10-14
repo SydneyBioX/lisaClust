@@ -17,7 +17,7 @@ lisaClust(
   cores = 1,
   window = "convex",
   window.length = NULL,
-  whichParallel = "imimageID",
+  whichParallel = "imageID",
   sigma = NULL,
   lisaFunc = "K",
   minLambda = 0.05,
@@ -62,7 +62,7 @@ lisaClust(
 - cores:
 
   Number of cores to use for parallel processing, or a BiocParallel
-  MulticoreParam or SerialParam object.
+  param object (such as MulticoreParam, SnowParam or SerialParam).
 
 - window:
 
@@ -94,7 +94,7 @@ lisaClust(
 
 - BPPARAM:
 
-  {DEPRECATED} A BiocParalell MulticoreParam or SerialParam object.
+  {DEPRECATED} A BiocParallel param object.
 
 - Rs:
 

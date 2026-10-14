@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.7</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.8</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@
 <span>  cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  window <span class="op">=</span> <span class="st">"convex"</span>,</span>
 <span>  window.length <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  whichParallel <span class="op">=</span> <span class="st">"imimageID"</span>,</span>
+<span>  whichParallel <span class="op">=</span> <span class="st">"imageID"</span>,</span>
 <span>  sigma <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lisaFunc <span class="op">=</span> <span class="st">"K"</span>,</span>
 <span>  minLambda <span class="op">=</span> <span class="fl">0.05</span>,</span>
@@ -94,7 +94,8 @@ variables x and y, giving the  coordinates of each cell, imageID and cellType.</
 
 <dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
 <dd><p>Number of cores to use for parallel processing, or a BiocParallel
-MulticoreParam or SerialParam object.</p></dd>
+param object (such as MulticoreParam,
+SnowParam or SerialParam).</p></dd>
 
 
 <dt id="arg-window">window<a class="anchor" aria-label="anchor" href="#arg-window"></a></dt>
@@ -124,7 +125,7 @@ the cellType.</p></dd>
 
 
 <dt id="arg-bpparam">BPPARAM<a class="anchor" aria-label="anchor" href="#arg-bpparam"></a></dt>
-<dd><p>{DEPRECATED} A BiocParalell MulticoreParam or SerialParam object.</p></dd>
+<dd><p>{DEPRECATED} A BiocParallel param object.</p></dd>
 
 
 <dt id="arg-rs">Rs<a class="anchor" aria-label="anchor" href="#arg-rs"></a></dt>
