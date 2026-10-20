@@ -11,7 +11,8 @@ inhomLocalK(
   window = "convex",
   window.length = NULL,
   minLambda = 0.05,
-  lisaFunc = "K"
+  lisaFunc = "K",
+  membership = NULL
 )
 }
 \arguments{

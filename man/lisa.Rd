@@ -18,7 +18,8 @@ lisa(
   lisaFunc = "K",
   minLambda = 0.05,
   BPPARAM = NULL,
-  Rs = r
+  Rs = r,
+  cellWeights = NULL
 )
 }
 \arguments{
@@ -54,6 +55,13 @@ the cellType.}
 \item{BPPARAM}{\{DEPRECATED\} A BiocParallel param object.}
 
 \item{Rs}{\{DEPRECATED\} A vector of the radii that the measures of association should be calculated.}
+
+\item{cellWeights}{Optional cell weights in \[0, 1\], in the order of `cells`: a numeric vector with one weight
+per cell for its own cell type (for example a quality score), or a numeric matrix (or sparse `Matrix`) of soft
+cell type membership with one row per cell and one named column per label (for example a classifier's
+confidence). The curves are then one per label: each neighbour counts towards a label in proportion to its
+weight, and a label's density is its summed weight per unit area. Labels may overlap, for example a group and
+its subtypes. Weights of 1 give the curves of the cell types.}
 }
 \value{
 A matrix of LISA curves

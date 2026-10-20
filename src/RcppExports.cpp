@@ -46,6 +46,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// localCurvesWeightedR
+Rcpp::List localCurvesWeightedR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::IntegerVector ptr, Rcpp::IntegerVector memLab, Rcpp::NumericVector memW, int nLabels, Rcpp::NumericVector Rs, Rcpp::NumericVector labelVal, Rcpp::NumericVector wt, Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction, bool includeSelf);
+RcppExport SEXP _lisaClust_localCurvesWeightedR(SEXP xSEXP, SEXP ySEXP, SEXP ptrSEXP, SEXP memLabSEXP, SEXP memWSEXP, SEXP nLabelsSEXP, SEXP RsSEXP, SEXP labelValSEXP, SEXP wtSEXP, SEXP lamSEXP, SEXP edgeSEXP, SEXP LfunctionSEXP, SEXP includeSelfSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type memLab(memLabSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type memW(memWSEXP);
+    Rcpp::traits::input_parameter< int >::type nLabels(nLabelsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type Rs(RsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type labelVal(labelValSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type lam(lamSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type edge(edgeSEXP);
+    Rcpp::traits::input_parameter< bool >::type Lfunction(LfunctionSEXP);
+    Rcpp::traits::input_parameter< bool >::type includeSelf(includeSelfSEXP);
+    rcpp_result_gen = Rcpp::wrap(localCurvesWeightedR(x, y, ptr, memLab, memW, nLabels, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf));
+    return rcpp_result_gen;
+END_RCPP
+}
 // nearestLabelsR
 Rcpp::IntegerVector nearestLabelsR(Rcpp::NumericVector tx, Rcpp::NumericVector ty, Rcpp::IntegerVector label, Rcpp::NumericVector qx, Rcpp::NumericVector qy);
 RcppExport SEXP _lisaClust_nearestLabelsR(SEXP txSEXP, SEXP tySEXP, SEXP labelSEXP, SEXP qxSEXP, SEXP qySEXP) {
@@ -79,6 +102,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_lisaClust_discWindowArea", (DL_FUNC) &_lisaClust_discWindowArea, 5},
     {"_lisaClust_localCurvesR", (DL_FUNC) &_lisaClust_localCurvesR, 11},
+    {"_lisaClust_localCurvesWeightedR", (DL_FUNC) &_lisaClust_localCurvesWeightedR, 13},
     {"_lisaClust_nearestLabelsR", (DL_FUNC) &_lisaClust_nearestLabelsR, 5},
     {"_lisaClust_concaveHullR", (DL_FUNC) &_lisaClust_concaveHullR, 4},
     {NULL, NULL, 0}

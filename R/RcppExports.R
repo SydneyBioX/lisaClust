@@ -9,6 +9,10 @@
     .Call(`_lisaClust_localCurvesR`, x, y, type, nTypes, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf)
 }
 
+.localCurvesWeighted <- function(x, y, ptr, memLab, memW, nLabels, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf = TRUE) {
+    .Call(`_lisaClust_localCurvesWeightedR`, x, y, ptr, memLab, memW, nLabels, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf)
+}
+
 .nearestLabels <- function(tx, ty, label, qx, qy) {
     .Call(`_lisaClust_nearestLabelsR`, tx, ty, label, qx, qy)
 }

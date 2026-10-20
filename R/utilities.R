@@ -187,7 +187,8 @@ argumentChecks = function(function_name, user_vals) {
 # The cells of each image: imageID, cellID, imageCellID, x, y and cellType, split by image.
 #' @importFrom S4Vectors DataFrame split
 .cellsByImage <- function(cells) {
-  cells <- cells[, c("imageID", "cellID", "imageCellID", "x", "y", "cellType"), drop = FALSE]
+  cells <- cells[, intersect(c("imageID", "cellID", "imageCellID", "x", "y", "cellType", ".row"), colnames(cells)),
+                 drop = FALSE]
   S4Vectors::split(S4Vectors::DataFrame(cells), cells$imageID)
 }
 
@@ -198,4 +199,53 @@ argumentChecks = function(function_name, user_vals) {
   missing <- setdiff(columns, colnames(cells))
   if (length(missing)) stop("column(s) not found in data: ", paste0("'", missing, "'", collapse = ", "))
   as.data.frame(cells)[, columns, drop = FALSE]
+}
+
+# Soft cell type membership as triplets: the non-zero weights of a cells x labels matrix (base or sparse Matrix),
+# checked against the number of cells. A vector gives each cell's weight for its own cell type.
+.membership <- function(w, nCells, cellType = NULL) {
+  if (is.numeric(w) && is.null(dim(w))) {
+    if (length(w) != nCells)
+      stop("`cellWeights` has ", length(w), " values but there are ", nCells, " cells (one per cell, in the order of ",
+           "`cells`).", call. = FALSE)
+    if (anyNA(w) || any(!is.finite(w)) || any(w < 0) || any(w > 1))
+      stop("`cellWeights` must be between 0 and 1, with no missing values.", call. = FALSE)
+    lab <- if (is.factor(cellType)) levels(droplevels(cellType)) else sort(unique(as.character(cellType)))
+    j <- match(as.character(cellType), lab); keep <- w != 0 & !is.na(j)
+    return(list(i = which(keep), j = j[keep], x = w[keep], labels = lab))
+  }
+  if (is.data.frame(w)) w <- as.matrix(w)
+  if (is.null(colnames(w)) || anyDuplicated(colnames(w)) || any(colnames(w) == ""))
+    stop("`cellWeights` needs unique column names (the labels).", call. = FALSE)
+  if (nrow(w) != nCells)
+    stop("`cellWeights` has ", nrow(w), " rows but there are ", nCells, " cells (one row per cell, in the ",
+         "order of `cells`).", call. = FALSE)
+  if (is.matrix(w)) {
+    if (!is.numeric(w)) stop("`cellWeights` must be numeric.", call. = FALSE)
+    nz <- which(w != 0, arr.ind = TRUE)
+    trip <- list(i = unname(nz[, 1]), j = unname(nz[, 2]), x = w[nz])
+  } else if (is(w, "sparseMatrix")) {
+    s <- Matrix::summary(w)
+    keep <- s$x != 0
+    trip <- list(i = s$i[keep], j = s$j[keep], x = as.numeric(s$x[keep]))
+  } else {
+    stop("`cellWeights` must be a numeric matrix, data.frame or sparse Matrix.", call. = FALSE)
+  }
+  if (anyNA(trip$x) || any(!is.finite(trip$x)) || any(trip$x < 0))
+    stop("`cellWeights` must be finite and non-negative, with no missing values.", call. = FALSE)
+  c(trip, list(labels = colnames(w)))
+}
+
+# The membership of the cells `rows` (rows of the weight matrix), as compressed rows in that order: cell k's
+# labels (1-based) are lab[ptr[k] + 1 .. ptr[k + 1]] with weights w; total is each label's summed weight.
+.membershipOf <- function(memb, rows) {
+  pos <- match(memb$i, rows)
+  keep <- !is.na(pos)
+  pos <- pos[keep]; j <- memb$j[keep]; x <- memb$x[keep]
+  ord <- order(pos, j)
+  total <- numeric(length(memb$labels))
+  s <- rowsum(x, j)
+  total[as.integer(rownames(s))] <- s[, 1]
+  list(ptr = c(0L, cumsum(tabulate(pos, length(rows)))), lab = as.integer(j[ord]), w = x[ord], total = total,
+       labels = memb$labels)
 }

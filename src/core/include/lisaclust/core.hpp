@@ -41,6 +41,15 @@ LocalCurves localCurves(const double* x, const double* y, const int* type, int n
                         const std::vector<double>& Rs, const std::vector<double>& labelVal,
                         const double* wt, const std::vector<double>& lam, const double* edge,
                         bool Lfunction, bool includeSelf);
+// localCurves() with soft cell type membership: cell j belongs to label J with weight memW[m] for m in
+// [ptr[j], ptr[j + 1]) with memLab[m] = J, and a pair (i, j) adds wt[j] * memW[m] to label memLab[m]. Labels may
+// overlap. lam holds each label's summed weight per unit area. With one label of weight 1 per cell it gives
+// localCurves().
+LocalCurves localCurvesWeighted(const double* x, const double* y, const int* ptr, const int* memLab,
+                                const double* memW, int n, int K, const std::vector<double>& Rs,
+                                const std::vector<double>& labelVal, const double* wt,
+                                const std::vector<double>& lam, const double* edge, bool Lfunction,
+                                bool includeSelf);
 
 // The label of the nearest training point to each query point. Points at exactly the nearest distance
 // vote; ties between labels go to the smallest label. Labels are 0-based.

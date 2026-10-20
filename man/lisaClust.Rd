@@ -20,7 +20,8 @@ lisaClust(
   lisaFunc = "K",
   minLambda = 0.05,
   BPPARAM = NULL,
-  Rs = r
+  Rs = r,
+  cellWeights = NULL
 )
 }
 \arguments{
@@ -60,6 +61,9 @@ the cellType.}
 \item{BPPARAM}{\{DEPRECATED\} A BiocParallel param object.}
 
 \item{Rs}{A vector of the radii that the measures of association should be calculated.}
+
+\item{cellWeights}{Optional cell weights, a vector or a soft membership matrix in the order of `cells`; see
+[lisa()].}
 }
 \value{
 A matrix of LISA curves

@@ -21,6 +21,8 @@
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param BPPARAM \{DEPRECATED\} A BiocParallel param object.
 #' @param Rs A vector of the radii that the measures of association should be calculated.
+#' @param cellWeights Optional cell weights, a vector or a soft membership matrix in the order of `cells`; see
+#'   [lisa()].
 #'
 #' @return A matrix of LISA curves
 #'
@@ -65,7 +67,8 @@ lisaClust <-
            lisaFunc = "K",
            minLambda = 0.05,
            BPPARAM = NULL,
-           Rs = r) {
+           Rs = r,
+           cellWeights = NULL) {
     
     user_args = as.list(match.call())[-1]
     
@@ -97,7 +100,10 @@ lisaClust <-
                        whichParallel = whichParallel,
                        sigma = sigma,
                        lisaFunc = lisaFunc,
-                       minLambda = minLambda
+                       minLambda = minLambda,
+                       cellWeights = if (is.null(cellWeights)) NULL
+                         else if (is.null(dim(cellWeights))) cellWeights[unname(rowOf)]
+                         else cellWeights[unname(rowOf), , drop = FALSE]
     )
     kM <- kmeans(lisaCurves, k)
     regions <- character(length(rowOf))

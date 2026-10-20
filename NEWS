@@ -1,3 +1,14 @@
+CHANGES IN VERSION 1.21.9
+-------------------------
+
+    o Cell weights: lisa() and lisaClust() take cellWeights, either a vector with one weight in [0, 1] per cell for
+      its own cell type (for example a quality score) or a cells x labels matrix (base or sparse) of soft cell type
+      membership, for example a classifier's confidence. The curves are then
+      one per label: each neighbour counts towards a label in proportion to its weight, and a label's density is its
+      summed weight per unit area. Labels may overlap (a group and its subtypes). A matrix of 0s and 1s with one 1
+      per row gives the curves of the cell types exactly. The weighted curves are computed in the shared core
+      (localCurvesWeighted()), as in lisaclust.
+
 CHANGES IN VERSION 1.21.8
 -------------------------
 

@@ -19,7 +19,12 @@
 #' @param minLambda  Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param BPPARAM \{DEPRECATED\} A BiocParallel param object. 
 #' @param Rs \{DEPRECATED\} A vector of the radii that the measures of association should be calculated.
-#' 
+#' @param cellWeights Optional cell weights in \[0, 1\], in the order of `cells`: a numeric vector with one weight
+#'   per cell for its own cell type (for example a quality score), or a numeric matrix (or sparse `Matrix`) of soft
+#'   cell type membership with one row per cell and one named column per label (for example a classifier's
+#'   confidence). The curves are then one per label: each neighbour counts towards a label in proportion to its
+#'   weight, and a label's density is its summed weight per unit area. Labels may overlap, for example a group and
+#'   its subtypes. Weights of 1 give the curves of the cell types.
 #' @return A matrix of LISA curves
 #'
 #' @examples
@@ -63,7 +68,8 @@ lisa <- function(cells,
                  lisaFunc = "K",
                  minLambda = 0.05,
                  BPPARAM = NULL,
-                 Rs = r) {
+                 Rs = r,
+                 cellWeights = NULL) {
   
   user_args = as.list(match.call())[-1]
   
@@ -105,6 +111,12 @@ lisa <- function(cells,
   
   cells <- .formatCells(cells, imageID, cellType, spatialCoords)
   cellSummary <- .cellsByImage(cells)
+  # soft membership: each image gets the weights of its own cells, in its row order
+  memberships <- NULL
+  if (!is.null(cellWeights)) {
+    memb <- .membership(cellWeights, nrow(cells), cells$cellType[order(cells$.row)])
+    memberships <- lapply(cellSummary, function(d) .membershipOf(memb, d$.row))
+  }
   
   if (is.null(Rs)) {
     Rs <- c(20, 50, 100)
@@ -114,8 +126,8 @@ lisa <- function(cells,
   
   curveList <-
     .par_lapply(
-      cellSummary,
-      inhomLocalK,
+      if (is.null(memberships)) cellSummary else Map(function(d, m) list(d, m), cellSummary, memberships),
+      .lisaImage,
       Rs = Rs,
       sigma = sigma,
       window = window,
@@ -134,6 +146,12 @@ lisa <- function(cells,
 }
 
 
+
+
+# inhomLocalK() of one image: its cells, or (soft membership) a list of its cells and their membership.
+.lisaImage <- function(d, ...) {
+  if (is(d, "DataFrame") || is.data.frame(d)) inhomLocalK(d, ...) else inhomLocalK(d[[1]], ..., membership = d[[2]])
+}
 
 
 #' @importFrom spatstat.geom ppp
@@ -266,7 +284,8 @@ inhomLocalK <-
            window = "convex",
            window.length = NULL,
            minLambda = 0.05,
-           lisaFunc = "K") {
+           lisaFunc = "K",
+           membership = NULL) {
     ow <- makeWindow(data, window, window.length)
     ow <- spatstat.random::expand.owin(ow, distance = 0.01)
     X <-
@@ -304,16 +323,28 @@ inhomLocalK <-
     edge <- matrix(edge, nrow = X$n)
     labels <- as.character(Rs[-1])
     
-    res <- .localCurves(
-      as.numeric(data$x), as.numeric(data$y), as.integer(cellType), nlevels(cellType), as.numeric(Rs),
-      as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L", includeSelf = TRUE
-    )
+    if (is.null(membership)) {
+      res <- .localCurves(
+        as.numeric(data$x), as.numeric(data$y), as.integer(cellType), nlevels(cellType), as.numeric(Rs),
+        as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L", includeSelf = TRUE
+      )
+      labelNames <- levels(cellType)
+    } else {
+      # soft membership (lisa(cellWeights =)): one curve per label, a label's density its summed weight
+      labelNames <- membership$labels
+      lam <- membership$total / spatstat.geom::area(X)
+      res <- .localCurvesWeighted(
+        as.numeric(data$x), as.numeric(data$y), membership$ptr, membership$lab, membership$w,
+        length(labelNames), as.numeric(Rs), as.numeric(labels), as.numeric(wt), lam, edge, lisaFunc == "L",
+        includeSelf = TRUE
+      )
+    }
     
     # one column per radius and neighbouring type, as radius_type, for the radii and types that occur
     keep <- which(res$type)
     curves <- do.call("cbind", c(list(matrix(numeric(0), nrow = X$n, ncol = 0)), lapply(which(res$bin), function(k) {
       m <- matrix(res$value[, keep, k], nrow = X$n)
-      colnames(m) <- paste(labels[k], levels(cellType)[keep], sep = "_")
+      colnames(m) <- paste(labels[k], labelNames[keep], sep = "_")
       m
     })))
     curves[!res$cell, ] <- NA

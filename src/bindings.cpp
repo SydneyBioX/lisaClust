@@ -50,6 +50,28 @@ Rcpp::List localCurvesR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::Inte
       Rcpp::Named("type") = Rcpp::LogicalVector(res.typePresent.begin(), res.typePresent.end()));
 }
 
+// [[Rcpp::export(.localCurvesWeighted)]]
+Rcpp::List localCurvesWeightedR(Rcpp::NumericVector x, Rcpp::NumericVector y, Rcpp::IntegerVector ptr,
+                                Rcpp::IntegerVector memLab, Rcpp::NumericVector memW, int nLabels,
+                                Rcpp::NumericVector Rs, Rcpp::NumericVector labelVal, Rcpp::NumericVector wt,
+                                Rcpp::NumericVector lam, Rcpp::NumericMatrix edge, bool Lfunction,
+                                bool includeSelf = true) {
+  std::vector<int> l0(memLab.size());
+  for (R_xlen_t m = 0; m < memLab.size(); ++m) l0[m] = memLab[m] - 1;
+  lisaclust::LocalCurves res = lisaclust::localCurvesWeighted(
+      x.begin(), y.begin(), ptr.begin(), l0.data(), memW.begin(), x.size(), nLabels,
+      std::vector<double>(Rs.begin(), Rs.end()), std::vector<double>(labelVal.begin(), labelVal.end()), wt.begin(),
+      std::vector<double>(lam.begin(), lam.end()), edge.begin(), Lfunction, includeSelf);
+  Rcpp::NumericVector value(res.value.begin(), res.value.end());
+  for (double& v : value) if (std::isnan(v)) v = NA_REAL;
+  value.attr("dim") = Rcpp::IntegerVector::create(res.n, res.K, res.nb);
+  return Rcpp::List::create(
+      Rcpp::Named("value") = value,
+      Rcpp::Named("cell") = Rcpp::LogicalVector(res.cellPresent.begin(), res.cellPresent.end()),
+      Rcpp::Named("bin") = Rcpp::LogicalVector(res.binPresent.begin(), res.binPresent.end()),
+      Rcpp::Named("type") = Rcpp::LogicalVector(res.typePresent.begin(), res.typePresent.end()));
+}
+
 // [[Rcpp::export(.nearestLabels)]]
 Rcpp::IntegerVector nearestLabelsR(Rcpp::NumericVector tx, Rcpp::NumericVector ty, Rcpp::IntegerVector label,
                                    Rcpp::NumericVector qx, Rcpp::NumericVector qy) {

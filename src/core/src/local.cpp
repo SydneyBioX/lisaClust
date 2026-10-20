@@ -15,10 +15,16 @@
 //   both sums accumulate in long double, as data.table's sum() and base cumsum() do);
 // - the expectation uses the cell's edge share in that band when the cell has a pair of that type in
 //   the band, and 1 otherwise (the value of the unmatched rows of the join).
-lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, const int* type, int n, int K,
-                                              const std::vector<double>& Rs, const std::vector<double>& labelVal,
-                                              const double* wt, const std::vector<double>& lam, const double* edge,
-                                              bool Lfunction, bool includeSelf) {
+namespace {
+
+// The body of localCurves() and localCurvesWeighted(): members(j, f) calls f(label, weight) for each label of
+// cell j.
+template <class Members>
+lisaclust::LocalCurves localCurvesImpl(const double* x, const double* y, Members members, int n, int K,
+                                       const std::vector<double>& Rs, const std::vector<double>& labelVal,
+                                       const double* wt, const std::vector<double>& lam, const double* edge,
+                                       bool Lfunction, bool includeSelf) {
+  using lisaclust::LocalCurves;
   LocalCurves out;
   const int nb = static_cast<int>(Rs.size()) - 1;
   out.n = n;
@@ -58,12 +64,14 @@ lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, 
   }
 
   auto add = [&](int i, int j, int k) {
-    const std::size_t a = at(i, k, type[j]);
-    S[a] += wt[j];
-    has[a] = 1;
+    members(j, [&](int J, double w) {
+      const std::size_t a = at(i, k, J);
+      S[a] += wt[j] * w;
+      has[a] = 1;
+      out.typePresent[J] = 1;
+    });
     out.cellPresent[i] = 1;
     out.binPresent[k] = 1;
-    out.typePresent[type[j]] = 1;
   };
   for (int cy = 0; cy < gy; ++cy) {
     for (int cx = 0; cx < gx; ++cx) {
@@ -117,6 +125,28 @@ lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, 
     }
   }
   return out;
+}
+
+}  // namespace
+
+lisaclust::LocalCurves lisaclust::localCurves(const double* x, const double* y, const int* type, int n, int K,
+                                              const std::vector<double>& Rs, const std::vector<double>& labelVal,
+                                              const double* wt, const std::vector<double>& lam, const double* edge,
+                                              bool Lfunction, bool includeSelf) {
+  return localCurvesImpl(x, y, [&](int j, auto&& f) { f(type[j], 1.0); }, n, K, Rs, labelVal, wt, lam, edge,
+                         Lfunction, includeSelf);
+}
+
+lisaclust::LocalCurves lisaclust::localCurvesWeighted(const double* x, const double* y, const int* ptr,
+                                                      const int* memLab, const double* memW, int n, int K,
+                                                      const std::vector<double>& Rs,
+                                                      const std::vector<double>& labelVal, const double* wt,
+                                                      const std::vector<double>& lam, const double* edge,
+                                                      bool Lfunction, bool includeSelf) {
+  auto members = [&](int j, auto&& f) {
+    for (int m = ptr[j]; m < ptr[j + 1]; ++m) f(memLab[m], memW[m]);
+  };
+  return localCurvesImpl(x, y, members, n, K, Rs, labelVal, wt, lam, edge, Lfunction, includeSelf);
 }
 
 // Nearest training point by a uniform grid search, growing the search ring until it can hold no closer
