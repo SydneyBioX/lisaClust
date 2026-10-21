@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.21.10
+--------------------------
+
+    o Tests pass with a single-threaded BLAS (R's reference BLAS, as on the Bioconductor build machines).
+
 CHANGES IN VERSION 1.21.9
 -------------------------
 
