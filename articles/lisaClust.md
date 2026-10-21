@@ -452,7 +452,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.8) to
+A methods sentence might read: “We used lisaClust (version 1.21.9) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -526,8 +526,8 @@ sessionInfo()
 #> [17] Seqinfo_1.2.0                   IRanges_2.46.0                 
 #> [19] S4Vectors_0.50.3                BiocGenerics_0.58.1            
 #> [21] generics_0.1.4                  MatrixGenerics_1.24.0          
-#> [23] matrixStats_1.5.0               spicyR_1.24.0                  
-#> [25] lisaClust_1.21.8                BiocStyle_2.40.0               
+#> [23] matrixStats_1.5.0               spicyR_1.24.1                  
+#> [25] lisaClust_1.21.9                BiocStyle_2.40.0               
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] splines_4.6.1               later_1.4.8                
@@ -559,9 +559,9 @@ sessionInfo()
 #>  [53] tools_4.6.1                 ggnewscale_0.5.2           
 #>  [55] ragg_1.5.2                  Rcpp_1.1.2                 
 #>  [57] glue_1.8.1                  gridExtra_2.3.1            
-#>  [59] SparseArray_1.12.3          xfun_0.61                  
+#>  [59] SparseArray_1.12.3          xfun_0.62                  
 #>  [61] mgcv_1.9-4                  ggthemes_7.0.0             
-#>  [63] scam_1.2-22                 withr_3.0.3                
+#>  [63] scam_1.2-23                 withr_3.0.3                
 #>  [65] numDeriv_2016.8-1.1         BiocManager_1.30.27        
 #>  [67] fastmap_1.2.0               ggh4x_0.3.1                
 #>  [69] boot_1.3-32                 fansi_1.0.7                
@@ -579,7 +579,7 @@ sessionInfo()
 #>  [93] ggupset_0.4.1               png_0.1-9                  
 #>  [95] spatstat.univar_3.2-0       reformulas_0.4.4           
 #>  [97] knitr_1.52                  reshape2_1.4.5             
-#>  [99] rjson_0.2.23                curl_8.0.0                 
+#>  [99] rjson_0.2.23                curl_8.1.0                 
 #> [101] nlme_3.1-169                nloptr_2.2.1               
 #> [103] bdsmatrix_1.3-7             cachem_1.1.0               
 #> [105] stringr_1.6.0               BiocVersion_3.23.1         

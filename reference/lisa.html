@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.8</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.9</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,7 +53,8 @@
 <span>  lisaFunc <span class="op">=</span> <span class="st">"K"</span>,</span>
 <span>  minLambda <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  BPPARAM <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  Rs <span class="op">=</span> <span class="va">r</span></span>
+<span>  Rs <span class="op">=</span> <span class="va">r</span>,</span>
+<span>  cellWeights <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -120,6 +121,15 @@ the cellType.</p></dd>
 
 <dt id="arg-rs">Rs<a class="anchor" aria-label="anchor" href="#arg-rs"></a></dt>
 <dd><p>{DEPRECATED} A vector of the radii that the measures of association should be calculated.</p></dd>
+
+
+<dt id="arg-cellweights">cellWeights<a class="anchor" aria-label="anchor" href="#arg-cellweights"></a></dt>
+<dd><p>Optional cell weights in \[0, 1\], in the order of `cells`: a numeric vector with one weight
+per cell for its own cell type (for example a quality score), or a numeric matrix (or sparse `Matrix`) of soft
+cell type membership with one row per cell and one named column per label (for example a classifier's
+confidence). The curves are then one per label: each neighbour counts towards a label in proportion to its
+weight, and a label's density is its summed weight per unit area. Labels may overlap, for example a group and
+its subtypes. Weights of 1 give the curves of the cell types.</p></dd>
 
 </dl></div>
     <div class="section level2">

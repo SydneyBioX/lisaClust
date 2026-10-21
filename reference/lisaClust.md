@@ -22,7 +22,8 @@ lisaClust(
   lisaFunc = "K",
   minLambda = 0.05,
   BPPARAM = NULL,
-  Rs = r
+  Rs = r,
+  cellWeights = NULL
 )
 ```
 
@@ -100,6 +101,11 @@ lisaClust(
 
   A vector of the radii that the measures of association should be
   calculated.
+
+- cellWeights:
+
+  Optional cell weights, a vector or a soft membership matrix in the
+  order of \`cells\`; see \[lisa()\].
 
 ## Value
 
