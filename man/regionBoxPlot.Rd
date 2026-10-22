@@ -9,6 +9,7 @@ regionBoxPlot(
   condition,
   region = "region",
   imageID = "imageID",
+  subject = NULL,
   regions = NULL
 )
 }
@@ -19,8 +20,10 @@ regionBoxPlot(
 
 \item{region}{The column storing the regions.}
 
-\item{imageID}{The column identifying the units whose shares are compared: images, or patients to pool the
-images of each patient.}
+\item{imageID}{The column of the images.}
+
+\item{subject}{Optional: the column of the patient. The shares are then those of each patient's cells, all images
+pooled, so each patient is one point.}
 
 \item{regions}{The regions to show; all by default.}
 }

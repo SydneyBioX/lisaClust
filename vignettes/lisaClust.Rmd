@@ -133,23 +133,11 @@ regionMap(kerenSPE, region = "domain", type = "bubble")
 ## Domains in two tumours
 
 `hatchingPlot()` draws the cells coloured by type, with each region outlined and filled with its own hatching, so
-types and regions can be seen together. Here are the compartmentalised tumour and the mixed tumour with the most
-cells in the T cell domain. With tidySpatialExperiment, `group_by()` and `summarise()` work on the cells of a
-`SpatialExperiment` and return a table.
-
-```{r keren-examples}
-tcellShare <- kerenSPE |>
-  group_by(imageID, tumour_type) |>
-  summarise(share = mean(domain == "T cell"), .groups = "drop")
-examples <- tcellShare |>
-  filter(tumour_type != "cold") |>
-  group_by(tumour_type) |>
-  slice_max(share)
-examples
-```
+types and regions can be seen together. Here are the compartmentalised tumour (image 16) and the mixed tumour
+(image 29) with the most cells in the T cell domain.
 
 ```{r keren-hatching, fig.width = 10, fig.height = 5.5}
-hatchingPlot(kerenSPE, useImages = examples$imageID, region = "domain")
+hatchingPlot(kerenSPE, useImages = c("16", "29"), region = "domain")
 ```
 
 ## Do the domains differ between kinds of tumour?
@@ -162,21 +150,19 @@ regionBoxPlot(kerenSPE, condition = "tumour_type", region = "domain")
 ```
 
 spicyR's `colTest()` computes the share of each domain in each image and compares the groups with a Wilcoxon
-test; here we compare compartmentalised with mixed tumours.
+test, reporting the median share in each group; here we compare compartmentalised with mixed tumours.
 
 ```{r keren-domain-test}
 domainTests <- kerenSPE |>
   filter(tumour_type != "cold") |>
   colTest(condition = "tumour_type", feature = "domain", type = "wilcox")
 domainTests
-medians <- with(tcellShare, tapply(share, tumour_type, median))
-round(100 * medians, 1)
-pT <- domainTests["T cell", "pval"]
+tcell <- domainTests["T cell", ]
 ```
 
-The T cell domain makes up a median of `r round(100 * medians["compartmentalised"], 1)`% of the cells in a
-compartmentalised tumour and `r round(100 * medians["mixed"], 1)`% in a mixed one (Wilcoxon p =
-`r format(pT, digits = 2)`). `r if (medians["compartmentalised"] > medians["mixed"]) "In compartmentalised tumours the immune cells form their own areas, which become a domain; in mixed tumours they sit among the tumour cells and fall into the tumour domain." else ""`
+The T cell domain makes up a median of `r 100 * tcell[["median in group compartmentalised"]]`% of the cells in a
+compartmentalised tumour and `r 100 * tcell[["median in group mixed"]]`% in a mixed one (Wilcoxon p =
+`r format(tcell$pval, digits = 2)`). `r if (tcell[["median in group compartmentalised"]] > tcell[["median in group mixed"]]) "In compartmentalised tumours the immune cells form their own areas, which become a domain; in mixed tumours they sit among the tumour cells and fall into the tumour domain." else ""`
 
 ::: {.callout .callout-important}
 @keren2018 classified the tumours from how their immune and tumour cells are arranged, so this difference is a
@@ -210,8 +196,7 @@ schurchSPE <- lisaClust(schurchSPE, k = 20, r = c(20, 50, 100), regionName = "ni
 ```
 
 ```{r schurch-region-map, fig.width = 9, fig.height = 7}
-regionMap(schurchSPE, region = "niche", type = "bubble") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+regionMap(schurchSPE, region = "niche", type = "bubble")
 ```
 
 ## Comparing niches between groups of patients
@@ -219,20 +204,19 @@ regionMap(schurchSPE, region = "niche", type = "bubble") +
 The question is whether a niche makes up more of the tissue in one group of patients than in the other. The four
 cores of a patient come from the same tumour, so they are not independent: we pool the cells of each patient's
 cores, so that each patient contributes one share of each niche, and compare the two groups of patients. Setting
-`imageID = "patients"` in `colTest()` does this pooling. With 20 niches tested, `colTest()` also adjusts the
+`subject = "patients"` in `colTest()` does this pooling. With 20 niches tested, `colTest()` also adjusts the
 p-values for multiple testing (`adjPval`).
 
 ```{r schurch-patient-test}
 patientTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
-                        imageID = "patients", type = "wilcox")
+                        subject = "patients", type = "wilcox")
 head(patientTests, 5)
 ```
 
 For comparison, the same test treating each core as an independent sample:
 
 ```{r schurch-core-test}
-coreTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
-                     imageID = "imageID", type = "wilcox")
+coreTests <- colTest(schurchSPE, condition = "condition", feature = "niche", type = "wilcox")
 c(patients = sum(patientTests$adjPval < 0.05), cores = sum(coreTests$adjPval < 0.05))
 ```
 
@@ -254,28 +238,24 @@ for the number of niches tested.
 :::
 
 `regionMap(type = "table")` gives the enrichment of each cell type in each niche as a matrix, so we can list
-the cell types the niche with the smallest p-value is most enriched for, and its median share in each group.
+the cell types the niche with the smallest p-value is most enriched for; its median share in each group is in
+`patientTests`.
 
 ```{r schurch-top-niche-types}
 top <- patientTests$cluster[1]
 enrichment <- regionMap(schurchSPE, region = "niche", type = "table")
 topTypes <- sort(enrichment[, top], decreasing = TRUE)
 round(topTypes[1:5], 1)
-
-topMedians <- schurchSPE |>
-  group_by(patients, condition) |>
-  summarise(share = mean(niche == top), .groups = "drop") |>
-  with(tapply(share, condition, median))
-round(100 * topMedians, 1)
+topMedians <- c(CLR = patientTests[top, "median in group CLR"], DII = patientTests[top, "median in group DII"])
 ```
 
 The niche with the smallest p-value, `r top`, is most enriched for
 `r paste(names(topTypes)[1:3], collapse = ", ")`. It makes up a median of
-`r round(100 * topMedians["CLR"], 1)`% of the cells in CLR patients and
-`r round(100 * topMedians["DII"], 1)`% in DII patients`r if (names(topTypes)[1] == "b_cells" && topMedians["CLR"] > topMedians["DII"]) ", as expected for the lymphoid follicles that define a Crohn's-like reaction" else ""`:
+`r 100 * topMedians["CLR"]`% of the cells in CLR patients and
+`r 100 * topMedians["DII"]`% in DII patients`r if (names(topTypes)[1] == "b_cells" && topMedians["CLR"] > topMedians["DII"]) ", as expected for the lymphoid follicles that define a Crohn's-like reaction" else ""`:
 
 ```{r schurch-top-niche, fig.width = 3, fig.height = 4}
-regionBoxPlot(schurchSPE, condition = "condition", region = "niche", imageID = "patients", regions = top)
+regionBoxPlot(schurchSPE, condition = "condition", region = "niche", subject = "patients", regions = top)
 ```
 
 # Using your own clustering
@@ -284,7 +264,7 @@ regionBoxPlot(schurchSPE, condition = "condition", region = "niche", imageID = "
 cluster them any way you like.
 
 ```{r lisa-curves}
-curves <- lisa(kerenSPE[, kerenSPE$imageID %in% examples$imageID], r = c(20, 50, 100))
+curves <- lisa(kerenSPE[, kerenSPE$imageID %in% c("16", "29")], r = c(20, 50, 100))
 dim(curves)
 curves[1:3, 1:4]
 

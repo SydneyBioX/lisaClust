@@ -1,3 +1,13 @@
+CHANGES IN VERSION 1.21.11
+--------------------------
+
+    o regionBoxPlot() takes `subject`: the shares are then those of each patient's cells, all images pooled, one
+      point per patient.
+    o regionMap() turns the region labels upright when there are more than six regions, so they do not overlap.
+    o The vignette is simpler: the example tumours are named rather than computed, the group medians come from
+      spicyR's colTest() (which now reports them), patients are given as `subject`, and the region labels need no
+      theme() adjustment. Needs spicyR 1.99.38.
+
 CHANGES IN VERSION 1.21.10
 --------------------------
 

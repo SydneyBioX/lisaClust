@@ -391,7 +391,7 @@ inhomLocalK <-
 #' @export
 #' @importFrom SummarizedExperiment colData
 #' @importFrom pheatmap pheatmap
-#' @importFrom ggplot2 ggplot aes geom_point scale_colour_gradient2 theme_minimal labs
+#' @importFrom ggplot2 ggplot aes geom_point scale_colour_gradient2 theme_minimal labs theme element_text
 #' @importFrom dplyr mutate .data
 #' @import SpatialExperiment SingleCellExperiment
 regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "region", limit = c(0.33, 3), ...) {
@@ -410,6 +410,8 @@ regionMap <- function(cells, type = "bubble", cellType = "cellType", region = "r
       ggplot2::scale_colour_gradient2(low = "#4575B4", mid = "grey90", high = "#D73027", midpoint = 1, guide = "legend") +
       ggplot2::theme_minimal() +
       ggplot2::labs(x = "Region", y = "Cell-type", colour = "Relative\nFrequency", size = "Relative\nFrequency")
+    # with many regions, upright labels so that they do not overlap
+    if (ncol(tab) > 6) p1 <- p1 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
     
     return(p1)
   }

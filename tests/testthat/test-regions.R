@@ -46,3 +46,20 @@ test_that("regionBoxPlot gives one share per unit and region, with zeros", {
   bad <- toy(); bad$group[1] <- "B"
   expect_error(regionBoxPlot(bad, "group"), "single")
 })
+
+test_that("regionBoxPlot(subject =) pools each patient's images, one point per patient", {
+  cells <- toy(); cells$patient <- c(rep("p1", 8), rep("p2", 4))   # images a and b are patient p1's
+  p <- regionBoxPlot(cells, condition = "group", subject = "patient")
+  expect_identical(p$data, regionBoxPlot(cells, condition = "group", imageID = "patient")$data)
+  expect_setequal(unique(p$data$unit), c("p1", "p2"))
+  expect_equal(p$data$share[p$data$unit == "p1" & p$data$region == "r1"], 4 / 8)
+})
+
+test_that("regionMap() turns the region labels upright only when there are many regions", {
+  few <- regionMap(toy())
+  expect_null(few$theme$axis.text.x$angle)
+  set.seed(1)
+  many <- data.frame(cellType = sample(c("t", "i", "s"), 400, TRUE, prob = c(5, 3, 1)),
+                     region = paste0("niche ", sample(1:8, 400, TRUE)))
+  expect_equal(regionMap(many)$theme$axis.text.x$angle, 90)
+})

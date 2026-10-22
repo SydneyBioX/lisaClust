@@ -60,8 +60,9 @@ nameRegions <- function(cells, markers, region = "region", cellType = "cellType"
 #' @param cells A SingleCellExperiment, SpatialExperiment or data frame with a region column.
 #' @param condition The column storing the group of each image (or patient).
 #' @param region The column storing the regions.
-#' @param imageID The column identifying the units whose shares are compared: images, or patients to pool the
-#' images of each patient.
+#' @param imageID The column of the images.
+#' @param subject Optional: the column of the patient. The shares are then those of each patient's cells, all images
+#' pooled, so each patient is one point.
 #' @param regions The regions to show; all by default.
 #'
 #' @return A ggplot object.
@@ -86,7 +87,8 @@ nameRegions <- function(cells, markers, region = "region", cellType = "cellType"
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_point position_jitter facet_wrap scale_y_continuous labs
 #'   theme element_text
-regionBoxPlot <- function(cells, condition, region = "region", imageID = "imageID", regions = NULL) {
+regionBoxPlot <- function(cells, condition, region = "region", imageID = "imageID", subject = NULL, regions = NULL) {
+  if (!is.null(subject)) imageID <- subject   # the unit: the patient, all images pooled, or else the image
   df <- .colDataFrame(cells, c(imageID, condition, region))
   units <- unique(df[, c(imageID, condition)])
   if (anyDuplicated(units[[imageID]])) stop("each '", imageID, "' must have a single '", condition, "'")
