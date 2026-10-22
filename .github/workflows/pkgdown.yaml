@@ -34,7 +34,8 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          # spicyR from its devel branch: lisaClust can need a newer spicyR than Bioconductor has built yet
+          extra-packages: any::pkgdown, github::SydneyBioX/spicyR@devel, local::.
           needs: website
 
       - name: Build site
