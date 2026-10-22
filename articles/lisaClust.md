@@ -165,32 +165,12 @@ regionMap(kerenSPE, region = "domain", type = "bubble")
 [`hatchingPlot()`](https://github.com/ellispatrick/lisaClust/reference/hatchingPlot.md)
 draws the cells coloured by type, with each region outlined and filled
 with its own hatching, so types and regions can be seen together. Here
-are the compartmentalised tumour and the mixed tumour with the most
-cells in the T cell domain. With tidySpatialExperiment, `group_by()` and
-`summarise()` work on the cells of a `SpatialExperiment` and return a
-table.
+are the compartmentalised tumour (image 16) and the mixed tumour (image
+29) with the most cells in the T cell domain.
 
 ``` r
 
-tcellShare <- kerenSPE |>
-  group_by(imageID, tumour_type) |>
-  summarise(share = mean(domain == "T cell"), .groups = "drop")
-examples <- tcellShare |>
-  filter(tumour_type != "cold") |>
-  group_by(tumour_type) |>
-  slice_max(share)
-examples
-#> # A tibble: 2 × 3
-#> # Groups:   tumour_type [2]
-#>   imageID tumour_type       share
-#>   <chr>   <fct>             <dbl>
-#> 1 16      compartmentalised 0.403
-#> 2 29      mixed             0.170
-```
-
-``` r
-
-hatchingPlot(kerenSPE, useImages = examples$imageID, region = "domain")
+hatchingPlot(kerenSPE, useImages = c("16", "29"), region = "domain")
 ```
 
 ![](lisaClust_files/figure-html/keren-hatching-1.png)
@@ -212,8 +192,8 @@ regionBoxPlot(kerenSPE, condition = "tumour_type", region = "domain")
 spicyR’s
 [`colTest()`](https://sydneybiox.github.io/spicyR/reference/colTest.html)
 computes the share of each domain in each image and compares the groups
-with a Wilcoxon test; here we compare compartmentalised with mixed
-tumours.
+with a Wilcoxon test, reporting the median share in each group; here we
+compare compartmentalised with mixed tumours.
 
 ``` r
 
@@ -221,19 +201,20 @@ domainTests <- kerenSPE |>
   filter(tumour_type != "cold") |>
   colTest(condition = "tumour_type", feature = "domain", type = "wilcox")
 domainTests
-#>        tval.W    pval adjPval cluster
-#> tumour      6 3.2e-08 1.3e-07  tumour
-#> T cell    250 9.1e-05 1.8e-04  T cell
-#> B cell    240 7.5e-04 1.0e-03  B cell
-#> stroma    230 3.1e-03 3.1e-03  stroma
-medians <- with(tcellShare, tapply(share, tumour_type, median))
-round(100 * medians, 1)
-#>              cold compartmentalised             mixed 
-#>               1.3              15.2               4.5
-pT <- domainTests["T cell", "pval"]
+#>        median in group compartmentalised median in group mixed tval.W    pval
+#> tumour                             0.370                0.6400      6 3.2e-08
+#> T cell                             0.150                0.0450    250 9.1e-05
+#> B cell                             0.012                0.0049    240 7.5e-04
+#> stroma                             0.380                0.2900    230 3.1e-03
+#>        adjPval cluster
+#> tumour 1.3e-07  tumour
+#> T cell 1.8e-04  T cell
+#> B cell 1.0e-03  B cell
+#> stroma 3.1e-03  stroma
+tcell <- domainTests["T cell", ]
 ```
 
-The T cell domain makes up a median of 15.2% of the cells in a
+The T cell domain makes up a median of 15% of the cells in a
 compartmentalised tumour and 4.5% in a mixed one (Wilcoxon p = 9.1e-05).
 In compartmentalised tumours the immune cells form their own areas,
 which become a domain; in mixed tumours they sit among the tumour cells
@@ -282,8 +263,7 @@ schurchSPE <- lisaClust(schurchSPE, k = 20, r = c(20, 50, 100), regionName = "ni
 
 ``` r
 
-regionMap(schurchSPE, region = "niche", type = "bubble") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+regionMap(schurchSPE, region = "niche", type = "bubble")
 ```
 
 ![](lisaClust_files/figure-html/schurch-region-map-1.png)
@@ -295,7 +275,7 @@ of patients than in the other. The four cores of a patient come from the
 same tumour, so they are not independent: we pool the cells of each
 patient’s cores, so that each patient contributes one share of each
 niche, and compare the two groups of patients. Setting
-`imageID = "patients"` in
+`subject = "patients"` in
 [`colTest()`](https://sydneybiox.github.io/spicyR/reference/colTest.html)
 does this pooling. With 20 niches tested,
 [`colTest()`](https://sydneybiox.github.io/spicyR/reference/colTest.html)
@@ -304,14 +284,20 @@ also adjusts the p-values for multiple testing (`adjPval`).
 ``` r
 
 patientTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
-                        imageID = "patients", type = "wilcox")
+                        subject = "patients", type = "wilcox")
 head(patientTests, 5)
-#>           tval.W   pval adjPval   cluster
-#> region_13    250 0.0016   0.019 region_13
-#> region_7     240 0.0019   0.019  region_7
-#> region_11     68 0.0043   0.029 region_11
-#> region_4      74 0.0083   0.042  region_4
-#> region_5     220 0.0200   0.080  region_5
+#>           median in group CLR median in group DII tval.W   pval adjPval
+#> region_13              0.0640              0.0340    250 0.0016   0.019
+#> region_7               0.0160              0.0019    240 0.0019   0.019
+#> region_11              0.0250              0.0540     68 0.0043   0.029
+#> region_4               0.0310              0.0490     74 0.0083   0.042
+#> region_5               0.0053              0.0025    220 0.0200   0.080
+#>             cluster
+#> region_13 region_13
+#> region_7   region_7
+#> region_11 region_11
+#> region_4   region_4
+#> region_5   region_5
 ```
 
 For comparison, the same test treating each core as an independent
@@ -319,8 +305,7 @@ sample:
 
 ``` r
 
-coreTests <- colTest(schurchSPE, condition = "condition", feature = "niche",
-                     imageID = "imageID", type = "wilcox")
+coreTests <- colTest(schurchSPE, condition = "condition", feature = "niche", type = "wilcox")
 c(patients = sum(patientTests$adjPval < 0.05), cores = sum(coreTests$adjPval < 0.05))
 #> patients    cores 
 #>        4        4
@@ -338,8 +323,8 @@ adjust for the number of niches tested.
 
 `regionMap(type = "table")` gives the enrichment of each cell type in
 each niche as a matrix, so we can list the cell types the niche with the
-smallest p-value is most enriched for, and its median share in each
-group.
+smallest p-value is most enriched for; its median share in each group is
+in `patientTests`.
 
 ``` r
 
@@ -351,14 +336,7 @@ round(topTypes[1:5], 1)
 #>                8.3                2.1                2.1                1.4 
 #> cd4_t_cells_cd45ro 
 #>                1.4
-
-topMedians <- schurchSPE |>
-  group_by(patients, condition) |>
-  summarise(share = mean(niche == top), .groups = "drop") |>
-  with(tapply(share, condition, median))
-round(100 * topMedians, 1)
-#> CLR DII 
-#> 6.4 3.4
+topMedians <- c(CLR = patientTests[top, "median in group CLR"], DII = patientTests[top, "median in group DII"])
 ```
 
 The niche with the smallest p-value, region_13, is most enriched for
@@ -368,7 +346,7 @@ lymphoid follicles that define a Crohn’s-like reaction:
 
 ``` r
 
-regionBoxPlot(schurchSPE, condition = "condition", region = "niche", imageID = "patients", regions = top)
+regionBoxPlot(schurchSPE, condition = "condition", region = "niche", subject = "patients", regions = top)
 ```
 
 ![](lisaClust_files/figure-html/schurch-top-niche-1.png)
@@ -381,7 +359,7 @@ and cell type, so you can cluster them any way you like.
 
 ``` r
 
-curves <- lisa(kerenSPE[, kerenSPE$imageID %in% examples$imageID], r = c(20, 50, 100))
+curves <- lisa(kerenSPE[, kerenSPE$imageID %in% c("16", "29")], r = c(20, 50, 100))
 dim(curves)
 #> [1] 13031    51
 curves[1:3, 1:4]
@@ -452,7 +430,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.10) to
+A methods sentence might read: “We used lisaClust (version 1.21.11) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -515,95 +493,58 @@ sessionInfo()
 #> [8] base     
 #> 
 #> other attached packages:
-#>  [1] SpatialDatasets_1.10.0          ExperimentHub_3.2.2            
-#>  [3] AnnotationHub_4.2.2             BiocFileCache_3.2.0            
-#>  [5] dbplyr_2.6.0                    tidySpatialExperiment_1.8.0    
+#>  [1] SpatialDatasets_1.11.0          ExperimentHub_3.3.2            
+#>  [3] AnnotationHub_4.3.2             BiocFileCache_3.3.0            
+#>  [5] dbplyr_2.6.0                    tidySpatialExperiment_1.9.0    
 #>  [7] ggplot2_4.0.3                   tidyr_1.3.2                    
-#>  [9] dplyr_1.2.1                     tidySingleCellExperiment_1.22.0
-#> [11] ttservice_0.5.3                 SpatialExperiment_1.22.0       
-#> [13] SingleCellExperiment_1.34.0     SummarizedExperiment_1.42.0    
-#> [15] Biobase_2.72.0                  GenomicRanges_1.64.0           
-#> [17] Seqinfo_1.2.0                   IRanges_2.46.0                 
-#> [19] S4Vectors_0.50.3                BiocGenerics_0.58.1            
-#> [21] generics_0.1.4                  MatrixGenerics_1.24.0          
-#> [23] matrixStats_1.5.0               spicyR_1.24.1                  
-#> [25] lisaClust_1.21.10               BiocStyle_2.40.0               
+#>  [9] dplyr_1.2.1                     tidySingleCellExperiment_1.23.0
+#> [11] ttservice_0.5.3                 SpatialExperiment_1.23.0       
+#> [13] SingleCellExperiment_1.35.2     SummarizedExperiment_1.43.0    
+#> [15] Biobase_2.73.2                  GenomicRanges_1.65.4           
+#> [17] Seqinfo_1.3.2                   IRanges_2.47.5                 
+#> [19] S4Vectors_0.51.10               BiocGenerics_0.59.12           
+#> [21] generics_0.1.4                  MatrixGenerics_1.25.0          
+#> [23] matrixStats_1.5.0               spicyR_1.99.38                 
+#> [25] lisaClust_1.21.11               BiocStyle_2.41.0               
 #> 
 #> loaded via a namespace (and not attached):
-#>   [1] splines_4.6.1               later_1.4.8                
-#>   [3] filelock_1.0.3              tibble_3.3.1               
-#>   [5] polyclip_1.10-7             httr2_1.3.0                
-#>   [7] lifecycle_1.0.5             Rdpack_2.6.6               
-#>   [9] rstatix_1.1.0               lattice_0.22-9             
-#>  [11] MASS_7.3-65                 MultiAssayExperiment_1.38.0
-#>  [13] backports_1.5.1             magrittr_2.0.5             
-#>  [15] plotly_4.12.1               sass_0.4.10                
-#>  [17] rmarkdown_2.32              jquerylib_0.1.4            
-#>  [19] yaml_2.3.12                 httpuv_1.6.17              
-#>  [21] otel_0.2.0                  doRNG_1.8.6.3              
-#>  [23] ClassifyR_3.16.0            dcanr_1.28.0               
-#>  [25] spatstat.sparse_3.2-0       DBI_1.3.0                  
-#>  [27] minqa_1.2.8                 RColorBrewer_1.1-3         
-#>  [29] abind_1.4-8                 purrr_1.2.2                
-#>  [31] rappdirs_0.3.4              tweenr_2.0.3               
-#>  [33] spatstat.utils_3.2-5        pheatmap_1.0.13            
-#>  [35] goftest_1.2-3               spatstat.random_3.5-2      
-#>  [37] pkgdown_2.2.1               codetools_0.2-20           
-#>  [39] DelayedArray_0.38.2         ggforce_0.5.0              
-#>  [41] tidyselect_1.2.1            farver_2.1.2               
-#>  [43] lme4_2.0-6                  viridis_0.6.5              
-#>  [45] spatstat.explore_3.8-3      jsonlite_2.0.0             
-#>  [47] ellipsis_0.3.3              Formula_1.2-6              
-#>  [49] survival_3.8-6              iterators_1.0.14           
-#>  [51] systemfonts_1.3.2           foreach_1.5.2              
-#>  [53] tools_4.6.1                 ggnewscale_0.5.2           
-#>  [55] ragg_1.5.2                  Rcpp_1.1.2                 
-#>  [57] glue_1.8.1                  gridExtra_2.3.1            
-#>  [59] SparseArray_1.12.3          xfun_0.62                  
-#>  [61] mgcv_1.9-4                  ggthemes_7.0.0             
-#>  [63] scam_1.2-23                 withr_3.0.3                
-#>  [65] numDeriv_2016.8-1.1         BiocManager_1.30.27        
-#>  [67] fastmap_1.2.0               ggh4x_0.3.1                
-#>  [69] boot_1.3-32                 fansi_1.0.7                
-#>  [71] digest_0.6.39               R6_2.6.1                   
-#>  [73] mime_0.13                   textshaping_1.0.5          
-#>  [75] tensor_1.5.1                spatstat.data_3.1-9        
-#>  [77] RSQLite_3.53.3              utf8_1.2.6                 
-#>  [79] data.table_1.18.6.1         httr_1.4.9                 
-#>  [81] htmlwidgets_1.6.4           S4Arrays_1.12.1            
-#>  [83] pkgconfig_2.0.3             gtable_0.3.6               
-#>  [85] blob_1.3.0                  S7_0.2.2                   
-#>  [87] XVector_0.52.0              htmltools_0.5.9            
-#>  [89] carData_3.0-6               bookdown_0.48              
-#>  [91] fftwtools_0.9-11            scales_1.4.0               
-#>  [93] ggupset_0.4.1               png_0.1-9                  
-#>  [95] spatstat.univar_3.2-0       reformulas_0.4.4           
-#>  [97] knitr_1.52                  reshape2_1.4.5             
-#>  [99] rjson_0.2.23                curl_8.1.0                 
-#> [101] nlme_3.1-169                nloptr_2.2.1               
-#> [103] bdsmatrix_1.3-7             cachem_1.1.0               
-#> [105] stringr_1.6.0               BiocVersion_3.23.1         
-#> [107] parallel_4.6.1              concaveman_1.2.0           
-#> [109] AnnotationDbi_1.74.0        desc_1.4.3                 
-#> [111] pillar_1.11.1               grid_4.6.1                 
-#> [113] vctrs_0.7.3                 coxme_2.2-22               
-#> [115] promises_1.5.0              ggpubr_1.0.0               
-#> [117] car_3.1-5                   xtable_1.8-8               
-#> [119] evaluate_1.0.5              magick_2.9.1               
-#> [121] cli_3.6.6                   compiler_4.6.1             
-#> [123] crayon_1.5.3                rlang_1.3.0                
-#> [125] rngtools_1.5.2              ggsignif_0.6.4             
-#> [127] labeling_0.4.3              plyr_1.8.9                 
-#> [129] fs_2.1.0                    stringi_1.8.9              
-#> [131] viridisLite_0.4.3           deldir_2.0-4               
-#> [133] BiocParallel_1.46.0         Biostrings_2.80.2          
-#> [135] lmerTest_3.2-1              spatstat.geom_3.8-3        
-#> [137] Matrix_1.7-5                bit64_4.8.6                
-#> [139] KEGGREST_1.52.2             shiny_1.14.0               
-#> [141] rbibutils_2.4.1             tidygate_1.0.19            
-#> [143] memoise_2.0.1               igraph_2.3.4               
-#> [145] broom_1.0.13                bslib_0.12.0               
-#> [147] bit_4.6.0
+#>   [1] RColorBrewer_1.1-3     jsonlite_2.0.0         magrittr_2.0.5        
+#>   [4] spatstat.utils_3.2-5   magick_2.9.1           farver_2.1.2          
+#>   [7] rmarkdown_2.32         fs_2.1.0               ragg_1.5.2            
+#>  [10] vctrs_0.7.3            memoise_2.0.1          spatstat.explore_3.8-3
+#>  [13] htmltools_0.5.9        S4Arrays_1.13.2        BiocBaseUtils_1.15.1  
+#>  [16] curl_8.1.0             SparseArray_1.13.4     sass_0.4.10           
+#>  [19] bslib_0.12.0           htmlwidgets_1.6.4      desc_1.4.3            
+#>  [22] httr2_1.3.0            plotly_4.12.1          cachem_1.1.0          
+#>  [25] mime_0.13              lifecycle_1.0.5        pkgconfig_2.0.3       
+#>  [28] Matrix_1.7-5           R6_2.6.1               fastmap_1.2.0         
+#>  [31] shiny_1.14.0           digest_0.6.39          AnnotationDbi_1.75.2  
+#>  [34] tensor_1.5.1           textshaping_1.0.5      RSQLite_3.53.3        
+#>  [37] labeling_0.4.3         filelock_1.0.3         fansi_1.0.7           
+#>  [40] spatstat.sparse_3.2-0  httr_1.4.9             polyclip_1.10-7       
+#>  [43] abind_1.4-8            compiler_4.6.1         bit64_4.8.6           
+#>  [46] withr_3.0.3            S7_0.2.2               BiocParallel_1.47.0   
+#>  [49] viridis_0.6.5          DBI_1.3.0              rappdirs_0.3.4        
+#>  [52] DelayedArray_0.39.8    rjson_0.2.23           tools_4.6.1           
+#>  [55] otel_0.2.0             httpuv_1.6.17          goftest_1.2-3         
+#>  [58] glue_1.8.1             nlme_3.1-169           promises_1.5.0        
+#>  [61] grid_4.6.1             gtable_0.3.6           spatstat.data_3.1-9   
+#>  [64] data.table_1.18.6.1    utf8_1.2.6             XVector_0.53.0        
+#>  [67] spatstat.geom_3.8-3    BiocVersion_3.24.0     pillar_1.11.1         
+#>  [70] stringr_1.6.0          later_1.4.8            splines_4.6.1         
+#>  [73] lattice_0.22-9         survival_3.8-6         bit_4.6.0             
+#>  [76] deldir_2.0-4           tidyselect_1.2.1       Biostrings_2.81.9     
+#>  [79] knitr_1.52             gridExtra_2.3.1        bookdown_0.48         
+#>  [82] xfun_0.62              pheatmap_1.0.13        fftwtools_0.9-11      
+#>  [85] stringi_1.8.9          yaml_2.3.12            evaluate_1.0.5        
+#>  [88] codetools_0.2-20       tibble_3.3.1           BiocManager_1.30.27   
+#>  [91] cli_3.6.6              xtable_1.8-8           systemfonts_1.3.2     
+#>  [94] jquerylib_0.1.4        Rcpp_1.1.2             spatstat.random_3.5-2 
+#>  [97] png_0.1-9              spatstat.univar_3.2-0  parallel_4.6.1        
+#> [100] tidygate_1.0.19        ellipsis_0.3.3         pkgdown_2.2.1         
+#> [103] blob_1.3.0             viridisLite_0.4.3      scales_1.4.0          
+#> [106] purrr_1.2.2            crayon_1.5.3           rlang_1.3.0           
+#> [109] KEGGREST_1.53.6
 ```
 
 ## References
