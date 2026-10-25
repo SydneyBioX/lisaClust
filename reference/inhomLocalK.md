@@ -51,6 +51,11 @@ inhomLocalK(
 
   Either "K" or "L" curve.
 
+- membership:
+
+  Used internally by \[lisa()\] with \`cellWeights\`: the soft
+  membership of the cells, already prepared. Leave as \`NULL\`.
+
 ## Value
 
 A matrix of LISA curves
