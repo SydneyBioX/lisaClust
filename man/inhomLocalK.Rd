@@ -30,6 +30,9 @@ calculated.}
 \item{minLambda}{Minimum value for density for scaling when fitting inhomogeneous L-curves.}
 
 \item{lisaFunc}{Either "K" or "L" curve.}
+
+\item{membership}{Used internally by [lisa()] with `cellWeights`: the soft membership of the cells, already
+prepared. Leave as `NULL`.}
 }
 \value{
 A matrix of LISA curves

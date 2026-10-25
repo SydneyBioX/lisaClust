@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.21.12
+--------------------------
+
+    o Matrix is listed in Suggests (it is used only when `cellWeights` is a sparse Matrix), and inhomLocalK()
+      documents its internal `membership` argument, clearing the two R CMD check warnings.
+
 CHANGES IN VERSION 1.21.11
 --------------------------
 

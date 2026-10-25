@@ -250,6 +250,8 @@ borderEdge <- function(X, maxD) {
 #' @param minLambda
 #'   Minimum value for density for scaling when fitting inhomogeneous L-curves.
 #' @param lisaFunc Either "K" or "L" curve.
+#' @param membership Used internally by [lisa()] with `cellWeights`: the soft membership of the cells, already
+#'   prepared. Leave as `NULL`.
 #'
 #' @return A matrix of LISA curves
 #'
