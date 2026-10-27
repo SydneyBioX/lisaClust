@@ -1,3 +1,20 @@
+CHANGES IN VERSION 1.21.13
+--------------------------
+
+    o lisaClust() put regions on the right cells only when cell IDs were unique across images; with cell IDs
+      that repeat in each image (1, 2, ... per image), most cells were left without a region. Regions now go
+      back to the cells by position, and results with unique cell IDs are unchanged.
+    o lisa() returns its rows in the order of `cells` rather than grouped by image, so its curves can be
+      clustered and put back on a SingleCellExperiment or SpatialExperiment directly. Input that is already
+      ordered by image gives the same matrix as before. Without a cellID column, the rows are named cell_1,
+      cell_2, ... in the order of `cells`.
+    o lisa() and lisaClust() stop with a message naming the column when image IDs, cell types or coordinates
+      are missing (a missing cell type crashed R; a missing image ID dropped the cell). Image IDs that are
+      factors with unused levels work. lisaClust() checks the length of `cellWeights`.
+    o hatchingPlot() treats a numeric region column as categories instead of failing with "Continuous value
+      supplied to a discrete scale".
+    o Deprecated arguments of lisa() are reported as lisa()'s rather than lisaClust()'s.
+
 CHANGES IN VERSION 1.21.12
 --------------------------
 

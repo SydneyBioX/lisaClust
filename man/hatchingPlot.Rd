@@ -41,7 +41,7 @@ geom_hatching(
 
 \item{useImages}{A vector of images to plot.}
 
-\item{region}{The region column to plot.}
+\item{region}{The region column to plot. Numeric region labels are treated as categories.}
 
 \item{imageID}{The imageIDs column if using data.frame or SingleCellExperiment.}
 

@@ -25,7 +25,9 @@
 #'   confidence). The curves are then one per label: each neighbour counts towards a label in proportion to its
 #'   weight, and a label's density is its summed weight per unit area. Labels may overlap, for example a group and
 #'   its subtypes. Weights of 1 give the curves of the cell types.
-#' @return A matrix of LISA curves
+#' @return A matrix of LISA curves, one row per cell in the order of `cells` and one column per radius and cell
+#'   type. The rows are named by the cellID column, or cell_1, cell_2, ... in the order of `cells` if there is
+#'   none.
 #'
 #' @examples
 #' ## Generate toy data: two images, two cell types that sit in separate bands
@@ -45,8 +47,9 @@
 #' # Generate LISA curves
 #' lisaCurves <- lisa(cells, r = c(10, 20, 50))
 #'
-#' # Cluster the LISA curves
+#' # Cluster the LISA curves; the rows are in the order of the cells
 #' kM <- kmeans(lisaCurves, 2)
+#' cells$region <- kM$cluster
 #'
 #' @export
 #' @rdname lisa
@@ -83,7 +86,7 @@ lisa <- function(cells,
     names(user_vals) = names(user_args)
     
     if (length(user_vals) > 0 && any(!sapply(user_vals, is.null))) {
-      argumentChecks("lisaClust", user_vals)
+      argumentChecks("lisa", user_vals)
     }
   }, error = function(e) {
     if (grepl("object 'cd' not found", e$message)) {
@@ -109,7 +112,7 @@ lisa <- function(cells,
     stop(paste0("'", cellType, "' column not found in data"))
   }
   
-  cells <- .formatCells(cells, imageID, cellType, spatialCoords)
+  cells <- .formatCells(cells, imageID, cellType, spatialCoords, allowNA = FALSE)
   cellSummary <- .cellsByImage(cells)
   # soft membership: each image gets the weights of its own cells, in its row order
   memberships <- NULL
@@ -140,6 +143,8 @@ lisa <- function(cells,
   curvelist <- lapply(curveList, as.data.frame)
   curves <- as.matrix(dplyr::bind_rows(curvelist))
   rownames(curves) <- as.character(unlist(lapply(cellSummary, function(x) x$cellID)))
+  # the curves are computed image by image; return them in the order of `cells`
+  curves <- curves[order(unlist(lapply(cellSummary, function(x) x$.row))), , drop = FALSE]
   
   curves[is.na(curves)] <- 0
   return(curves)

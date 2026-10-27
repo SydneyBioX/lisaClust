@@ -24,7 +24,7 @@
 #' @param cellWeights Optional cell weights, a vector or a soft membership matrix in the order of `cells`; see
 #'   [lisa()].
 #'
-#' @return A matrix of LISA curves
+#' @return `cells`, in the same order, with each cell's region in the column `regionName`.
 #'
 #' @examples
 #' ## Generate toy data: two images, two cell types that sit in separate bands
@@ -87,10 +87,14 @@ lisaClust <-
       stop("Data must be in the form of a SingleCellExperiment, SpatialExperiment, or data frame.")
     }
     
-    cd <- .formatCells(cells, imageID, cellType, spatialCoords)
-    # lisa() orders the cells by image; .row records where each one came from
-    rowOf <- stats::setNames(cd$.row, cd$cellID)
+    cd <- .formatCells(cells, imageID, cellType, spatialCoords, allowNA = FALSE)
+    # cd is ordered by image and lisa() keeps that order; .row records where each cell came from
+    rowOf <- cd$.row
     cd <- cd[, c("imageID", "cellType", "x", "y", "cellID", "imageCellID")]
+    if (!is.null(cellWeights) && NROW(cellWeights) != length(rowOf)) {
+      stop("`cellWeights` has ", NROW(cellWeights), " ", if (is.null(dim(cellWeights))) "values" else "rows",
+           " but there are ", length(rowOf), " cells (one per cell, in the order of `cells`).", call. = FALSE)
+    }
     
     lisaCurves <- lisa(cd,
                        r = Rs,
@@ -102,12 +106,12 @@ lisaClust <-
                        lisaFunc = lisaFunc,
                        minLambda = minLambda,
                        cellWeights = if (is.null(cellWeights)) NULL
-                         else if (is.null(dim(cellWeights))) cellWeights[unname(rowOf)]
-                         else cellWeights[unname(rowOf), , drop = FALSE]
+                         else if (is.null(dim(cellWeights))) cellWeights[rowOf]
+                         else cellWeights[rowOf, , drop = FALSE]
     )
     kM <- kmeans(lisaCurves, k)
     regions <- character(length(rowOf))
-    regions[rowOf[rownames(lisaCurves)]] <- paste("region", kM$cluster, sep = "_")
+    regions[rowOf] <- paste("region", kM$cluster, sep = "_")
     
     if (is(cells, "SummarizedExperiment")) {
       SummarizedExperiment::colData(cells)[regionName] <- regions

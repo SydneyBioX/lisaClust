@@ -5,7 +5,7 @@
 #'
 #' @param cells A data.frame or SingleCellExperiment.
 #' @param useImages A vector of images to plot.
-#' @param region The region column to plot.
+#' @param region The region column to plot. Numeric region labels are treated as categories.
 #' @param imageID The imageIDs column if using data.frame or SingleCellExperiment.
 #' @param cellType The cellType column if using data.frame or SingleCellExperiment.
 #' @param spatialCoords The spatial coordinates columns if using data.frame or SingleCellExperiment.
@@ -63,6 +63,8 @@ hatchingPlot <-
     df <- .formatCells(cells, imageID, cellType, spatialCoords)
     if (!region %in% colnames(df)) stop(paste0("'", region, "' column not found in data"))
     df <- data.frame(df[, c("imageID", "cellID", "imageCellID", "x", "y", "cellType")], region = df[[region]])
+    # regions are discrete: numeric or logical labels become factor levels
+    if (!is.factor(df$region) && !is.character(df$region)) df$region <- factor(df$region)
     
     if (is.null(useImages)) useImages <- df$imageID[1]
     

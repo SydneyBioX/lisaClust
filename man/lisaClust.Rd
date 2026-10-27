@@ -66,7 +66,7 @@ the cellType.}
 [lisa()].}
 }
 \value{
-A matrix of LISA curves
+`cells`, in the same order, with each cell's region in the column `regionName`.
 }
 \description{
 Use k-means clustering to cluster local indicators of spatial association. For other clustering use lisa.

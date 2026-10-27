@@ -143,13 +143,14 @@ argumentChecks = function(function_name, user_vals) {
 #' Put cells in a canonical data frame
 #'
 #' The columns imageID, cellType, x and y, and cellID and imageCellID when the data have none. imageID and
-#' cellType become factors with levels in order of first appearance, and the cells are ordered by image.
-#' Other columns are kept.
+#' cellType become factors with levels in order of first appearance (images without cells are dropped), and the
+#' cells are ordered by image. Other columns are kept. With `allowNA = FALSE`, missing image IDs, cell types or
+#' coordinates are an error.
 #'
 #' @importFrom methods is
 #' @importFrom S4Vectors as.data.frame
 #' @noRd
-.formatCells <- function(cells, imageID, cellType, spatialCoords) {
+.formatCells <- function(cells, imageID, cellType, spatialCoords, allowNA = TRUE) {
   if (is(cells, "SpatialExperiment")) {
     cd <- as.data.frame(SummarizedExperiment::colData(cells))
     sc <- data.frame(SpatialExperiment::spatialCoords(cells))
@@ -170,12 +171,19 @@ argumentChecks = function(function_name, user_vals) {
     imageID = cells[[imageID]], cellType = cells[[cellType]],
     x = cells[[spatialCoords[1]]], y = cells[[spatialCoords[2]]], stringsAsFactors = FALSE
   )
+  if (!allowNA) {
+    columns <- c(imageID, cellType, spatialCoords[1:2])
+    for (k in seq_along(columns)) {
+      if (anyNA(needed[[k]])) stop(paste0("'", columns[k], "' has missing values; remove those cells first"))
+    }
+  }
   cells <- cbind(cells[, setdiff(colnames(cells), c("imageID", "cellType", "x", "y")), drop = FALSE], needed)
   if (!is.factor(cells$imageID)) cells$imageID <- factor(cells$imageID, levels = unique(cells$imageID))
+  cells$imageID <- droplevels(cells$imageID)
   if (!is.factor(cells$cellType)) cells$cellType <- factor(cells$cellType, levels = unique(cells$cellType))
   cells$.row <- seq_len(nrow(cells))
   cells <- cells[order(cells$imageID), , drop = FALSE]
-  if (is.null(cells$cellID)) cells$cellID <- paste0("cell_", seq_len(nrow(cells)))
+  if (is.null(cells$cellID)) cells$cellID <- paste0("cell_", cells$.row)
   if (is.null(cells$imageCellID)) {
     within <- stats::ave(seq_len(nrow(cells)), cells$imageID, FUN = seq_along)
     cells$imageCellID <- paste0(cells$imageID, "_", within)
