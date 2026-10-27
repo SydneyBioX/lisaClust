@@ -53,7 +53,8 @@ geom_hatching(
 
 - region:
 
-  The region column to plot.
+  The region column to plot. Numeric region labels are treated as
+  categories.
 
 - imageID:
 

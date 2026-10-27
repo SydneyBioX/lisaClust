@@ -109,7 +109,8 @@ lisaClust(
 
 ## Value
 
-A matrix of LISA curves
+\`cells\`, in the same order, with each cell's region in the column
+\`regionName\`.
 
 ## Examples
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">lisaClust</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.21.13</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -134,7 +134,9 @@ its subtypes. Weights of 1 give the curves of the cell types.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A matrix of LISA curves</p>
+    <p>A matrix of LISA curves, one row per cell in the order of `cells` and one column per radius and cell
+  type. The rows are named by the cellID column, or cell_1, cell_2, ... in the order of `cells` if there is
+  none.</p>
     </div>
 
     <div class="section level2">
@@ -157,8 +159,9 @@ its subtypes. Weights of 1 give the curves of the cell types.</p></dd>
 <span class="r-in"><span><span class="va">lisaCurves</span> <span class="op">&lt;-</span> <span class="fu">lisa</span><span class="op">(</span><span class="va">cells</span>, r <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">50</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Generating local indicators of spatial association.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Cluster the LISA curves</span></span></span>
+<span class="r-in"><span><span class="co"># Cluster the LISA curves; the rows are in the order of the cells</span></span></span>
 <span class="r-in"><span><span class="va">kM</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="va">lisaCurves</span>, <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cells</span><span class="op">$</span><span class="va">region</span> <span class="op">&lt;-</span> <span class="va">kM</span><span class="op">$</span><span class="va">cluster</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

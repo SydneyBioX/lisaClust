@@ -105,7 +105,10 @@ lisa(
 
 ## Value
 
-A matrix of LISA curves
+A matrix of LISA curves, one row per cell in the order of \`cells\` and
+one column per radius and cell type. The rows are named by the cellID
+column, or cell_1, cell_2, ... in the order of \`cells\` if there is
+none.
 
 ## Examples
 
@@ -128,6 +131,7 @@ cells <- data.frame(x, y, cellType, imageID)
 lisaCurves <- lisa(cells, r = c(10, 20, 50))
 #> Generating local indicators of spatial association.
 
-# Cluster the LISA curves
+# Cluster the LISA curves; the rows are in the order of the cells
 kM <- kmeans(lisaCurves, 2)
+cells$region <- kM$cluster
 ```

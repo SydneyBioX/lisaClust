@@ -430,7 +430,7 @@ hundreds of thousands of cells take seconds.
 
 ## Reporting results
 
-A methods sentence might read: “We used lisaClust (version 1.21.12) to
+A methods sentence might read: “We used lisaClust (version 1.21.13) to
 compute, for each cell, local indicators of spatial association with
 every cell type at radii of 20, 50 and 100 pixels, and clustered the
 cells into 20 niches by k-means. The share of each niche in each patient
@@ -504,8 +504,8 @@ sessionInfo()
 #> [17] Seqinfo_1.3.2                   IRanges_2.47.5                 
 #> [19] S4Vectors_0.51.10               BiocGenerics_0.59.12           
 #> [21] generics_0.1.4                  MatrixGenerics_1.25.0          
-#> [23] matrixStats_1.5.0               spicyR_1.99.41                 
-#> [25] lisaClust_1.21.12               BiocStyle_2.41.0               
+#> [23] matrixStats_1.5.0               spicyR_1.99.44                 
+#> [25] lisaClust_1.21.13               BiocStyle_2.41.0               
 #> 
 #> loaded via a namespace (and not attached):
 #>   [1] RColorBrewer_1.1-3     jsonlite_2.0.0         magrittr_2.0.5        
